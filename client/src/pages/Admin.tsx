@@ -113,6 +113,7 @@ export default function Admin() {
     category: "gold_bar",
     isBest: false,
     isNew: false,
+    useFixedPrice: false,
     description: "",
     imageUrl: "",
     imageUrls: [] as string[],
@@ -873,7 +874,7 @@ export default function Admin() {
       if (data.success) {
         toast({ title: "성공", description: "상품이 추가되었습니다." });
         setShowAddForm(false);
-        setFormData({ name: "", weight: "", purity: "", price: "", category: "gold_bar", isBest: false, isNew: false, description: "", imageUrl: "", imageUrls: [] });
+        setFormData({ name: "", weight: "", purity: "", price: "", category: "gold_bar", isBest: false, isNew: false, useFixedPrice: false, description: "", imageUrl: "", imageUrls: [] });
         fetchProducts();
         fetchStats();
       } else {
@@ -945,6 +946,7 @@ export default function Admin() {
       category: product.category,
       isBest: product.isBest || false,
       isNew: product.isNew || false,
+      useFixedPrice: product.useFixedPrice || false,
       description: product.description || "",
       imageUrl: product.imageUrl || "",
       imageUrls: existingUrls.length > 0 ? existingUrls : (product.imageUrl ? [product.imageUrl] : []),
@@ -1830,7 +1832,7 @@ export default function Admin() {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-4 mb-4">
+                <div className="flex flex-wrap gap-4 mb-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1848,6 +1850,15 @@ export default function Admin() {
                       className="w-4 h-4"
                     />
                     <span className="text-sm">New 상품</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer bg-yellow-50 px-3 py-1 rounded border border-yellow-200">
+                    <input
+                      type="checkbox"
+                      checked={formData.useFixedPrice}
+                      onChange={(e) => setFormData({ ...formData, useFixedPrice: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm text-yellow-700">고정가격 사용</span>
                   </label>
                 </div>
                 <Textarea
@@ -2004,7 +2015,7 @@ export default function Admin() {
                           ))}
                         </select>
                       </div>
-                      <div className="flex items-center gap-6 pt-6">
+                      <div className="flex flex-wrap items-center gap-6 pt-6">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
@@ -2022,6 +2033,15 @@ export default function Admin() {
                             className="w-4 h-4"
                           />
                           <span className="text-sm">New 상품</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer bg-yellow-50 px-3 py-1 rounded border border-yellow-200">
+                          <input
+                            type="checkbox"
+                            checked={formData.useFixedPrice}
+                            onChange={(e) => setFormData({ ...formData, useFixedPrice: e.target.checked })}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-yellow-700">고정가격 사용</span>
                         </label>
                       </div>
                     </div>

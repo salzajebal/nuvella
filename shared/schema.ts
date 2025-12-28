@@ -149,6 +149,7 @@ export const products = pgTable("products", {
   category: text("category").notNull(),
   isBest: boolean("is_best").default(false),
   isNew: boolean("is_new").default(false),
+  useFixedPrice: boolean("use_fixed_price").default(false),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 
 export interface WishlistItem {
-  id: number;
+  id: string;
   name: string;
   price: string;
   imageUrl: string | null;
@@ -13,9 +13,9 @@ interface WishlistContextType {
   items: WishlistItem[];
   count: number;
   addItem: (item: WishlistItem) => void;
-  removeItem: (id: number) => void;
+  removeItem: (id: string) => void;
   toggleItem: (item: WishlistItem) => void;
-  isInWishlist: (id: number) => boolean;
+  isInWishlist: (id: string) => boolean;
   clearWishlist: () => void;
 }
 
@@ -52,7 +52,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const removeItem = useCallback((id: number) => {
+  const removeItem = useCallback((id: string) => {
     setItems(prev => {
       const newItems = prev.filter(i => i.id !== id);
       localStorage.setItem(WISHLIST_KEY, JSON.stringify(newItems));
@@ -69,7 +69,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const isInWishlist = useCallback((id: number) => {
+  const isInWishlist = useCallback((id: string) => {
     return items.some(i => i.id === id);
   }, [items]);
 
