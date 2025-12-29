@@ -78,7 +78,7 @@ export default function Home() {
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
               </div>
               <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 break-keep">
-                한국골드금거래소 실시간 시세
+                한국실버골드거래소 실시간 시세
               </h3>
               <p className="text-stone-300 text-sm sm:text-base mb-4 sm:mb-6 break-keep">
                 고객님의 성원에 감사드리며, 금 · 은 상품을 안내해 드립니다.
