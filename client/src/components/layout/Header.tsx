@@ -103,7 +103,7 @@ export function Header() {
       <div className="bg-[#f8f8f8] border-b border-gray-100 py-2 sm:py-2.5 hidden md:block">
         <div className="container-custom flex justify-between items-center text-sm text-gray-600">
           <div className="flex gap-4 items-center">
-            <span className="text-xs text-gray-500">한국실버골드거래소 대표: 임정재</span>
+            <span className="text-xs text-gray-500">한국골드금거래소 대표: 임정재</span>
             <span className="text-gray-300">|</span>
             <span className="text-xs text-gray-500">사업자등록번호: 754-29-01752</span>
             <span className="text-gray-300">|</span>
@@ -149,7 +149,7 @@ export function Header() {
             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 bg-gradient-to-br from-yellow-200 to-amber-300 rounded-full opacity-80"></div>
           </div>
           <div className="flex flex-col">
-            <span className="text-sm sm:text-base md:text-lg lg:text-xl font-bold tracking-tight text-gray-900 leading-none whitespace-nowrap">한국실버골드거래소</span>
+            <span className="text-sm sm:text-base md:text-lg lg:text-xl font-bold tracking-tight text-gray-900 leading-none whitespace-nowrap">한국골드금거래소</span>
             <span className="text-[8px] sm:text-[9px] md:text-[10px] text-amber-600 font-medium tracking-widest uppercase mt-0.5 sm:mt-1 hidden xs:block">KOREA GOLD EXCHANGE</span>
           </div>
         </Link>

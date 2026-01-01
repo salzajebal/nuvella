@@ -6,13 +6,13 @@ export function Footer() {
     <footer className="bg-gray-900 text-gray-400 pt-10 sm:pt-12 md:pt-16 pb-6 sm:pb-8 safe-area-bottom">
       <div className="container-custom grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-10 md:gap-12 mb-8 sm:mb-10 md:mb-12">
         <div className="col-span-1">
-          <h3 className="text-white font-bold text-lg sm:text-xl mb-4 sm:mb-6">한국실버골드거래소</h3>
+          <h3 className="text-white font-bold text-lg sm:text-xl mb-4 sm:mb-6">한국골드금거래소</h3>
           <p className="leading-relaxed text-xs sm:text-sm mb-4 sm:mb-6 max-w-md break-keep">
-            한국실버골드거래소는 투명하고 공정한 귀금속 거래 문화를 선도합니다.
+            한국골드금거래소는 투명하고 공정한 귀금속 거래 문화를 선도합니다.
             최고 품질의 골드바와 실버바를 합리적인 가격에 만나보세요.
           </p>
           <div className="text-[10px] sm:text-xs space-y-1 text-gray-500">
-            <p><span className="text-gray-400">상호:</span> 한국실버골드거래소</p>
+            <p><span className="text-gray-400">상호:</span> 한국골드금거래소</p>
             <p><span className="text-gray-400">사업자등록번호:</span> 754-29-01752</p>
             <p><span className="text-gray-400">통신판매번호:</span> 2025-대전서구-1289</p>
             <p><span className="text-gray-400">대표:</span> 임정재</p>
