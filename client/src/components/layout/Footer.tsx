@@ -40,7 +40,6 @@ export function Footer() {
               <li><Link href="/products/living" className="hover:text-white transition-colors">생활용품</Link></li>
               <li><Link href="/products/health" className="hover:text-white transition-colors">헬스/건강식품</Link></li>
               <li><Link href="/products/luxury" className="hover:text-white transition-colors">럭셔리/명품</Link></li>
-              <li><Link href="/products/baby" className="hover:text-white transition-colors">유아/완구</Link></li>
             </ul>
           </div>
 

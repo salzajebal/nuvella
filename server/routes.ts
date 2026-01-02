@@ -315,15 +315,51 @@ export async function registerRoutes(
   // Seed initial data (Admin - Protected)
   app.post("/api/seed", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      // Seed categories - Estella lifestyle mall categories
+      // Seed categories - Estella lifestyle mall categories (6 main + subcategories)
       const categoryData = [
-        { id: "home_interior", name: "홈 인테리어", description: "세련된 감각의 홈스타일링 아이템", count: 3 },
-        { id: "beauty", name: "뷰티", description: "트렌디한 뷰티 & 스킨케어 제품", count: 3 },
-        { id: "electronics", name: "가전/디지털", description: "스마트한 라이프를 위한 디지털 기기", count: 3 },
-        { id: "living", name: "생활용품", description: "일상을 더 편리하게 만드는 생활용품", count: 3 },
-        { id: "health", name: "헬스/건강식품", description: "건강한 삶을 위한 웰니스 제품", count: 3 },
-        { id: "luxury", name: "럭셔리/명품", description: "프리미엄 명품 컬렉션", count: 3 },
-        { id: "baby", name: "유아/완구", description: "아이를 위한 안전한 유아용품", count: 3 },
+        // 대분류: 홈 인테리어
+        { id: "home_interior", name: "홈 인테리어", description: "세련된 감각의 홈스타일링 아이템", parentId: null, sortOrder: 1 },
+        { id: "home_furniture", name: "가구", description: "의자, 테이블, 수납가구", parentId: "home_interior", sortOrder: 1 },
+        { id: "home_lighting", name: "조명", description: "스탠드, 무드등, 펜던트", parentId: "home_interior", sortOrder: 2 },
+        { id: "home_decor", name: "인테리어소품", description: "화병, 액자, 오브제", parentId: "home_interior", sortOrder: 3 },
+        { id: "home_fabric", name: "패브릭", description: "쿠션, 러그, 커튼", parentId: "home_interior", sortOrder: 4 },
+        { id: "home_wall", name: "벽장식", description: "거울, 시계, 월데코", parentId: "home_interior", sortOrder: 5 },
+        
+        // 대분류: 뷰티
+        { id: "beauty", name: "뷰티", description: "트렌디한 뷰티 & 스킨케어 제품", parentId: null, sortOrder: 2 },
+        { id: "beauty_skincare", name: "스킨케어", description: "세럼, 크림, 토너", parentId: "beauty", sortOrder: 1 },
+        { id: "beauty_makeup", name: "메이크업", description: "립스틱, 파운데이션", parentId: "beauty", sortOrder: 2 },
+        { id: "beauty_perfume", name: "향수", description: "오드퍼퓸, 디퓨저", parentId: "beauty", sortOrder: 3 },
+        { id: "beauty_body", name: "바디케어", description: "로션, 바디워시", parentId: "beauty", sortOrder: 4 },
+        { id: "beauty_hair", name: "헤어케어", description: "샴푸, 트리트먼트", parentId: "beauty", sortOrder: 5 },
+        
+        // 대분류: 가전/디지털
+        { id: "electronics", name: "가전/디지털", description: "스마트한 라이프를 위한 디지털 기기", parentId: null, sortOrder: 3 },
+        { id: "elec_living", name: "생활가전", description: "공기청정기, 가습기", parentId: "electronics", sortOrder: 1 },
+        { id: "elec_kitchen", name: "주방가전", description: "에어프라이어, 커피머신", parentId: "electronics", sortOrder: 2 },
+        { id: "elec_audio", name: "오디오", description: "스피커, 이어폰", parentId: "electronics", sortOrder: 3 },
+        { id: "elec_digital", name: "디지털기기", description: "태블릿악세서리", parentId: "electronics", sortOrder: 4 },
+        
+        // 대분류: 생활용품
+        { id: "living", name: "생활용품", description: "일상을 더 편리하게 만드는 생활용품", parentId: null, sortOrder: 4 },
+        { id: "living_kitchen", name: "주방용품", description: "그릇, 수저, 조리도구", parentId: "living", sortOrder: 1 },
+        { id: "living_bathroom", name: "욕실용품", description: "수건, 욕실소품", parentId: "living", sortOrder: 2 },
+        { id: "living_storage", name: "수납/정리", description: "바구니, 정리함", parentId: "living", sortOrder: 3 },
+        { id: "living_cleaning", name: "청소용품", description: "세제, 청소도구", parentId: "living", sortOrder: 4 },
+        
+        // 대분류: 헬스/건강식품
+        { id: "health", name: "헬스/건강식품", description: "건강한 삶을 위한 웰니스 제품", parentId: null, sortOrder: 5 },
+        { id: "health_supplements", name: "건강보조제", description: "비타민, 유산균", parentId: "health", sortOrder: 1 },
+        { id: "health_drinks", name: "건강음료", description: "차, 건강즙", parentId: "health", sortOrder: 2 },
+        { id: "health_fitness", name: "운동용품", description: "요가매트, 덤벨", parentId: "health", sortOrder: 3 },
+        { id: "health_diet", name: "다이어트", description: "단백질, 식이섬유", parentId: "health", sortOrder: 4 },
+        
+        // 대분류: 럭셔리/명품
+        { id: "luxury", name: "럭셔리/명품", description: "프리미엄 명품 컬렉션", parentId: null, sortOrder: 6 },
+        { id: "luxury_bags", name: "명품가방", description: "지갑, 클러치", parentId: "luxury", sortOrder: 1 },
+        { id: "luxury_accessories", name: "명품악세서리", description: "스카프, 벨트", parentId: "luxury", sortOrder: 2 },
+        { id: "luxury_furniture", name: "프리미엄가구", description: "디자이너가구", parentId: "luxury", sortOrder: 3 },
+        { id: "luxury_items", name: "명품소품", description: "키링, 카드지갑", parentId: "luxury", sortOrder: 4 },
       ];
       
       for (const cat of categoryData) {
@@ -336,40 +372,35 @@ export async function registerRoutes(
       
       // Seed products - lifestyle products (weight and purity are empty for lifestyle items)
       const productData = [
-        // Home Interior
-        { name: "프리미엄 아로마 캔들 세트", weight: "", purity: "", price: "89,000", originalPrice: "120,000", discountPercent: 26, category: "home_interior", isBest: true, isNew: false, isHot: true, description: "3종 향기 세트" },
-        { name: "북유럽 스타일 쿠션 커버 4P", weight: "", purity: "", price: "45,000", originalPrice: "58,000", discountPercent: 22, category: "home_interior", isBest: false, isNew: true, isHot: false, description: "면 100% 고급 쿠션커버" },
-        { name: "무드등 LED 스탠드", weight: "", purity: "", price: "67,000", originalPrice: "85,000", discountPercent: 21, category: "home_interior", isBest: true, isNew: false, isHot: false, description: "터치 조광 기능" },
+        // 홈 인테리어 - 소분류별
+        { name: "프리미엄 아로마 캔들 세트", weight: "", purity: "", price: "89,000", originalPrice: "120,000", discountPercent: 26, category: "home_decor", isBest: true, isNew: false, isHot: true, description: "3종 향기 세트" },
+        { name: "북유럽 스타일 쿠션 커버 4P", weight: "", purity: "", price: "45,000", originalPrice: "58,000", discountPercent: 22, category: "home_fabric", isBest: false, isNew: true, isHot: false, description: "면 100% 고급 쿠션커버" },
+        { name: "무드등 LED 스탠드", weight: "", purity: "", price: "67,000", originalPrice: "85,000", discountPercent: 21, category: "home_lighting", isBest: true, isNew: false, isHot: false, description: "터치 조광 기능" },
         
-        // Beauty
-        { name: "비타민C 세럼 30ml", weight: "", purity: "", price: "42,000", originalPrice: "58,000", discountPercent: 28, category: "beauty", isBest: true, isNew: false, isHot: true, description: "브라이트닝 앰플" },
-        { name: "수분 크림 50ml", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "beauty", isBest: false, isNew: true, isHot: false, description: "히알루론산 함유" },
-        { name: "클렌징 오일 200ml", weight: "", purity: "", price: "28,000", originalPrice: "36,000", discountPercent: 22, category: "beauty", isBest: true, isNew: false, isHot: false, description: "딥클렌징 효과" },
+        // 뷰티 - 소분류별
+        { name: "비타민C 세럼 30ml", weight: "", purity: "", price: "42,000", originalPrice: "58,000", discountPercent: 28, category: "beauty_skincare", isBest: true, isNew: false, isHot: true, description: "브라이트닝 앰플" },
+        { name: "수분 크림 50ml", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "beauty_skincare", isBest: false, isNew: true, isHot: false, description: "히알루론산 함유" },
+        { name: "클렌징 오일 200ml", weight: "", purity: "", price: "28,000", originalPrice: "36,000", discountPercent: 22, category: "beauty_skincare", isBest: true, isNew: false, isHot: false, description: "딥클렌징 효과" },
         
-        // Electronics
-        { name: "무선 블루투스 이어폰", weight: "", purity: "", price: "89,000", originalPrice: "129,000", discountPercent: 31, category: "electronics", isBest: true, isNew: false, isHot: true, description: "노이즈캔슬링" },
-        { name: "스마트 공기청정기", weight: "", purity: "", price: "299,000", originalPrice: "399,000", discountPercent: 25, category: "electronics", isBest: true, isNew: true, isHot: false, description: "앱 연동, HEPA필터" },
-        { name: "에어프라이어 5.5L", weight: "", purity: "", price: "129,000", originalPrice: "169,000", discountPercent: 24, category: "electronics", isBest: true, isNew: true, isHot: true, description: "대용량, 터치패널" },
+        // 가전/디지털 - 소분류별
+        { name: "무선 블루투스 이어폰", weight: "", purity: "", price: "89,000", originalPrice: "129,000", discountPercent: 31, category: "elec_audio", isBest: true, isNew: false, isHot: true, description: "노이즈캔슬링" },
+        { name: "스마트 공기청정기", weight: "", purity: "", price: "299,000", originalPrice: "399,000", discountPercent: 25, category: "elec_living", isBest: true, isNew: true, isHot: false, description: "앱 연동, HEPA필터" },
+        { name: "에어프라이어 5.5L", weight: "", purity: "", price: "129,000", originalPrice: "169,000", discountPercent: 24, category: "elec_kitchen", isBest: true, isNew: true, isHot: true, description: "대용량, 터치패널" },
         
-        // Living
-        { name: "스테인리스 텀블러 500ml", weight: "", purity: "", price: "28,000", originalPrice: "38,000", discountPercent: 26, category: "living", isBest: true, isNew: false, isHot: true, description: "보온보냉 12시간" },
-        { name: "프리미엄 수건 세트", weight: "", purity: "", price: "45,000", originalPrice: "62,000", discountPercent: 27, category: "living", isBest: false, isNew: true, isHot: false, description: "호텔식 면수건 6P" },
-        { name: "실리콘 주방용품 세트", weight: "", purity: "", price: "32,000", originalPrice: "45,000", discountPercent: 29, category: "living", isBest: true, isNew: false, isHot: false, description: "조리도구 6종" },
+        // 생활용품 - 소분류별
+        { name: "스테인리스 텀블러 500ml", weight: "", purity: "", price: "28,000", originalPrice: "38,000", discountPercent: 26, category: "living_kitchen", isBest: true, isNew: false, isHot: true, description: "보온보냉 12시간" },
+        { name: "프리미엄 수건 세트", weight: "", purity: "", price: "45,000", originalPrice: "62,000", discountPercent: 27, category: "living_bathroom", isBest: false, isNew: true, isHot: false, description: "호텔식 면수건 6P" },
+        { name: "실리콘 주방용품 세트", weight: "", purity: "", price: "32,000", originalPrice: "45,000", discountPercent: 29, category: "living_kitchen", isBest: true, isNew: false, isHot: false, description: "조리도구 6종" },
         
-        // Health
-        { name: "종합비타민 90정", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "health", isBest: true, isNew: false, isHot: true, description: "3개월분" },
-        { name: "프로바이오틱스 유산균", weight: "", purity: "", price: "42,000", originalPrice: "58,000", discountPercent: 28, category: "health", isBest: true, isNew: true, isHot: false, description: "100억 CFU" },
-        { name: "프로틴 파우더 1kg", weight: "", purity: "", price: "49,000", originalPrice: "68,000", discountPercent: 28, category: "health", isBest: true, isNew: false, isHot: false, description: "WPI 분리유청" },
+        // 헬스/건강식품 - 소분류별
+        { name: "종합비타민 90정", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "health_supplements", isBest: true, isNew: false, isHot: true, description: "3개월분" },
+        { name: "프로바이오틱스 유산균", weight: "", purity: "", price: "42,000", originalPrice: "58,000", discountPercent: 28, category: "health_supplements", isBest: true, isNew: true, isHot: false, description: "100억 CFU" },
+        { name: "프로틴 파우더 1kg", weight: "", purity: "", price: "49,000", originalPrice: "68,000", discountPercent: 28, category: "health_diet", isBest: true, isNew: false, isHot: false, description: "WPI 분리유청" },
         
-        // Luxury
-        { name: "프리미엄 가죽 지갑", weight: "", purity: "", price: "189,000", originalPrice: "250,000", discountPercent: 24, category: "luxury", isBest: true, isNew: false, isHot: true, description: "이태리 소가죽" },
-        { name: "명품 스카프", weight: "", purity: "", price: "320,000", originalPrice: "420,000", discountPercent: 24, category: "luxury", isBest: true, isNew: true, isHot: false, description: "실크 100%" },
-        { name: "프리미엄 핸드백", weight: "", purity: "", price: "450,000", originalPrice: "600,000", discountPercent: 25, category: "luxury", isBest: true, isNew: false, isHot: false, description: "송아지 가죽" },
-        
-        // Baby
-        { name: "유아 블록 세트 100P", weight: "", purity: "", price: "45,000", originalPrice: "62,000", discountPercent: 27, category: "baby", isBest: true, isNew: false, isHot: true, description: "안전인증 완구" },
-        { name: "아기 이유식기 세트", weight: "", purity: "", price: "38,000", originalPrice: "52,000", discountPercent: 27, category: "baby", isBest: true, isNew: true, isHot: false, description: "실리콘 6종" },
-        { name: "유아 책상 의자 세트", weight: "", purity: "", price: "89,000", originalPrice: "120,000", discountPercent: 26, category: "baby", isBest: true, isNew: false, isHot: false, description: "높이조절 가능" },
+        // 럭셔리/명품 - 소분류별
+        { name: "프리미엄 가죽 지갑", weight: "", purity: "", price: "189,000", originalPrice: "250,000", discountPercent: 24, category: "luxury_bags", isBest: true, isNew: false, isHot: true, description: "이태리 소가죽" },
+        { name: "명품 스카프", weight: "", purity: "", price: "320,000", originalPrice: "420,000", discountPercent: 24, category: "luxury_accessories", isBest: true, isNew: true, isHot: false, description: "실크 100%" },
+        { name: "프리미엄 핸드백", weight: "", purity: "", price: "450,000", originalPrice: "600,000", discountPercent: 25, category: "luxury_bags", isBest: true, isNew: false, isHot: false, description: "송아지 가죽" },
       ];
       
       for (const prod of productData) {

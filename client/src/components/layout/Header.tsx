@@ -14,7 +14,6 @@ const navItems = [
   { name: '생활용품', path: '/products/living' },
   { name: '헬스/건강식품', path: '/products/health' },
   { name: '럭셔리/명품', path: '/products/luxury' },
-  { name: '유아/완구', path: '/products/baby' },
 ];
 
 export function Header() {

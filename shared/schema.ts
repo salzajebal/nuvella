@@ -165,6 +165,8 @@ export const categories = pgTable("categories", {
   id: varchar("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  parentId: varchar("parent_id"),
+  sortOrder: integer("sort_order").default(0),
   count: integer("count").default(0),
 });
 

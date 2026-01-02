@@ -44,13 +44,6 @@ const heroSlides = [
     subtitle: "프리미엄 명품 컬렉션",
     link: "/products/luxury",
   },
-  {
-    id: 7,
-    image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=1600&h=600&fit=crop&q=80",
-    title: "유아/완구",
-    subtitle: "아이를 위한 안전한 제품",
-    link: "/products/baby",
-  },
 ];
 
 export function Hero() {
