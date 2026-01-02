@@ -4,18 +4,52 @@ import { useState, useEffect } from "react";
 const heroSlides = [
   {
     id: 1,
-    image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&h=900&fit=crop&q=80",
-    alt: "Fashion model walking",
+    image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1600&h=600&fit=crop&q=80",
+    title: "홈 인테리어",
+    subtitle: "세련된 감각의 홈스타일링",
+    link: "/products/home_interior",
   },
   {
     id: 2,
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=900&fit=crop&q=80",
-    alt: "Beauty products",
+    image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1600&h=600&fit=crop&q=80",
+    title: "뷰티",
+    subtitle: "트렌디한 뷰티 & 스킨케어",
+    link: "/products/beauty",
   },
   {
     id: 3,
-    image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1920&h=900&fit=crop&q=80",
-    alt: "Modern home interior",
+    image: "https://images.unsplash.com/photo-1558089687-f282ffcbc126?w=1600&h=600&fit=crop&q=80",
+    title: "가전/디지털",
+    subtitle: "스마트한 라이프를 위한 기기",
+    link: "/products/electronics",
+  },
+  {
+    id: 4,
+    image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600&h=600&fit=crop&q=80",
+    title: "생활용품",
+    subtitle: "일상을 더 편리하게",
+    link: "/products/living",
+  },
+  {
+    id: 5,
+    image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1600&h=600&fit=crop&q=80",
+    title: "헬스/건강식품",
+    subtitle: "건강한 삶을 위한 웰니스",
+    link: "/products/health",
+  },
+  {
+    id: 6,
+    image: "https://images.unsplash.com/photo-1549439602-43ebca2327af?w=1600&h=600&fit=crop&q=80",
+    title: "럭셔리/명품",
+    subtitle: "프리미엄 명품 컬렉션",
+    link: "/products/luxury",
+  },
+  {
+    id: 7,
+    image: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=1600&h=600&fit=crop&q=80",
+    title: "유아/완구",
+    subtitle: "아이를 위한 안전한 제품",
+    link: "/products/baby",
   },
 ];
 
@@ -42,20 +76,25 @@ export function Hero() {
   };
 
   return (
-    <section className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden bg-gray-100">
+    <section className="relative w-full h-[280px] sm:h-[320px] md:h-[380px] lg:h-[420px] overflow-hidden bg-gray-100">
       {heroSlides.map((slide, index) => (
-        <div
+        <a
+          href={slide.link}
           key={slide.id}
           className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentSlide ? "opacity-100" : "opacity-0"
+            index === currentSlide ? "opacity-100 z-[1]" : "opacity-0 z-0"
           }`}
         >
           <img
             src={slide.image}
-            alt={slide.alt}
+            alt={slide.title}
             className="w-full h-full object-cover"
           />
-        </div>
+          <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">{slide.title}</h2>
+            <p className="text-sm sm:text-base md:text-lg opacity-90">{slide.subtitle}</p>
+          </div>
+        </a>
       ))}
 
       <button
