@@ -128,7 +128,7 @@ export default function Signup() {
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">회원가입</h1>
-            <p className="text-gray-500">한국실버골드거래소 회원이 되어 다양한 혜택을 누리세요</p>
+            <p className="text-gray-500">Blue Black 회원이 되어 다양한 혜택을 누리세요</p>
           </div>
 
           <div className="bg-white p-8 shadow-sm border border-gray-100">
@@ -337,7 +337,7 @@ export default function Signup() {
             <ul className="space-y-3 text-sm text-gray-600">
               <li className="flex items-start gap-2">
                 <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>실시간 금시세 알림 서비스</span>
+                <span>신상품 및 할인 알림 서비스</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />

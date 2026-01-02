@@ -640,7 +640,7 @@ export default function Profile() {
               </div>
               <div className="flex justify-between">
                 <span>이메일</span>
-                <span>support@kaggold.com</span>
+                <span>support@blueblackmall.com</span>
               </div>
             </div>
             <Link href="/support">

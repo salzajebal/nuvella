@@ -17,14 +17,14 @@ const FAQ_CATEGORIES = [
 ];
 
 const DEFAULT_FAQS = [
-  { id: "1", category: "order", question: "온라인으로 주문이 가능한가요?", answer: "네, 온라인으로 주문 가능합니다. 다만, 금/은 시세는 실시간으로 변동되므로 주문 시 본점 또는 대리점으로 전화 문의 후 진행해 주시기 바랍니다." },
-  { id: "2", category: "order", question: "배송은 얼마나 걸리나요?", answer: "결제 확인 후 1-2 영업일 내에 발송되며, 배송은 보통 1-2일 소요됩니다. 귀중품 특성상 안전한 배송을 위해 보험 택배로 발송됩니다." },
-  { id: "5", category: "price", question: "금 시세는 어떻게 확인하나요?", answer: "홈페이지 상단의 '금시세조회' 메뉴에서 실시간 금/은/백금 시세를 확인하실 수 있습니다." },
-  { id: "6", category: "price", question: "시세는 얼마나 자주 변동되나요?", answer: "국제 금 시세와 환율에 따라 실시간으로 변동됩니다. 당일 시세는 오전 10시에 고시됩니다." },
-  { id: "7", category: "product", question: "골드바 순도는 어떻게 되나요?", answer: "당사에서 취급하는 골드바는 99.99% (999.9‰) 순도의 순금입니다. 국제 공인 LBMA 인증 제품입니다." },
-  { id: "8", category: "product", question: "각인 서비스가 가능한가요?", answer: "네, 골드바 및 일부 제품에 각인 서비스를 제공하고 있습니다. 제작 기간은 약 1주일 소요됩니다." },
-  { id: "9", category: "refund", question: "반품이 가능한가요?", answer: "금/은 제품 특성상 주문 후 취소 및 반품이 불가합니다. 불량 제품의 경우 수령 후 7일 이내 교환 가능합니다." },
-  { id: "10", category: "member", question: "회원가입 혜택이 있나요?", answer: "회원가입 시 구매 포인트 적립, 시세 알림 서비스, 특별 프로모션 등의 혜택을 받으실 수 있습니다." },
+  { id: "1", category: "order", question: "온라인으로 주문이 가능한가요?", answer: "네, 온라인으로 24시간 주문 가능합니다. 결제 완료 후 1-2 영업일 내에 발송됩니다." },
+  { id: "2", category: "order", question: "배송은 얼마나 걸리나요?", answer: "결제 확인 후 1-2 영업일 내에 발송되며, 배송은 보통 1-2일 소요됩니다. 전 상품 무료배송입니다." },
+  { id: "5", category: "price", question: "할인가는 언제까지 적용되나요?", answer: "할인가는 프로모션 기간에 따라 달라집니다. 각 상품 상세페이지에서 할인 기간을 확인해주세요." },
+  { id: "6", category: "price", question: "포인트 적립은 어떻게 되나요?", answer: "구매 금액의 1%가 포인트로 적립됩니다. 적립된 포인트는 다음 구매 시 사용 가능합니다." },
+  { id: "7", category: "product", question: "상품 품질 보증이 있나요?", answer: "모든 상품은 정품 보증이 제공됩니다. 품질 문제 발생 시 7일 이내 교환/환불이 가능합니다." },
+  { id: "8", category: "product", question: "선물 포장이 가능한가요?", answer: "네, 선물 포장 서비스를 제공하고 있습니다. 주문 시 요청사항에 기재해주세요." },
+  { id: "9", category: "refund", question: "반품이 가능한가요?", answer: "상품 수령 후 7일 이내 교환/반품이 가능합니다. 단순 변심의 경우 왕복 배송비가 발생합니다." },
+  { id: "10", category: "member", question: "회원가입 혜택이 있나요?", answer: "회원가입 시 구매 포인트 적립, 할인 쿠폰, 특별 프로모션 등의 혜택을 받으실 수 있습니다." },
 ];
 
 export default function Support() {
@@ -65,7 +65,7 @@ export default function Support() {
         <main className="container-custom py-12">
           <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-4" data-testid="text-support-title">고객센터</h1>
-          <p className="text-gray-500">한국실버골드거래소에 대해 궁금한 점을 확인하세요</p>
+          <p className="text-gray-500">Blue Black에 대해 궁금한 점을 확인하세요</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">

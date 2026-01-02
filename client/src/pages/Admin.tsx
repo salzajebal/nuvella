@@ -41,11 +41,13 @@ const playNotificationSound = () => {
 };
 
 const CATEGORY_OPTIONS = [
-  { id: "gold_bar", name: "골드바" },
-  { id: "silver_bar", name: "실버바" },
-  { id: "baby_ring", name: "돌선물" },
-  { id: "jewelry", name: "순금기념품" },
-  { id: "pure_jewelry", name: "순금주얼리" },
+  { id: "home_interior", name: "홈 인테리어" },
+  { id: "beauty", name: "뷰티" },
+  { id: "electronics", name: "가전/디지털" },
+  { id: "living", name: "생활용품" },
+  { id: "health", name: "헬스/건강식품" },
+  { id: "luxury", name: "럭셔리/명품" },
+  { id: "baby", name: "유아/완구" },
 ];
 
 interface AdminStats {
@@ -110,9 +112,12 @@ export default function Admin() {
     weight: "",
     purity: "",
     price: "",
-    category: "gold_bar",
+    originalPrice: "",
+    discountPercent: 0,
+    category: "beauty",
     isBest: false,
     isNew: false,
+    isHot: false,
     useFixedPrice: false,
     description: "",
     imageUrl: "",
@@ -874,7 +879,7 @@ export default function Admin() {
       if (data.success) {
         toast({ title: "성공", description: "상품이 추가되었습니다." });
         setShowAddForm(false);
-        setFormData({ name: "", weight: "", purity: "", price: "", category: "gold_bar", isBest: false, isNew: false, useFixedPrice: false, description: "", imageUrl: "", imageUrls: [] });
+        setFormData({ name: "", weight: "", purity: "", price: "", originalPrice: "", discountPercent: 0, category: "beauty", isBest: false, isNew: false, isHot: false, useFixedPrice: false, description: "", imageUrl: "", imageUrls: [] });
         fetchProducts();
         fetchStats();
       } else {
@@ -943,9 +948,12 @@ export default function Admin() {
       weight: product.weight,
       purity: product.purity,
       price: product.price,
+      originalPrice: product.originalPrice || "",
+      discountPercent: product.discountPercent || 0,
       category: product.category,
       isBest: product.isBest || false,
       isNew: product.isNew || false,
+      isHot: product.isHot || false,
       useFixedPrice: product.useFixedPrice || false,
       description: product.description || "",
       imageUrl: product.imageUrl || "",
@@ -1402,7 +1410,7 @@ export default function Admin() {
               <Lock className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">관리자 로그인</h1>
-            <p className="text-gray-500 mt-2">한국실버골드거래소 관리 시스템</p>
+            <p className="text-gray-500 mt-2">Blue Black 관리 시스템</p>
           </div>
           
           <form onSubmit={handleLogin} className="space-y-5">
@@ -1514,7 +1522,7 @@ export default function Admin() {
               <span className="font-bold text-gray-900">금</span>
             </div>
             <div>
-              <h1 className="font-bold">한국실버골드거래소</h1>
+              <h1 className="font-bold italic">Blue Black</h1>
               <p className="text-xs text-gray-400">관리자 패널</p>
             </div>
           </div>
@@ -1772,9 +1780,24 @@ export default function Admin() {
                   />
                   <Input
                     data-testid="input-product-price"
-                    placeholder="가격 (예: 15,100,000)"
+                    placeholder="판매가 (예: 28,900)"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  />
+                  <Input
+                    data-testid="input-product-original-price"
+                    placeholder="정가 (선택, 예: 34,000)"
+                    value={formData.originalPrice}
+                    onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
+                  />
+                  <Input
+                    data-testid="input-product-discount-percent"
+                    placeholder="할인율 % (선택, 예: 15)"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.discountPercent || ""}
+                    onChange={(e) => setFormData({ ...formData, discountPercent: parseInt(e.target.value) || 0 })}
                   />
                   <select
                     data-testid="select-product-category"
@@ -1850,6 +1873,15 @@ export default function Admin() {
                       className="w-4 h-4"
                     />
                     <span className="text-sm">New 상품</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isHot}
+                      onChange={(e) => setFormData({ ...formData, isHot: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Hot 상품</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer bg-yellow-50 px-3 py-1 rounded border border-yellow-200">
                     <input
@@ -1996,11 +2028,30 @@ export default function Admin() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">가격 *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">판매가 *</label>
                         <Input
-                          placeholder="가격 (예: 15,100,000)"
+                          placeholder="판매가 (예: 28,900)"
                           value={formData.price}
                           onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">정가 (선택)</label>
+                        <Input
+                          placeholder="정가 (예: 34,000)"
+                          value={formData.originalPrice}
+                          onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">할인율 % (선택)</label>
+                        <Input
+                          placeholder="할인율 (예: 15)"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={formData.discountPercent || ""}
+                          onChange={(e) => setFormData({ ...formData, discountPercent: parseInt(e.target.value) || 0 })}
                         />
                       </div>
                       <div>
@@ -2033,6 +2084,15 @@ export default function Admin() {
                             className="w-4 h-4"
                           />
                           <span className="text-sm">New 상품</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.isHot}
+                            onChange={(e) => setFormData({ ...formData, isHot: e.target.checked })}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm">Hot 상품</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer bg-yellow-50 px-3 py-1 rounded border border-yellow-200">
                           <input
@@ -2994,7 +3054,7 @@ export default function Admin() {
                     <Input
                       value={reviewFormData.productName}
                       onChange={(e) => setReviewFormData({ ...reviewFormData, productName: e.target.value })}
-                      placeholder="골드바 100g"
+                      placeholder="상품 중량"
                       data-testid="input-review-product"
                     />
                   </div>
@@ -3784,7 +3844,7 @@ export default function Admin() {
                         type="text"
                         value={depositAccountSettings.accountHolder}
                         onChange={(e) => setDepositAccountSettings(prev => ({ ...prev, accountHolder: e.target.value }))}
-                        placeholder="예: 한국실버골드거래소"
+                        placeholder="예: Blue Black"
                         className="w-full max-w-md"
                       />
                     </div>

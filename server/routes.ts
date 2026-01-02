@@ -50,62 +50,6 @@ function requireAdminAuth(req: Request, res: Response, next: Function) {
   next();
 }
 
-// Gold price cache - shared across all requests within 30 seconds
-let cachedPrices: any = null;
-let lastPriceUpdate: number = 0;
-const PRICE_CACHE_DURATION = 30000; // 30 seconds
-
-// Gold price fetch function - Korean market real-time prices
-// Based on 한국금거래소 (Korea Gold Exchange) consumer prices
-async function fetchGoldPrices() {
-  const now = Date.now();
-  
-  // Return cached prices if still valid (within 30 seconds)
-  if (cachedPrices && (now - lastPriceUpdate) < PRICE_CACHE_DURATION) {
-    return cachedPrices;
-  }
-  
-  // 한국금거래소 실시간 시세 (VAT포함) - 2025.12.24 기준
-  // 매수가 (내가 살 때) / 매도가 (내가 팔 때)
-  // Gold 24K: 929,000원/돈 (매수), 782,000원/돈 (매도)
-  // Silver: 16,080원/돈 (매수), 11,800원/돈 (매도)
-  // Platinum: 479,000원/돈 (매수), 389,000원/돈 (매도)
-  const baseGoldBuy = 929000;
-  const baseGoldSell = 782000;
-  const baseSilverBuy = 16080;
-  const baseSilverSell = 11800;
-  const basePlatinumBuy = 479000;
-  const basePlatinumSell = 389000;
-  
-  // 전일대비 변동 (한국금거래소 기준)
-  const goldChange = -7000;  // -0.75% 하락
-  const silverChange = 610;   // +3.79% 상승
-  const platinumChange = 36000; // +7.52% 상승
-  
-  cachedPrices = {
-    gold: {
-      buyPrice: baseGoldBuy.toLocaleString(),
-      sellPrice: baseGoldSell.toLocaleString(),
-      trend: goldChange >= 0 ? "up" : "down",
-      change: Math.abs(goldChange).toLocaleString(),
-    },
-    silver: {
-      buyPrice: baseSilverBuy.toLocaleString(),
-      sellPrice: baseSilverSell.toLocaleString(),
-      trend: silverChange >= 0 ? "up" : "down",
-      change: Math.abs(silverChange).toLocaleString(),
-    },
-    platinum: {
-      buyPrice: basePlatinumBuy.toLocaleString(),
-      sellPrice: basePlatinumSell.toLocaleString(),
-      trend: platinumChange >= 0 ? "up" : "down",
-      change: Math.abs(platinumChange).toLocaleString(),
-    },
-  };
-  
-  lastPriceUpdate = now;
-  return cachedPrices;
-}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -117,29 +61,6 @@ export async function registerRoutes(
   app.use("/uploads", express.default.static(path.join(process.cwd(), "uploads")));
   
   // NOTE: WebSocket is handled in chatSocket.ts - do not create duplicate here
-  
-  // ==================== GOLD PRICES API ====================
-  
-  // Get real-time gold prices
-  app.get("/api/prices", async (req: Request, res: Response) => {
-    try {
-      const prices = await fetchGoldPrices();
-      
-      // Update database with latest prices
-      await storage.updateGoldPrice("gold", prices.gold);
-      await storage.updateGoldPrice("silver", prices.silver);
-      await storage.updateGoldPrice("platinum", prices.platinum);
-      
-      res.json({
-        success: true,
-        data: prices,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error("Error fetching prices:", error);
-      res.status(500).json({ success: false, error: "Failed to fetch prices" });
-    }
-  });
   
   // ==================== PRODUCTS API ====================
   
@@ -263,16 +184,15 @@ export async function registerRoutes(
         await storage.deleteProduct(product.id);
       }
 
-      // Seed categories
+      // Seed categories - Blue Black lifestyle mall categories
       const categoryData = [
-        { id: "gold_bar", name: "골드바", description: "한국실버골드거래소가 보증하는 최고 품질의 순금 바", count: 15 },
-        { id: "silver_bar", name: "실버바", description: "투자 가치가 높은 고순도 실버바 컬렉션", count: 8 },
-        { id: "baby_ring", name: "돌반지/돌팔찌", description: "소중한 아이의 첫 생일을 축하하는 순금 선물", count: 10 },
-        { id: "jewelry", name: "순금제품", description: "품격 있는 디자인의 고순도 순금 주얼리", count: 12 },
-        { id: "diamond", name: "다이아몬드", description: "영원히 변치 않는 가치, 최상급 다이아몬드", count: 8 },
-        { id: "corporate", name: "기업선물", description: "임직원 및 VIP를 위한 품격 있는 기업 전용 선물", count: 10 },
-        { id: "gift_gold", name: "순금기념품", description: "특별한 날을 기념하는 소장가치 높은 순금 기념품", count: 10 },
-        { id: "event", name: "이벤트", description: "한국실버골드거래소의 특별한 혜택과 기획 상품", count: 6 },
+        { id: "home_interior", name: "홈 인테리어", description: "세련된 감각의 홈스타일링 아이템", count: 10 },
+        { id: "beauty", name: "뷰티", description: "트렌디한 뷰티 & 스킨케어 제품", count: 10 },
+        { id: "electronics", name: "가전/디지털", description: "스마트한 라이프를 위한 디지털 기기", count: 10 },
+        { id: "living", name: "생활용품", description: "일상을 더 편리하게 만드는 생활용품", count: 10 },
+        { id: "health", name: "헬스/건강식품", description: "건강한 삶을 위한 웰니스 제품", count: 10 },
+        { id: "luxury", name: "럭셔리/명품", description: "프리미엄 명품 컬렉션", count: 10 },
+        { id: "baby", name: "유아/완구", description: "아이를 위한 안전한 유아용품", count: 10 },
       ];
       
       for (const cat of categoryData) {
@@ -283,172 +203,96 @@ export async function registerRoutes(
         }
       }
       
-      // Image URLs by category
-      const categoryImages: Record<string, string[]> = {
-        gold_bar: [
-          "/images/gold_bar_investment__387f2a88.jpg",
-          "/images/gold_bar_investment__88b39b22.jpg",
-          "/images/gold_bar_investment__e8df734a.jpg",
-          "/images/gold_bar_investment__5310ba8d.jpg",
-          "/images/gold_bar_investment__dd21ba3e.jpg",
-        ],
-        silver_bar: [
-          "/images/silver_bar_precious__13a68013.jpg",
-          "/images/silver_bar_precious__407c7ecf.jpg",
-          "/images/silver_bar_precious__0359b3bd.jpg",
-        ],
-        baby_ring: [
-          "/images/baby_gold_ring_jewel_8be0fd1f.jpg",
-          "/images/baby_gold_ring_jewel_482fc739.jpg",
-          "/images/baby_gold_ring_jewel_0ce8422b.jpg",
-        ],
-        jewelry: [
-          "/images/gold_necklace_bracel_7734c76c.jpg",
-          "/images/gold_necklace_bracel_71b2e33d.jpg",
-          "/images/gold_necklace_bracel_be16df58.jpg",
-          "/images/gold_necklace_bracel_022f2625.jpg",
-        ],
-        diamond: [
-          "/images/diamond_ring_solitai_9d0dd718.jpg",
-          "/images/diamond_ring_solitai_2a941a5b.jpg",
-          "/images/diamond_ring_solitai_993ab741.jpg",
-        ],
-        corporate: [
-          "/images/gold_corporate_gift__38c38353.jpg",
-          "/images/gold_corporate_gift__013daad3.jpg",
-          "/images/gold_corporate_gift__58fc1a8c.jpg",
-        ],
-        gift_gold: [
-          "/images/gold_figurine_pig_lu_50eddba6.jpg",
-          "/images/gold_turtle_longevity_symbol.png",
-          "/images/gold_dragon_figurine_majestic.png",
-          "/images/gold_snake_zodiac_figurine.png",
-          "/images/gold_toad_figurine_wealth.png",
-          "/images/gold_elephant_luck_figurine.png",
-          "/images/gold_buddha_meditation_statue.png",
-          "/images/gold_tiger_figurine_sculpture.png",
-          "/images/gold_carp_success_symbol.png",
-          "/images/gold_phoenix_bird_sculpture.png",
-        ],
-        event: [
-          "/images/gold_coin_limited_ed_bf80ea77.jpg",
-          "/images/gold_coin_limited_ed_e6f20c04.jpg",
-          "/images/gold_coin_limited_ed_89ba9616.jpg",
-        ],
-        pure_jewelry: [
-          "/images/vca_alhambra_clover_necklace.png",
-          "/images/cartier_love_bracelet_gold.png",
-          "/images/tiffany_t_hoop_earrings.png",
-          "/images/chanel_coco_crush_ring.png",
-          "/images/bulgari_bzero1_spiral_ring.png",
-          "/images/lv_blossom_gold_bracelet.png",
-          "/images/chaumet_liens_pendant_necklace.png",
-          "/images/piaget_rose_gold_ring.png",
-          "/images/boucheron_serpent_ring_gold.png",
-        ],
-      };
-      
-      const getImageForCategory = (category: string, index: number) => {
-        const images = categoryImages[category] || categoryImages.gold_bar;
-        return images[index % images.length];
+      // Placeholder image helper for lifestyle products
+      const placeholderImage = (category: string, index: number) => {
+        return `https://placehold.co/400x400/f5f5f5/333333?text=${encodeURIComponent(category)}`;
       };
 
-      // Comprehensive product data based on real Korean gold exchange offerings
+      // Blue Black lifestyle mall product data
       const productData = [
-        // ==================== GOLD BARS (15 items) ====================
-        { name: "한국금거래소 골드바 1kg", weight: "1000g", purity: "999.9‰", price: "149,800,000", category: "gold_bar", isBest: true, isNew: false, description: "LBMA 인증 국제 공인 순금 바", imageUrl: getImageForCategory("gold_bar", 0) },
-        { name: "한국금거래소 골드바 500g", weight: "500g", purity: "999.9‰", price: "75,200,000", category: "gold_bar", isBest: true, isNew: false, description: "투자용 대형 순금 바", imageUrl: getImageForCategory("gold_bar", 1) },
-        { name: "한국금거래소 골드바 100g", weight: "100g", purity: "999.9‰", price: "15,100,000", category: "gold_bar", isBest: true, isNew: false, description: "가장 인기있는 투자용 골드바", imageUrl: getImageForCategory("gold_bar", 2) },
-        { name: "한국금거래소 골드바 50g", weight: "50g", purity: "999.9‰", price: "7,580,000", category: "gold_bar", isBest: false, isNew: true, description: "중량 투자 입문용 골드바", imageUrl: getImageForCategory("gold_bar", 3) },
-        { name: "한국금거래소 골드바 37.5g (10돈)", weight: "37.5g", purity: "999.9‰", price: "5,620,000", category: "gold_bar", isBest: true, isNew: false, description: "전통 10돈 순금 바", imageUrl: getImageForCategory("gold_bar", 4) },
-        { name: "한국금거래소 골드바 30g", weight: "30g", purity: "999.9‰", price: "4,530,000", category: "gold_bar", isBest: false, isNew: false, description: "선물용 순금 바", imageUrl: getImageForCategory("gold_bar", 0) },
-        { name: "한국금거래소 골드바 18.75g (5돈)", weight: "18.75g", purity: "999.9‰", price: "2,850,000", category: "gold_bar", isBest: false, isNew: false, description: "5돈 순금 바", imageUrl: getImageForCategory("gold_bar", 1) },
-        { name: "한국금거래소 골드바 10g", weight: "10g", purity: "999.9‰", price: "1,550,000", category: "gold_bar", isBest: false, isNew: true, description: "소액 투자 입문용", imageUrl: getImageForCategory("gold_bar", 2) },
-        { name: "한국금거래소 골드바 5g", weight: "5g", purity: "999.9‰", price: "785,000", category: "gold_bar", isBest: false, isNew: true, description: "소형 투자용 골드바", imageUrl: getImageForCategory("gold_bar", 3) },
-        { name: "한국금거래소 골드바 3.75g (1돈)", weight: "3.75g", purity: "999.9‰", price: "590,000", category: "gold_bar", isBest: false, isNew: false, description: "1돈 순금 바", imageUrl: getImageForCategory("gold_bar", 4) },
-        { name: "한국금거래소 골드바 1g", weight: "1g", purity: "999.9‰", price: "165,000", category: "gold_bar", isBest: false, isNew: true, description: "미니 골드바 선물용", imageUrl: getImageForCategory("gold_bar", 0) },
-        { name: "LS-Nikko 동제련 골드바 1kg", weight: "1000g", purity: "999.9‰", price: "150,500,000", category: "gold_bar", isBest: false, isNew: false, description: "LS-Nikko 정제 순금", imageUrl: getImageForCategory("gold_bar", 1) },
-        { name: "LS-Nikko 동제련 골드바 100g", weight: "100g", purity: "999.9‰", price: "15,250,000", category: "gold_bar", isBest: false, isNew: false, description: "LS-Nikko 정제 순금", imageUrl: getImageForCategory("gold_bar", 2) },
-        { name: "PAMP 스위스 골드바 100g", weight: "100g", purity: "999.9‰", price: "15,450,000", category: "gold_bar", isBest: false, isNew: false, description: "스위스 PAMP 정제", imageUrl: getImageForCategory("gold_bar", 3) },
-        { name: "PAMP 스위스 골드바 50g", weight: "50g", purity: "999.9‰", price: "7,780,000", category: "gold_bar", isBest: false, isNew: true, description: "스위스 PAMP 정제", imageUrl: getImageForCategory("gold_bar", 4) },
+        // ==================== HOME INTERIOR (10 items) ====================
+        { name: "프리미엄 아로마 캔들 세트", weight: "", purity: "", price: "89,000", originalPrice: "120,000", discountPercent: 26, category: "home_interior", isBest: true, isNew: false, isHot: true, description: "3종 향기 세트, 최대 50시간 연소", imageUrl: placeholderImage("home_interior", 0) },
+        { name: "북유럽 스타일 쿠션 커버 4P", weight: "", purity: "", price: "45,000", originalPrice: "58,000", discountPercent: 22, category: "home_interior", isBest: false, isNew: true, isHot: false, description: "면 100% 고급 쿠션커버", imageUrl: placeholderImage("home_interior", 1) },
+        { name: "무드등 LED 스탠드", weight: "", purity: "", price: "67,000", originalPrice: "85,000", discountPercent: 21, category: "home_interior", isBest: true, isNew: false, isHot: false, description: "터치 조광 기능, 무선 충전", imageUrl: placeholderImage("home_interior", 2) },
+        { name: "호텔식 극세사 담요", weight: "", purity: "", price: "39,000", originalPrice: "55,000", discountPercent: 29, category: "home_interior", isBest: false, isNew: false, isHot: true, description: "킹사이즈, 세탁 가능", imageUrl: placeholderImage("home_interior", 3) },
+        { name: "월넛 우드 벽시계", weight: "", purity: "", price: "78,000", originalPrice: "98,000", discountPercent: 20, category: "home_interior", isBest: false, isNew: true, isHot: false, description: "무소음 무브먼트", imageUrl: placeholderImage("home_interior", 4) },
+        { name: "대형 러그 카페트 200x300", weight: "", purity: "", price: "189,000", originalPrice: "250,000", discountPercent: 24, category: "home_interior", isBest: true, isNew: false, isHot: false, description: "거실용 대형 러그", imageUrl: placeholderImage("home_interior", 5) },
+        { name: "미니멀 행잉 플랜트팟", weight: "", purity: "", price: "32,000", originalPrice: "42,000", discountPercent: 24, category: "home_interior", isBest: false, isNew: false, isHot: false, description: "마크라메 장식 포함", imageUrl: placeholderImage("home_interior", 6) },
+        { name: "모던 화병 세트 3종", weight: "", purity: "", price: "56,000", originalPrice: "75,000", discountPercent: 25, category: "home_interior", isBest: false, isNew: true, isHot: false, description: "세라믹 소재", imageUrl: placeholderImage("home_interior", 7) },
+        { name: "프리미엄 침구 세트", weight: "", purity: "", price: "159,000", originalPrice: "210,000", discountPercent: 24, category: "home_interior", isBest: true, isNew: false, isHot: true, description: "퀸 사이즈 이불+베개커버", imageUrl: placeholderImage("home_interior", 8) },
+        { name: "원목 선반 벽걸이형", weight: "", purity: "", price: "48,000", originalPrice: "62,000", discountPercent: 23, category: "home_interior", isBest: false, isNew: false, isHot: false, description: "DIY 간편 설치", imageUrl: placeholderImage("home_interior", 9) },
 
-        // ==================== SILVER BARS (8 items) ====================
-        { name: "한국금거래소 실버바 1kg", weight: "1000g", purity: "999.9‰", price: "1,850,000", category: "silver_bar", isBest: true, isNew: false, description: "투자용 대형 실버바", imageUrl: "/images/silver_bar_1kg.png" },
-        { name: "한국금거래소 실버바 500g", weight: "500g", purity: "999.9‰", price: "950,000", category: "silver_bar", isBest: false, isNew: false, description: "중형 투자용 실버바", imageUrl: "/images/silver_bar_500g.png" },
-        { name: "한국금거래소 실버바 100g", weight: "100g", purity: "999.9‰", price: "195,000", category: "silver_bar", isBest: true, isNew: true, description: "인기 투자용 실버바", imageUrl: "/images/silver_bar_100g.png" },
-        { name: "한국금거래소 실버바 50g", weight: "50g", purity: "999.9‰", price: "105,000", category: "silver_bar", isBest: false, isNew: false, description: "소형 투자용 실버바", imageUrl: "/images/silver_bar_50g.png" },
-        { name: "한국금거래소 실버바 37.5g", weight: "37.5g", purity: "999.9‰", price: "82,000", category: "silver_bar", isBest: false, isNew: false, description: "10돈 실버바", imageUrl: "/images/silver_bar_50g.png" },
-        { name: "한국금거래소 실버바 10g", weight: "10g", purity: "999.9‰", price: "25,000", category: "silver_bar", isBest: false, isNew: true, description: "미니 실버바", imageUrl: "/images/silver_bar_10g.png" },
-        { name: "LS-Nikko 실버바 1kg", weight: "1000g", purity: "999.9‰", price: "1,870,000", category: "silver_bar", isBest: false, isNew: false, description: "LS-Nikko 정제 은", imageUrl: "/images/silver_bar_1kg.png" },
-        { name: "LS-Nikko 실버바 100g", weight: "100g", purity: "999.9‰", price: "198,000", category: "silver_bar", isBest: false, isNew: false, description: "LS-Nikko 정제 은", imageUrl: "/images/silver_bar_100g.png" },
+        // ==================== BEAUTY (10 items) ====================
+        { name: "비타민C 세럼 30ml", weight: "", purity: "", price: "42,000", originalPrice: "58,000", discountPercent: 28, category: "beauty", isBest: true, isNew: false, isHot: true, description: "브라이트닝 앰플", imageUrl: placeholderImage("beauty", 0) },
+        { name: "수분 크림 50ml", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "beauty", isBest: false, isNew: true, isHot: false, description: "히알루론산 함유", imageUrl: placeholderImage("beauty", 1) },
+        { name: "클렌징 오일 200ml", weight: "", purity: "", price: "28,000", originalPrice: "36,000", discountPercent: 22, category: "beauty", isBest: true, isNew: false, isHot: false, description: "딥클렌징 효과", imageUrl: placeholderImage("beauty", 2) },
+        { name: "립틴트 3종 세트", weight: "", purity: "", price: "38,000", originalPrice: "52,000", discountPercent: 27, category: "beauty", isBest: false, isNew: false, isHot: true, description: "인기 컬러 구성", imageUrl: placeholderImage("beauty", 3) },
+        { name: "아이크림 25ml", weight: "", purity: "", price: "45,000", originalPrice: "62,000", discountPercent: 27, category: "beauty", isBest: false, isNew: true, isHot: false, description: "주름개선 기능성", imageUrl: placeholderImage("beauty", 4) },
+        { name: "선크림 SPF50+ 50ml", weight: "", purity: "", price: "22,000", originalPrice: "30,000", discountPercent: 27, category: "beauty", isBest: true, isNew: false, isHot: false, description: "자외선 차단", imageUrl: placeholderImage("beauty", 5) },
+        { name: "마스크팩 10매 세트", weight: "", purity: "", price: "18,000", originalPrice: "25,000", discountPercent: 28, category: "beauty", isBest: false, isNew: false, isHot: false, description: "수분 집중 케어", imageUrl: placeholderImage("beauty", 6) },
+        { name: "헤어 에센스 100ml", weight: "", purity: "", price: "24,000", originalPrice: "32,000", discountPercent: 25, category: "beauty", isBest: false, isNew: true, isHot: false, description: "손상모 케어", imageUrl: placeholderImage("beauty", 7) },
+        { name: "메이크업 브러쉬 세트", weight: "", purity: "", price: "32,000", originalPrice: "45,000", discountPercent: 29, category: "beauty", isBest: true, isNew: false, isHot: true, description: "12종 풀세트", imageUrl: placeholderImage("beauty", 8) },
+        { name: "바디로션 300ml", weight: "", purity: "", price: "19,000", originalPrice: "26,000", discountPercent: 27, category: "beauty", isBest: false, isNew: false, isHot: false, description: "시어버터 함유", imageUrl: placeholderImage("beauty", 9) },
 
-        // ==================== BABY RINGS / 돌반지 (10 items) ====================
-        { name: "순금 뽀로로 돌반지 1.875g", weight: "1.875g", purity: "99.9%", price: "285,000", category: "baby_ring", isBest: true, isNew: false, description: "뽀로로 캐릭터 돌반지", imageUrl: "/images/pororo_gold_baby_ring.png" },
-        { name: "순금 왕관 돌반지 3.75g", weight: "3.75g", purity: "99.9%", price: "540,000", category: "baby_ring", isBest: true, isNew: true, description: "왕관 모양 프리미엄 돌반지", imageUrl: "/images/crown_gold_baby_ring.png" },
-        { name: "순금 하트 돌반지 1.875g", weight: "1.875g", purity: "99.9%", price: "290,000", category: "baby_ring", isBest: false, isNew: false, description: "하트 모양 돌반지", imageUrl: "/images/heart_gold_baby_ring.png" },
-        { name: "순금 별 돌반지 1.875g", weight: "1.875g", purity: "99.9%", price: "288,000", category: "baby_ring", isBest: false, isNew: false, description: "별 모양 돌반지", imageUrl: "/images/star_gold_baby_ring.png" },
-        { name: "순금 토끼 돌반지 3.75g", weight: "3.75g", purity: "99.9%", price: "545,000", category: "baby_ring", isBest: false, isNew: true, description: "토끼 모양 돌반지", imageUrl: "/images/bunny_gold_baby_ring.png" },
-        { name: "순금 코끼리 돌팔찌 3.75g", weight: "3.75g", purity: "99.9%", price: "560,000", category: "baby_ring", isBest: true, isNew: false, description: "코끼리 모양 돌팔찌", imageUrl: "/images/elephant_gold_baby_bracelet.png" },
-        { name: "순금 클로버 돌팔찌 5.625g", weight: "5.625g", purity: "99.9%", price: "820,000", category: "baby_ring", isBest: false, isNew: false, description: "네잎클로버 돌팔찌", imageUrl: "/images/clover_gold_baby_bracelet.png" },
-        { name: "순금 공주 돌반지 세트", weight: "5.625g", purity: "99.9%", price: "850,000", category: "baby_ring", isBest: false, isNew: true, description: "반지+팔찌 세트", imageUrl: "/images/princess_gold_jewelry_set.png" },
-        { name: "순금 왕자 돌반지 세트", weight: "5.625g", purity: "99.9%", price: "850,000", category: "baby_ring", isBest: false, isNew: true, description: "반지+팔찌 세트", imageUrl: "/images/prince_gold_jewelry_set.png" },
-        { name: "순금 곰돌이 돌반지 1.875g", weight: "1.875g", purity: "99.9%", price: "295,000", category: "baby_ring", isBest: false, isNew: false, description: "곰돌이 캐릭터 돌반지", imageUrl: "/images/teddy_bear_baby_ring.png" },
+        // ==================== ELECTRONICS (10 items) ====================
+        { name: "무선 블루투스 이어폰", weight: "", purity: "", price: "89,000", originalPrice: "129,000", discountPercent: 31, category: "electronics", isBest: true, isNew: false, isHot: true, description: "노이즈캔슬링, 30시간 재생", imageUrl: placeholderImage("electronics", 0) },
+        { name: "스마트 공기청정기", weight: "", purity: "", price: "299,000", originalPrice: "399,000", discountPercent: 25, category: "electronics", isBest: true, isNew: true, isHot: false, description: "앱 연동, HEPA필터", imageUrl: placeholderImage("electronics", 1) },
+        { name: "4K 웹캠 HD", weight: "", purity: "", price: "78,000", originalPrice: "98,000", discountPercent: 20, category: "electronics", isBest: false, isNew: false, isHot: false, description: "화상회의용", imageUrl: placeholderImage("electronics", 2) },
+        { name: "무선 충전 패드", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "electronics", isBest: false, isNew: false, isHot: true, description: "15W 급속충전", imageUrl: placeholderImage("electronics", 3) },
+        { name: "스마트 체중계", weight: "", purity: "", price: "49,000", originalPrice: "68,000", discountPercent: 28, category: "electronics", isBest: false, isNew: true, isHot: false, description: "앱 연동, 체지방 측정", imageUrl: placeholderImage("electronics", 4) },
+        { name: "로봇청소기", weight: "", purity: "", price: "389,000", originalPrice: "520,000", discountPercent: 25, category: "electronics", isBest: true, isNew: false, isHot: false, description: "자동 충전, 앱 제어", imageUrl: placeholderImage("electronics", 5) },
+        { name: "스탠드형 선풍기", weight: "", purity: "", price: "89,000", originalPrice: "120,000", discountPercent: 26, category: "electronics", isBest: false, isNew: false, isHot: false, description: "DC모터, 초저소음", imageUrl: placeholderImage("electronics", 6) },
+        { name: "에어프라이어 5.5L", weight: "", purity: "", price: "129,000", originalPrice: "169,000", discountPercent: 24, category: "electronics", isBest: true, isNew: true, isHot: true, description: "대용량, 터치패널", imageUrl: placeholderImage("electronics", 7) },
+        { name: "블루투스 스피커", weight: "", purity: "", price: "65,000", originalPrice: "89,000", discountPercent: 27, category: "electronics", isBest: false, isNew: false, isHot: false, description: "방수기능, 20시간 재생", imageUrl: placeholderImage("electronics", 8) },
+        { name: "스마트워치", weight: "", purity: "", price: "189,000", originalPrice: "250,000", discountPercent: 24, category: "electronics", isBest: false, isNew: true, isHot: false, description: "건강관리, 알림 기능", imageUrl: placeholderImage("electronics", 9) },
 
-        // ==================== JEWELRY / 순금제품 (12 items) ====================
-        { name: "순금 체인 목걸이 18.75g", weight: "18.75g", purity: "99.9%", price: "2,750,000", category: "jewelry", isBest: true, isNew: false, description: "클래식 체인 목걸이", imageUrl: getImageForCategory("jewelry", 0) },
-        { name: "순금 팔찌 37.5g (10돈)", weight: "37.5g", purity: "99.9%", price: "5,450,000", category: "jewelry", isBest: true, isNew: true, description: "두꺼운 체인 팔찌", imageUrl: getImageForCategory("jewelry", 1) },
-        { name: "순금 대나무 체인 목걸이 37.5g", weight: "37.5g", purity: "99.9%", price: "5,520,000", category: "jewelry", isBest: false, isNew: false, description: "대나무 마디 체인", imageUrl: getImageForCategory("jewelry", 2) },
-        { name: "순금 로프 목걸이 18.75g", weight: "18.75g", purity: "99.9%", price: "2,780,000", category: "jewelry", isBest: false, isNew: false, description: "로프 꼬임 디자인", imageUrl: getImageForCategory("jewelry", 3) },
-        { name: "순금 뱅글 팔찌 18.75g", weight: "18.75g", purity: "99.9%", price: "2,820,000", category: "jewelry", isBest: false, isNew: true, description: "원형 뱅글 팔찌", imageUrl: getImageForCategory("jewelry", 0) },
-        { name: "순금 커프 팔찌 15g", weight: "15g", purity: "99.9%", price: "2,280,000", category: "jewelry", isBest: false, isNew: false, description: "오픈형 커프 팔찌", imageUrl: getImageForCategory("jewelry", 1) },
-        { name: "순금 하트 펜던트 3.75g", weight: "3.75g", purity: "99.9%", price: "580,000", category: "jewelry", isBest: false, isNew: false, description: "하트 모양 펜던트", imageUrl: getImageForCategory("jewelry", 2) },
-        { name: "순금 십자가 펜던트 7.5g", weight: "7.5g", purity: "99.9%", price: "1,150,000", category: "jewelry", isBest: false, isNew: true, description: "십자가 펜던트", imageUrl: getImageForCategory("jewelry", 3) },
-        { name: "순금 반지 3.75g", weight: "3.75g", purity: "99.9%", price: "565,000", category: "jewelry", isBest: false, isNew: false, description: "심플 순금 반지", imageUrl: getImageForCategory("jewelry", 0) },
-        { name: "순금 커플링 세트 7.5g", weight: "7.5g", purity: "99.9%", price: "1,180,000", category: "jewelry", isBest: true, isNew: true, description: "커플 반지 2개 세트", imageUrl: getImageForCategory("jewelry", 1) },
-        { name: "순금 귀걸이 3.75g", weight: "3.75g", purity: "99.9%", price: "590,000", category: "jewelry", isBest: false, isNew: false, description: "드롭형 귀걸이", imageUrl: getImageForCategory("jewelry", 2) },
-        { name: "순금 브로치 7.5g", weight: "7.5g", purity: "99.9%", price: "1,180,000", category: "jewelry", isBest: false, isNew: false, description: "꽃 모양 브로치", imageUrl: getImageForCategory("jewelry", 3) },
+        // ==================== LIVING (10 items) ====================
+        { name: "스테인리스 텀블러 500ml", weight: "", purity: "", price: "28,000", originalPrice: "38,000", discountPercent: 26, category: "living", isBest: true, isNew: false, isHot: true, description: "보온보냉 12시간", imageUrl: placeholderImage("living", 0) },
+        { name: "프리미엄 수건 세트", weight: "", purity: "", price: "45,000", originalPrice: "62,000", discountPercent: 27, category: "living", isBest: false, isNew: true, isHot: false, description: "호텔식 면수건 6P", imageUrl: placeholderImage("living", 1) },
+        { name: "실리콘 주방용품 세트", weight: "", purity: "", price: "32,000", originalPrice: "45,000", discountPercent: 29, category: "living", isBest: true, isNew: false, isHot: false, description: "조리도구 6종", imageUrl: placeholderImage("living", 2) },
+        { name: "유리 밀폐용기 세트", weight: "", purity: "", price: "39,000", originalPrice: "52,000", discountPercent: 25, category: "living", isBest: false, isNew: false, isHot: true, description: "전자레인지 사용가능", imageUrl: placeholderImage("living", 3) },
+        { name: "접이식 빨래건조대", weight: "", purity: "", price: "49,000", originalPrice: "68,000", discountPercent: 28, category: "living", isBest: false, isNew: true, isHot: false, description: "스테인리스, 대형", imageUrl: placeholderImage("living", 4) },
+        { name: "디퓨저 200ml", weight: "", purity: "", price: "24,000", originalPrice: "32,000", discountPercent: 25, category: "living", isBest: true, isNew: false, isHot: false, description: "천연 에센셜오일", imageUrl: placeholderImage("living", 5) },
+        { name: "세탁 세제 세트", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "living", isBest: false, isNew: false, isHot: false, description: "친환경 저자극", imageUrl: placeholderImage("living", 6) },
+        { name: "주방 정리함 세트", weight: "", purity: "", price: "42,000", originalPrice: "58,000", discountPercent: 28, category: "living", isBest: false, isNew: true, isHot: false, description: "서랍형 3단", imageUrl: placeholderImage("living", 7) },
+        { name: "청소도구 세트", weight: "", purity: "", price: "55,000", originalPrice: "75,000", discountPercent: 27, category: "living", isBest: true, isNew: false, isHot: true, description: "밀대+걸레+솔", imageUrl: placeholderImage("living", 8) },
+        { name: "다용도 수납박스", weight: "", purity: "", price: "18,000", originalPrice: "25,000", discountPercent: 28, category: "living", isBest: false, isNew: false, isHot: false, description: "접이식, 3개입", imageUrl: placeholderImage("living", 9) },
 
-        // ==================== DIAMOND (8 items) ====================
-        { name: "1캐럿 다이아몬드 솔리테어 링", weight: "1.02ct", purity: "GIA F/VS2", price: "12,500,000", category: "diamond", isBest: true, isNew: false, description: "GIA 인증 1캐럿 링", imageUrl: getImageForCategory("diamond", 0) },
-        { name: "0.7캐럿 다이아몬드 링", weight: "0.71ct", purity: "GIA G/VS1", price: "7,800,000", category: "diamond", isBest: true, isNew: true, description: "GIA 인증 0.7캐럿", imageUrl: getImageForCategory("diamond", 1) },
-        { name: "0.5캐럿 다이아몬드 웨딩링", weight: "0.5ct", purity: "GIA E/SI1", price: "4,200,000", category: "diamond", isBest: false, isNew: false, description: "웨딩 다이아몬드 링", imageUrl: getImageForCategory("diamond", 2) },
-        { name: "0.3캐럿 다이아몬드 반지", weight: "0.31ct", purity: "GIA F/VS2", price: "2,100,000", category: "diamond", isBest: false, isNew: false, description: "데일리 다이아몬드", imageUrl: getImageForCategory("diamond", 0) },
-        { name: "화이트골드 다이아몬드 목걸이 0.5ct", weight: "0.5ct", purity: "18K WG", price: "3,850,000", category: "diamond", isBest: false, isNew: true, description: "18K 화이트골드 목걸이", imageUrl: getImageForCategory("diamond", 1) },
-        { name: "다이아몬드 테니스 팔찌 3ct", weight: "3.0ct", purity: "18K WG", price: "15,800,000", category: "diamond", isBest: false, isNew: false, description: "테니스 브레이슬릿", imageUrl: getImageForCategory("diamond", 2) },
-        { name: "다이아몬드 귀걸이 0.4ct", weight: "0.4ct", purity: "18K WG", price: "2,400,000", category: "diamond", isBest: false, isNew: true, description: "스터드 귀걸이", imageUrl: getImageForCategory("diamond", 0) },
-        { name: "다이아몬드 프로포즈 링 0.5ct", weight: "0.5ct", purity: "Pt950", price: "4,800,000", category: "diamond", isBest: true, isNew: false, description: "플래티넘 프로포즈 링", imageUrl: getImageForCategory("diamond", 1) },
+        // ==================== HEALTH (10 items) ====================
+        { name: "종합비타민 90정", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "health", isBest: true, isNew: false, isHot: true, description: "3개월분", imageUrl: placeholderImage("health", 0) },
+        { name: "프로바이오틱스 유산균", weight: "", purity: "", price: "42,000", originalPrice: "58,000", discountPercent: 28, category: "health", isBest: true, isNew: true, isHot: false, description: "100억 CFU", imageUrl: placeholderImage("health", 1) },
+        { name: "오메가3 피쉬오일", weight: "", purity: "", price: "38,000", originalPrice: "52,000", discountPercent: 27, category: "health", isBest: false, isNew: false, isHot: false, description: "60캡슐", imageUrl: placeholderImage("health", 2) },
+        { name: "콜라겐 파우더", weight: "", purity: "", price: "45,000", originalPrice: "62,000", discountPercent: 27, category: "health", isBest: false, isNew: false, isHot: true, description: "저분자 피쉬콜라겐", imageUrl: placeholderImage("health", 3) },
+        { name: "홍삼 스틱 30포", weight: "", purity: "", price: "58,000", originalPrice: "78,000", discountPercent: 26, category: "health", isBest: false, isNew: true, isHot: false, description: "6년근 홍삼", imageUrl: placeholderImage("health", 4) },
+        { name: "프로틴 파우더 1kg", weight: "", purity: "", price: "49,000", originalPrice: "68,000", discountPercent: 28, category: "health", isBest: true, isNew: false, isHot: false, description: "WPI 분리유청", imageUrl: placeholderImage("health", 5) },
+        { name: "마그네슘 영양제", weight: "", purity: "", price: "28,000", originalPrice: "38,000", discountPercent: 26, category: "health", isBest: false, isNew: false, isHot: false, description: "90정", imageUrl: placeholderImage("health", 6) },
+        { name: "비타민D 2000IU", weight: "", purity: "", price: "22,000", originalPrice: "30,000", discountPercent: 27, category: "health", isBest: false, isNew: true, isHot: false, description: "120캡슐", imageUrl: placeholderImage("health", 7) },
+        { name: "폼롤러 마사지기", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "health", isBest: true, isNew: false, isHot: true, description: "근육이완용", imageUrl: placeholderImage("health", 8) },
+        { name: "요가매트 NBR 10mm", weight: "", purity: "", price: "32,000", originalPrice: "45,000", discountPercent: 29, category: "health", isBest: false, isNew: false, isHot: false, description: "논슬립, 고밀도", imageUrl: placeholderImage("health", 9) },
 
-        // ==================== CORPORATE GIFTS (10 items) ====================
-        { name: "순금 감사패 (우드 케이스) 37.5g", weight: "37.5g", purity: "99.9%", price: "5,800,000", category: "corporate", isBest: true, isNew: false, description: "고급 우드 케이스 포함", imageUrl: getImageForCategory("corporate", 0) },
-        { name: "순금 행운의 열쇠 3.75g", weight: "3.75g", purity: "99.9%", price: "550,000", category: "corporate", isBest: true, isNew: false, description: "성공 기원 열쇠", imageUrl: getImageForCategory("corporate", 1) },
-        { name: "순금 VIP 명패 18.75g", weight: "18.75g", purity: "99.9%", price: "2,850,000", category: "corporate", isBest: false, isNew: true, description: "VIP 고객 명패", imageUrl: getImageForCategory("corporate", 2) },
-        { name: "순금 우수사원상 7.5g", weight: "7.5g", purity: "99.9%", price: "1,150,000", category: "corporate", isBest: false, isNew: false, description: "우수사원 포상용", imageUrl: getImageForCategory("corporate", 0) },
-        { name: "순금 창립기념 메달 15g", weight: "15g", purity: "99.9%", price: "2,320,000", category: "corporate", isBest: false, isNew: true, description: "창립기념 메달", imageUrl: getImageForCategory("corporate", 1) },
-        { name: "기업 로고 순금 뱃지 3.75g", weight: "3.75g", purity: "99.9%", price: "580,000", category: "corporate", isBest: false, isNew: true, description: "맞춤 로고 제작 가능", imageUrl: getImageForCategory("corporate", 2) },
-        { name: "순금 근속패 11.25g", weight: "11.25g", purity: "99.9%", price: "1,720,000", category: "corporate", isBest: false, isNew: false, description: "10년 근속 기념패", imageUrl: getImageForCategory("corporate", 0) },
-        { name: "순금 골프공 마커 1.875g", weight: "1.875g", purity: "99.9%", price: "295,000", category: "corporate", isBest: false, isNew: false, description: "골프 기념품", imageUrl: getImageForCategory("corporate", 1) },
-        { name: "순금 볼펜 세트", weight: "3.75g", purity: "99.9%", price: "680,000", category: "corporate", isBest: false, isNew: true, description: "순금 장식 볼펜", imageUrl: getImageForCategory("corporate", 2) },
-        { name: "순금 명함케이스", weight: "7.5g", purity: "99.9%", price: "1,250,000", category: "corporate", isBest: false, isNew: false, description: "순금 장식 명함케이스", imageUrl: getImageForCategory("corporate", 0) },
+        // ==================== LUXURY (10 items) ====================
+        { name: "프리미엄 가죽 지갑", weight: "", purity: "", price: "189,000", originalPrice: "250,000", discountPercent: 24, category: "luxury", isBest: true, isNew: false, isHot: true, description: "이태리 소가죽", imageUrl: placeholderImage("luxury", 0) },
+        { name: "명품 스카프", weight: "", purity: "", price: "320,000", originalPrice: "420,000", discountPercent: 24, category: "luxury", isBest: true, isNew: true, isHot: false, description: "실크 100%", imageUrl: placeholderImage("luxury", 1) },
+        { name: "디자이너 선글라스", weight: "", purity: "", price: "280,000", originalPrice: "380,000", discountPercent: 26, category: "luxury", isBest: false, isNew: false, isHot: false, description: "UV400 차단", imageUrl: placeholderImage("luxury", 2) },
+        { name: "가죽 벨트 명품", weight: "", purity: "", price: "165,000", originalPrice: "220,000", discountPercent: 25, category: "luxury", isBest: false, isNew: false, isHot: true, description: "정품 소가죽", imageUrl: placeholderImage("luxury", 3) },
+        { name: "럭셔리 시계", weight: "", purity: "", price: "890,000", originalPrice: "1,200,000", discountPercent: 26, category: "luxury", isBest: false, isNew: true, isHot: false, description: "스위스 무브먼트", imageUrl: placeholderImage("luxury", 4) },
+        { name: "프리미엄 핸드백", weight: "", purity: "", price: "450,000", originalPrice: "600,000", discountPercent: 25, category: "luxury", isBest: true, isNew: false, isHot: false, description: "송아지 가죽", imageUrl: placeholderImage("luxury", 5) },
+        { name: "명품 넥타이", weight: "", purity: "", price: "125,000", originalPrice: "168,000", discountPercent: 26, category: "luxury", isBest: false, isNew: false, isHot: false, description: "실크 100%", imageUrl: placeholderImage("luxury", 6) },
+        { name: "가죽 명함케이스", weight: "", purity: "", price: "89,000", originalPrice: "120,000", discountPercent: 26, category: "luxury", isBest: false, isNew: true, isHot: false, description: "프리미엄 소가죽", imageUrl: placeholderImage("luxury", 7) },
+        { name: "럭셔리 카드지갑", weight: "", purity: "", price: "145,000", originalPrice: "195,000", discountPercent: 26, category: "luxury", isBest: true, isNew: false, isHot: true, description: "8카드 수납", imageUrl: placeholderImage("luxury", 8) },
+        { name: "프리미엄 장갑", weight: "", purity: "", price: "98,000", originalPrice: "130,000", discountPercent: 25, category: "luxury", isBest: false, isNew: false, isHot: false, description: "양가죽, 캐시미어안감", imageUrl: placeholderImage("luxury", 9) },
 
-        // ==================== GIFT GOLD / 순금기념품 (10 items) ====================
-        { name: "순금 황금돼지 37.5g", weight: "37.5g", purity: "99.9%", price: "5,700,000", category: "gift_gold", isBest: true, isNew: true, description: "복을 부르는 황금돼지", imageUrl: "/images/gold_pig_figurine.png" },
-        { name: "순금 거북이 18.75g", weight: "18.75g", purity: "99.9%", price: "2,850,000", category: "gift_gold", isBest: false, isNew: false, description: "장수 기원 거북이", imageUrl: "/images/gold_turtle_new.png" },
-        { name: "순금 용 37.5g", weight: "37.5g", purity: "99.9%", price: "5,850,000", category: "gift_gold", isBest: true, isNew: false, description: "2024년 용의 해 기념", imageUrl: "/images/gold_dragon_new.png" },
-        { name: "순금 뱀 18.75g", weight: "18.75g", purity: "99.9%", price: "2,900,000", category: "gift_gold", isBest: false, isNew: true, description: "2025년 뱀의 해 기념", imageUrl: "/images/gold_snake_new.png" },
-        { name: "순금 두꺼비 11.25g", weight: "11.25g", purity: "99.9%", price: "1,750,000", category: "gift_gold", isBest: false, isNew: false, description: "재물 행운 두꺼비", imageUrl: "/images/gold_toad_new.png" },
-        { name: "순금 코끼리 18.75g", weight: "18.75g", purity: "99.9%", price: "2,880,000", category: "gift_gold", isBest: false, isNew: false, description: "행운의 코끼리", imageUrl: "/images/gold_elephant_new.png" },
-        { name: "순금 부처님 37.5g", weight: "37.5g", purity: "99.9%", price: "5,750,000", category: "gift_gold", isBest: false, isNew: false, description: "평화와 복을 기원", imageUrl: "/images/gold_buddha_new.png" },
-        { name: "순금 호랑이 18.75g", weight: "18.75g", purity: "99.9%", price: "2,920,000", category: "gift_gold", isBest: false, isNew: true, description: "용맹한 호랑이 조각", imageUrl: "/images/gold_tiger_new.png" },
-        { name: "순금 잉어 11.25g", weight: "11.25g", purity: "99.9%", price: "1,780,000", category: "gift_gold", isBest: false, isNew: false, description: "출세 기원 잉어", imageUrl: "/images/gold_carp_new.png" },
-        { name: "순금 봉황 37.5g", weight: "37.5g", purity: "99.9%", price: "5,900,000", category: "gift_gold", isBest: true, isNew: false, description: "부귀영화 봉황", imageUrl: "/images/gold_phoenix_new.png" },
-
-        // ==================== EVENT / 이벤트 (6 items) ====================
-        { name: "[이벤트] 2025 신년 기념 골드 코인 1돈", weight: "3.75g", purity: "99.9%", price: "520,000", category: "event", isBest: true, isNew: true, description: "2025년 한정판 코인", imageUrl: getImageForCategory("event", 0) },
-        { name: "[특가] 골드바 10g + 실버바 100g 세트", weight: "110g", purity: "99.9%", price: "1,720,000", category: "event", isBest: true, isNew: false, description: "세트 할인 상품", imageUrl: getImageForCategory("event", 1) },
-        { name: "[한정] 럭키백 순금 1돈", weight: "3.75g", purity: "99.9%", price: "550,000", category: "event", isBest: false, isNew: true, description: "랜덤 디자인 순금", imageUrl: getImageForCategory("event", 2) },
-        { name: "[이벤트] 결혼기념 골드바 세트", weight: "7.5g", purity: "99.9%", price: "1,180,000", category: "event", isBest: false, isNew: true, description: "커플 각인 서비스", imageUrl: "/attached_assets/generated_images/wedding_gold_bar_gift_set.png" },
-        { name: "[특가] 돌반지 + 돌팔찌 세트", weight: "7.5g", purity: "99.9%", price: "1,100,000", category: "event", isBest: false, isNew: false, description: "돌잔치 세트 할인", imageUrl: getImageForCategory("event", 1) },
-        { name: "[한정] 설날 특선 황금 복주머니", weight: "3.75g", purity: "99.9%", price: "580,000", category: "event", isBest: true, isNew: true, description: "설날 한정 기획상품", imageUrl: getImageForCategory("event", 2) },
+        // ==================== BABY (10 items) ====================
+        { name: "유아 블록 세트 100P", weight: "", purity: "", price: "45,000", originalPrice: "62,000", discountPercent: 27, category: "baby", isBest: true, isNew: false, isHot: true, description: "안전인증 완구", imageUrl: placeholderImage("baby", 0) },
+        { name: "아기 이유식기 세트", weight: "", purity: "", price: "38,000", originalPrice: "52,000", discountPercent: 27, category: "baby", isBest: true, isNew: true, isHot: false, description: "실리콘 6종", imageUrl: placeholderImage("baby", 1) },
+        { name: "유아 퍼즐매트", weight: "", purity: "", price: "49,000", originalPrice: "68,000", discountPercent: 28, category: "baby", isBest: false, isNew: false, isHot: false, description: "12장 세트", imageUrl: placeholderImage("baby", 2) },
+        { name: "뽀로로 장난감 세트", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "baby", isBest: false, isNew: false, isHot: true, description: "캐릭터 피규어 5종", imageUrl: placeholderImage("baby", 3) },
+        { name: "아기 목욕용품 세트", weight: "", purity: "", price: "42,000", originalPrice: "58,000", discountPercent: 28, category: "baby", isBest: false, isNew: true, isHot: false, description: "저자극 6종 세트", imageUrl: placeholderImage("baby", 4) },
+        { name: "유아 책상 의자 세트", weight: "", purity: "", price: "89,000", originalPrice: "120,000", discountPercent: 26, category: "baby", isBest: true, isNew: false, isHot: false, description: "높이조절 가능", imageUrl: placeholderImage("baby", 5) },
+        { name: "아기 젖병 세트", weight: "", purity: "", price: "55,000", originalPrice: "75,000", discountPercent: 27, category: "baby", isBest: false, isNew: false, isHot: false, description: "PPSU 4종", imageUrl: placeholderImage("baby", 6) },
+        { name: "유아 크레용 세트", weight: "", purity: "", price: "18,000", originalPrice: "25,000", discountPercent: 28, category: "baby", isBest: false, isNew: true, isHot: false, description: "무독성 24색", imageUrl: placeholderImage("baby", 7) },
+        { name: "아기 수면조끼", weight: "", purity: "", price: "32,000", originalPrice: "45,000", discountPercent: 29, category: "baby", isBest: true, isNew: false, isHot: true, description: "순면 100%", imageUrl: placeholderImage("baby", 8) },
+        { name: "유아 자전거 헬멧", weight: "", purity: "", price: "28,000", originalPrice: "38,000", discountPercent: 26, category: "baby", isBest: false, isNew: false, isHot: false, description: "안전인증", imageUrl: placeholderImage("baby", 9) },
       ];
       
       let createdCount = 0;
@@ -471,16 +315,15 @@ export async function registerRoutes(
   // Seed initial data (Admin - Protected)
   app.post("/api/seed", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      // Seed categories
+      // Seed categories - Blue Black lifestyle mall categories
       const categoryData = [
-        { id: "gold_bar", name: "골드바", description: "한국실버골드거래소가 보증하는 최고 품질의 순금 바", count: 6 },
-        { id: "silver_bar", name: "실버바", description: "투자 가치가 높은 고순도 실버바 컬렉션", count: 2 },
-        { id: "baby_ring", name: "돌반지/돌팔찌", description: "소중한 아이의 첫 생일을 축하하는 순금 선물", count: 2 },
-        { id: "jewelry", name: "순금제품", description: "품격 있는 디자인의 고순도 순금 주얼리", count: 3 },
-        { id: "diamond", name: "다이아몬드", description: "영원히 변치 않는 가치, 최상급 다이아몬드", count: 3 },
-        { id: "corporate", name: "기업선물", description: "임직원 및 VIP를 위한 품격 있는 기업 전용 선물", count: 3 },
-        { id: "gift_gold", name: "순금기념품", description: "특별한 날을 기념하는 소장가치 높은 순금 기념품", count: 2 },
-        { id: "event", name: "이벤트", description: "한국실버골드거래소의 특별한 혜택과 기획 상품", count: 2 },
+        { id: "home_interior", name: "홈 인테리어", description: "세련된 감각의 홈스타일링 아이템", count: 3 },
+        { id: "beauty", name: "뷰티", description: "트렌디한 뷰티 & 스킨케어 제품", count: 3 },
+        { id: "electronics", name: "가전/디지털", description: "스마트한 라이프를 위한 디지털 기기", count: 3 },
+        { id: "living", name: "생활용품", description: "일상을 더 편리하게 만드는 생활용품", count: 3 },
+        { id: "health", name: "헬스/건강식품", description: "건강한 삶을 위한 웰니스 제품", count: 3 },
+        { id: "luxury", name: "럭셔리/명품", description: "프리미엄 명품 컬렉션", count: 3 },
+        { id: "baby", name: "유아/완구", description: "아이를 위한 안전한 유아용품", count: 3 },
       ];
       
       for (const cat of categoryData) {
@@ -491,46 +334,42 @@ export async function registerRoutes(
         }
       }
       
-      // Seed products
+      // Seed products - lifestyle products (weight and purity are empty for lifestyle items)
       const productData = [
-        // Gold Bars
-        { name: "한국실버골드거래소 골드바 1,000g", weight: "1000g", purity: "999.9‰", price: "149,800,000", category: "gold_bar", isBest: true, isNew: false },
-        { name: "한국실버골드거래소 골드바 100g", weight: "100g", purity: "999.9‰", price: "15,100,000", category: "gold_bar", isBest: true, isNew: false },
-        { name: "한국실버골드거래소 골드바 10g", weight: "10g", purity: "999.9‰", price: "1,550,000", category: "gold_bar", isBest: false, isNew: true },
-        { name: "한국실버골드거래소 골드바 37.5g", weight: "37.5g", purity: "999.9‰", price: "5,620,000", category: "gold_bar", isBest: true, isNew: false },
-        { name: "LS-Nikko 동제련 골드바 100g", weight: "100g", purity: "999.9‰", price: "15,250,000", category: "gold_bar", isBest: false, isNew: false },
-        { name: "LS-Nikko 동제련 골드바 1000g", weight: "1000g", purity: "999.9‰", price: "150,500,000", category: "gold_bar", isBest: false, isNew: false },
+        // Home Interior
+        { name: "프리미엄 아로마 캔들 세트", weight: "", purity: "", price: "89,000", originalPrice: "120,000", discountPercent: 26, category: "home_interior", isBest: true, isNew: false, isHot: true, description: "3종 향기 세트" },
+        { name: "북유럽 스타일 쿠션 커버 4P", weight: "", purity: "", price: "45,000", originalPrice: "58,000", discountPercent: 22, category: "home_interior", isBest: false, isNew: true, isHot: false, description: "면 100% 고급 쿠션커버" },
+        { name: "무드등 LED 스탠드", weight: "", purity: "", price: "67,000", originalPrice: "85,000", discountPercent: 21, category: "home_interior", isBest: true, isNew: false, isHot: false, description: "터치 조광 기능" },
         
-        // Silver Bars
-        { name: "한국실버골드거래소 실버바 1,000g", weight: "1000g", purity: "999.9‰", price: "1,850,000", category: "silver_bar", isBest: true, isNew: false },
-        { name: "한국실버골드거래소 실버바 100g", weight: "100g", purity: "999.9‰", price: "195,000", category: "silver_bar", isBest: false, isNew: true },
+        // Beauty
+        { name: "비타민C 세럼 30ml", weight: "", purity: "", price: "42,000", originalPrice: "58,000", discountPercent: 28, category: "beauty", isBest: true, isNew: false, isHot: true, description: "브라이트닝 앰플" },
+        { name: "수분 크림 50ml", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "beauty", isBest: false, isNew: true, isHot: false, description: "히알루론산 함유" },
+        { name: "클렌징 오일 200ml", weight: "", purity: "", price: "28,000", originalPrice: "36,000", discountPercent: 22, category: "beauty", isBest: true, isNew: false, isHot: false, description: "딥클렌징 효과" },
         
-        // Baby Rings
-        { name: "순금 뽀르띠 돌반지 1.875g", weight: "1.875g", purity: "99.9%", price: "285,000", category: "baby_ring", isBest: true, isNew: false },
-        { name: "순금 왕관 돌반지 3.75g", weight: "3.75g", purity: "99.9%", price: "540,000", category: "baby_ring", isBest: false, isNew: true },
+        // Electronics
+        { name: "무선 블루투스 이어폰", weight: "", purity: "", price: "89,000", originalPrice: "129,000", discountPercent: 31, category: "electronics", isBest: true, isNew: false, isHot: true, description: "노이즈캔슬링" },
+        { name: "스마트 공기청정기", weight: "", purity: "", price: "299,000", originalPrice: "399,000", discountPercent: 25, category: "electronics", isBest: true, isNew: true, isHot: false, description: "앱 연동, HEPA필터" },
+        { name: "에어프라이어 5.5L", weight: "", purity: "", price: "129,000", originalPrice: "169,000", discountPercent: 24, category: "electronics", isBest: true, isNew: true, isHot: true, description: "대용량, 터치패널" },
         
-        // Jewelry
-        { name: "순금 체인 목걸이 18.75g", weight: "18.75g", purity: "99.9%", price: "2,750,000", category: "jewelry", isBest: true, isNew: false },
-        { name: "순금 팔찌 37.5g (10돈)", weight: "37.5g", purity: "99.9%", price: "5,450,000", category: "jewelry", isBest: false, isNew: true },
-        { name: "순금 대나무 체인 목걸이 37.5g", weight: "37.5g", purity: "99.9%", price: "5,520,000", category: "jewelry", isBest: false, isNew: false },
+        // Living
+        { name: "스테인리스 텀블러 500ml", weight: "", purity: "", price: "28,000", originalPrice: "38,000", discountPercent: 26, category: "living", isBest: true, isNew: false, isHot: true, description: "보온보냉 12시간" },
+        { name: "프리미엄 수건 세트", weight: "", purity: "", price: "45,000", originalPrice: "62,000", discountPercent: 27, category: "living", isBest: false, isNew: true, isHot: false, description: "호텔식 면수건 6P" },
+        { name: "실리콘 주방용품 세트", weight: "", purity: "", price: "32,000", originalPrice: "45,000", discountPercent: 29, category: "living", isBest: true, isNew: false, isHot: false, description: "조리도구 6종" },
         
-        // Diamonds
-        { name: "1캐럿 다이아몬드 솔리테어 링", weight: "1.02ct", purity: "GIA F/VS2", price: "12,500,000", category: "diamond", isBest: true, isNew: false },
-        { name: "화이트골드 다이아몬드 목걸이", weight: "0.5ct", purity: "18K WG", price: "3,850,000", category: "diamond", isBest: false, isNew: true },
-        { name: "5부 다이아몬드 웨딩 링", weight: "0.5ct", purity: "GIA E/SI1", price: "4,200,000", category: "diamond", isBest: false, isNew: false },
+        // Health
+        { name: "종합비타민 90정", weight: "", purity: "", price: "35,000", originalPrice: "48,000", discountPercent: 27, category: "health", isBest: true, isNew: false, isHot: true, description: "3개월분" },
+        { name: "프로바이오틱스 유산균", weight: "", purity: "", price: "42,000", originalPrice: "58,000", discountPercent: 28, category: "health", isBest: true, isNew: true, isHot: false, description: "100억 CFU" },
+        { name: "프로틴 파우더 1kg", weight: "", purity: "", price: "49,000", originalPrice: "68,000", discountPercent: 28, category: "health", isBest: true, isNew: false, isHot: false, description: "WPI 분리유청" },
         
-        // Corporate
-        { name: "순금 감사패 (우드 케이스)", weight: "37.5g", purity: "99.9%", price: "5,800,000", category: "corporate", isBest: true, isNew: false },
-        { name: "순금 행운의 열쇠 3.75g", weight: "3.75g", purity: "99.9%", price: "550,000", category: "corporate", isBest: true, isNew: false },
-        { name: "기업 로고 순금 뱃지", weight: "3.75g", purity: "99.9%", price: "580,000", category: "corporate", isBest: false, isNew: true },
+        // Luxury
+        { name: "프리미엄 가죽 지갑", weight: "", purity: "", price: "189,000", originalPrice: "250,000", discountPercent: 24, category: "luxury", isBest: true, isNew: false, isHot: true, description: "이태리 소가죽" },
+        { name: "명품 스카프", weight: "", purity: "", price: "320,000", originalPrice: "420,000", discountPercent: 24, category: "luxury", isBest: true, isNew: true, isHot: false, description: "실크 100%" },
+        { name: "프리미엄 핸드백", weight: "", purity: "", price: "450,000", originalPrice: "600,000", discountPercent: 25, category: "luxury", isBest: true, isNew: false, isHot: false, description: "송아지 가죽" },
         
-        // Gift Gold
-        { name: "순금 황금돼지 37.5g", weight: "37.5g", purity: "99.9%", price: "5,700,000", category: "gift_gold", isBest: false, isNew: true },
-        { name: "순금 거북이 18.75g", weight: "18.75g", purity: "99.9%", price: "2,850,000", category: "gift_gold", isBest: false, isNew: false },
-        
-        // Events
-        { name: "[이벤트] 2025 신년 기념 골드 코인", weight: "3.75g", purity: "99.9%", price: "520,000", category: "event", isBest: false, isNew: true },
-        { name: "[특가] 골드바 10g + 실버바 100g 세트", weight: "110g", purity: "99.9%", price: "1,720,000", category: "event", isBest: true, isNew: false },
+        // Baby
+        { name: "유아 블록 세트 100P", weight: "", purity: "", price: "45,000", originalPrice: "62,000", discountPercent: 27, category: "baby", isBest: true, isNew: false, isHot: true, description: "안전인증 완구" },
+        { name: "아기 이유식기 세트", weight: "", purity: "", price: "38,000", originalPrice: "52,000", discountPercent: 27, category: "baby", isBest: true, isNew: true, isHot: false, description: "실리콘 6종" },
+        { name: "유아 책상 의자 세트", weight: "", purity: "", price: "89,000", originalPrice: "120,000", discountPercent: 26, category: "baby", isBest: true, isNew: false, isHot: false, description: "높이조절 가능" },
       ];
       
       for (const prod of productData) {

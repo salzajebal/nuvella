@@ -1,113 +1,243 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/home/Hero";
-import { PriceBoard } from "@/components/home/PriceBoard";
 import { ProductGrid } from "@/components/home/ProductGrid";
-import { HomePopup } from "@/components/home/HomePopup";
-import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { Link } from "wouter";
-import { useKakaoLink } from "@/hooks/use-kakao-link";
-import { useLivePrices } from "@/hooks/use-live-prices";
+import { useState, useEffect } from "react";
+import type { Review } from "@shared/schema";
 
-function KakaoIcon({ className }: { className?: string }) {
+function BrandSection() {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-      <path d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.8 5.27 4.5 6.7-.15.53-.5 1.92-.57 2.22-.1.38.14.38.29.27.12-.08 1.85-1.22 2.6-1.72.72.11 1.47.17 2.18.17 5.52 0 10-3.58 10-8S17.52 3 12 3z"/>
-    </svg>
+    <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-50 via-white to-blue-50">
+      <div className="container-custom">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div className="space-y-6">
+            <div className="inline-block border border-gray-300 px-4 py-2">
+              <span className="text-sm text-gray-600">블루블랙</span>
+            </div>
+            <h2 
+              className="text-3xl sm:text-4xl font-bold text-gray-900"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              블루블랙
+            </h2>
+            <Link href="/products">
+              <Button 
+                variant="outline" 
+                className="rounded-full px-6 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white"
+                data-testid="button-view-more"
+              >
+                자세히보기
+              </Button>
+            </Link>
+          </div>
+          
+          <div className="relative">
+            <div 
+              className="absolute inset-0 rounded-lg"
+              style={{
+                background: "linear-gradient(135deg, #87CEEB 0%, #4682B4 50%, #1E90FF 100%)",
+                opacity: 0.3
+              }}
+            />
+            <div className="relative grid grid-cols-2 gap-4 p-4">
+              <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+                <div className="aspect-square bg-gray-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop" 
+                    alt="Beauty product" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-3">
+                  <p className="text-xs text-gray-600 line-clamp-2">아네트 레비쉬 미라클 듀얼 세럼 13g</p>
+                  <div className="mt-2">
+                    <span className="text-xs text-gray-400 line-through">34,000원</span>
+                    <span className="text-sm font-bold text-gray-900 ml-2">28,900원</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+                <div className="aspect-square bg-gray-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&h=400&fit=crop" 
+                    alt="Beauty product" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-3">
+                  <p className="text-xs text-gray-600 line-clamp-2">오아드 포어 퍼펙팅 미라클 쿠션 2 colors</p>
+                  <div className="mt-2">
+                    <span className="text-xs text-gray-400 line-through">45,000원</span>
+                    <span className="text-sm font-bold text-gray-900 ml-2">39,000원</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function NewProductsSection() {
+  return (
+    <section className="py-12 sm:py-16">
+      <div className="container-custom">
+        <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-8">
+          최신상품
+        </h2>
+        <ProductGrid showCategoryFilter={false} limit={4} isNew={true} />
+      </div>
+    </section>
+  );
+}
+
+function PopularProductsSection() {
+  return (
+    <section className="py-12 sm:py-16 bg-gray-50">
+      <div className="container-custom">
+        <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-8">
+          인기상품
+        </h2>
+        <ProductGrid showCategoryFilter={false} limit={4} isBest={true} />
+      </div>
+    </section>
+  );
+}
+
+function ReviewsSection() {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch("/api/reviews?limit=6");
+        const data = await res.json();
+        if (data.success) {
+          setReviews(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+    fetchReviews();
+  }, []);
+
+  const reviewsPerPage = 3;
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+  const currentReviews = reviews.slice(
+    currentPage * reviewsPerPage,
+    (currentPage + 1) * reviewsPerPage
+  );
+
+  const goToPrev = () => {
+    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
+  };
+
+  const goToNext = () => {
+    setCurrentPage((prev) => (prev + 1) % totalPages);
+  };
+
+  if (reviews.length === 0) return null;
+
+  return (
+    <section className="py-12 sm:py-16">
+      <div className="container-custom">
+        <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-8">
+          상품후기
+        </h2>
+        
+        <div className="relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {currentReviews.map((review) => (
+              <div 
+                key={review.id} 
+                className="bg-white border border-gray-100 rounded-lg p-6"
+                data-testid={`card-review-${review.id}`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                    {review.authorName.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{review.title}</p>
+                    <p className="text-xs text-gray-500">{review.productName}</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-0.5 mb-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star 
+                      key={i} 
+                      className={`w-4 h-4 ${i < (review.rating || 5) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`} 
+                    />
+                  ))}
+                </div>
+                
+                <p className="text-sm text-gray-600 line-clamp-3">{review.content}</p>
+              </div>
+            ))}
+          </div>
+          
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-8">
+              <button
+                onClick={goToPrev}
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50"
+                data-testid="button-review-prev"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    i === currentPage ? "bg-gray-900" : "bg-gray-300"
+                  }`}
+                  data-testid={`button-review-dot-${i}`}
+                />
+              ))}
+              
+              <button
+                onClick={goToNext}
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50"
+                data-testid="button-review-next"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 
 export default function Home() {
-  const { openKakaoChat } = useKakaoLink();
-  const { prices } = useLivePrices();
-  const handleKakaoClick = () => {
-    openKakaoChat();
-  };
-
   return (
-    <div className="min-h-screen-safe bg-white font-sans overflow-x-hidden">
-      <HomePopup />
+    <div className="min-h-screen bg-white font-sans overflow-x-hidden">
       <Header />
       
       <main>
         <Hero />
+        <BrandSection />
+        <NewProductsSection />
+        <PopularProductsSection />
+        <ReviewsSection />
         
-        <div className="container-custom py-4 sm:py-6 md:py-8">
-          <PriceBoard />
-        </div>
-
-        <div className="container-custom grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
-          <div 
-            className="bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 p-4 sm:p-6 md:p-8 h-36 sm:h-40 md:h-48 flex flex-col justify-center items-start hover:shadow-lg transition-all cursor-pointer border border-amber-200 rounded-lg sm:rounded-xl relative overflow-hidden group touch-manipulation" 
-            onClick={handleKakaoClick}
-          >
-            <span className="text-amber-700 font-medium text-xs sm:text-sm mb-1 sm:mb-2 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
-              GOLD BAR
-            </span>
-            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">순금 골드바</h3>
-            <p className="text-amber-800 text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2">{prices?.gold?.buyPrice || "900,000"}원<span className="text-xs sm:text-sm md:text-base font-normal text-stone-600">/돈</span></p>
-            <span className="text-amber-700 text-xs sm:text-sm flex items-center gap-1 font-medium">
-              <KakaoIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-              카카오톡 문의
-            </span>
+        <section className="py-12 sm:py-16">
+          <div className="container-custom">
+            <ProductGrid title="전체 상품" showCategoryFilter={true} />
           </div>
-          <div 
-            className="bg-gradient-to-br from-gray-50 via-slate-50 to-gray-50 p-4 sm:p-6 md:p-8 h-36 sm:h-40 md:h-48 flex flex-col justify-center items-start hover:shadow-lg transition-all cursor-pointer border border-gray-200 rounded-lg sm:rounded-xl relative overflow-hidden group touch-manipulation" 
-            onClick={handleKakaoClick}
-          >
-            <span className="text-gray-600 font-medium text-xs sm:text-sm mb-1 sm:mb-2 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
-              SILVER BAR
-            </span>
-            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">순은 실버바</h3>
-            <p className="text-gray-800 text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2">{prices?.silver?.buyPrice || "14,540"}원<span className="text-xs sm:text-sm md:text-base font-normal text-stone-600">/돈</span></p>
-            <span className="text-gray-600 text-xs sm:text-sm flex items-center gap-1 font-medium">
-              <KakaoIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-              카카오톡 문의
-            </span>
-          </div>
-        </div>
-
-        <div className="container-custom mb-8 sm:mb-12 md:mb-16">
-          <div className="bg-gradient-to-r from-stone-800 via-stone-700 to-stone-800 rounded-lg sm:rounded-xl p-4 sm:p-6 md:p-8 text-white text-center relative overflow-hidden">
-            <div className="relative z-10">
-              <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
-                <span className="text-amber-400 font-medium text-sm sm:text-base">한국금거래소 소비자가격</span>
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
-              </div>
-              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 break-keep">
-                한국실버골드거래소 실시간 시세
-              </h3>
-              <p className="text-stone-300 text-sm sm:text-base mb-4 sm:mb-6 break-keep">
-                고객님의 성원에 감사드리며, 금 · 은 상품을 안내해 드립니다.
-              </p>
-              <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
-                <div className="bg-stone-900/50 border border-stone-600 rounded-lg px-4 sm:px-6 py-3 sm:py-4">
-                  <p className="text-amber-400 text-xs sm:text-sm mb-0.5 sm:mb-1">순금 (1돈)</p>
-                  <p className="text-xl sm:text-2xl font-bold">{prices?.gold?.buyPrice || "900,000"}<span className="text-sm sm:text-base font-normal text-stone-400">원</span></p>
-                </div>
-                <div className="bg-stone-900/50 border border-stone-600 rounded-lg px-4 sm:px-6 py-3 sm:py-4">
-                  <p className="text-gray-400 text-xs sm:text-sm mb-0.5 sm:mb-1">순은 (1돈)</p>
-                  <p className="text-xl sm:text-2xl font-bold">{prices?.silver?.buyPrice || "14,540"}<span className="text-sm sm:text-base font-normal text-stone-400">원</span></p>
-                </div>
-              </div>
-              <button 
-                onClick={handleKakaoClick}
-                className="inline-flex items-center gap-2 bg-[#FEE500] hover:bg-[#FDD835] text-[#3C1E1E] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base touch-manipulation"
-              >
-                <KakaoIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                카카오톡으로 문의하기
-              </button>
-              <p className="text-stone-500 text-xs sm:text-sm mt-3 sm:mt-4">* VAT 포함 / 별도 문의를 통해 안내받으실 수 있습니다.</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="container-custom">
-          <ProductGrid />
-        </div>
+        </section>
       </main>
       
       <Footer />

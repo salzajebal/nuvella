@@ -17,7 +17,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Members table (site users/customers)
 export const members = pgTable("members", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
@@ -47,7 +46,6 @@ export const insertMemberSchema = createInsertSchema(members).omit({
 export type InsertMember = z.infer<typeof insertMemberSchema>;
 export type Member = typeof members.$inferSelect;
 
-// Member sessions table (persistent login sessions)
 export const memberSessions = pgTable("member_sessions", {
   token: varchar("token").primaryKey(),
   memberId: varchar("member_id").notNull(),
@@ -62,7 +60,6 @@ export const insertMemberSessionSchema = createInsertSchema(memberSessions);
 export type InsertMemberSession = z.infer<typeof insertMemberSessionSchema>;
 export type MemberSession = typeof memberSessions.$inferSelect;
 
-// Deposit requests table (point charging requests)
 export const depositRequests = pgTable("deposit_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memberId: varchar("member_id").notNull(),
@@ -72,7 +69,7 @@ export const depositRequests = pgTable("deposit_requests", {
   bankName: text("bank_name").notNull(),
   accountNumber: text("account_number"),
   depositorName: text("depositor_name").notNull(),
-  status: text("status").default("pending"), // pending, approved, rejected
+  status: text("status").default("pending"),
   adminNote: text("admin_note"),
   requestedAt: timestamp("requested_at").defaultNow(),
   processedAt: timestamp("processed_at"),
@@ -89,7 +86,6 @@ export const insertDepositRequestSchema = createInsertSchema(depositRequests).om
 export type InsertDepositRequest = z.infer<typeof insertDepositRequestSchema>;
 export type DepositRequest = typeof depositRequests.$inferSelect;
 
-// Withdrawal requests table (point withdrawal requests)
 export const withdrawalRequests = pgTable("withdrawal_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memberId: varchar("member_id").notNull(),
@@ -99,7 +95,7 @@ export const withdrawalRequests = pgTable("withdrawal_requests", {
   bankName: text("bank_name"),
   accountNumber: text("account_number"),
   accountHolder: text("account_holder"),
-  status: text("status").default("pending"), // pending, approved, rejected
+  status: text("status").default("pending"),
   adminNote: text("admin_note"),
   requestedAt: timestamp("requested_at").defaultNow(),
   processedAt: timestamp("processed_at"),
@@ -116,17 +112,16 @@ export const insertWithdrawalRequestSchema = createInsertSchema(withdrawalReques
 export type InsertWithdrawalRequest = z.infer<typeof insertWithdrawalRequestSchema>;
 export type WithdrawalRequest = typeof withdrawalRequests.$inferSelect;
 
-// Point transactions table (audit log for point changes)
 export const pointTransactions = pgTable("point_transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memberId: varchar("member_id").notNull(),
-  type: text("type").notNull(), // deposit_approved, manual_adjustment, purchase
-  amount: integer("amount").notNull(), // positive or negative
+  type: text("type").notNull(),
+  amount: integer("amount").notNull(),
   balanceAfter: integer("balance_after").notNull(),
   description: text("description"),
-  relatedId: varchar("related_id"), // deposit request id, order id, etc.
+  relatedId: varchar("related_id"),
   createdAt: timestamp("created_at").defaultNow(),
-  createdBy: varchar("created_by"), // admin id if applicable
+  createdBy: varchar("created_by"),
 });
 
 export const insertPointTransactionSchema = createInsertSchema(pointTransactions).omit({
@@ -137,18 +132,20 @@ export const insertPointTransactionSchema = createInsertSchema(pointTransactions
 export type InsertPointTransaction = z.infer<typeof insertPointTransactionSchema>;
 export type PointTransaction = typeof pointTransactions.$inferSelect;
 
-// Products table
 export const products = pgTable("products", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   weight: text("weight").notNull(),
   purity: text("purity").notNull(),
   price: text("price").notNull(),
+  originalPrice: text("original_price"),
+  discountPercent: integer("discount_percent"),
   imageUrl: text("image_url"),
   imageUrls: text("image_urls").array().default([]),
   category: text("category").notNull(),
   isBest: boolean("is_best").default(false),
   isNew: boolean("is_new").default(false),
+  isHot: boolean("is_hot").default(false),
   useFixedPrice: boolean("use_fixed_price").default(false),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -164,7 +161,6 @@ export const insertProductSchema = createInsertSchema(products).omit({
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
 
-// Categories table
 export const categories = pgTable("categories", {
   id: varchar("id").primaryKey(),
   name: text("name").notNull(),
@@ -177,33 +173,13 @@ export const insertCategorySchema = createInsertSchema(categories);
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = typeof categories.$inferSelect;
 
-// Gold prices cache table
-export const goldPrices = pgTable("gold_prices", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  metalType: text("metal_type").notNull(), // gold, silver, platinum
-  buyPrice: text("buy_price").notNull(),
-  sellPrice: text("sell_price").notNull(),
-  trend: text("trend").notNull(), // up, down, steady
-  change: text("change").notNull(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertGoldPriceSchema = createInsertSchema(goldPrices).omit({
-  id: true,
-  updatedAt: true,
-});
-
-export type InsertGoldPrice = z.infer<typeof insertGoldPriceSchema>;
-export type GoldPrice = typeof goldPrices.$inferSelect;
-
-// Chat conversations table
 export const chatConversations = pgTable("chat_conversations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memberId: varchar("member_id"),
   guestName: text("guest_name"),
   guestEmail: text("guest_email"),
   subject: text("subject").notNull(),
-  status: text("status").default("open"), // open, closed, pending
+  status: text("status").default("open"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -217,11 +193,10 @@ export const insertChatConversationSchema = createInsertSchema(chatConversations
 export type InsertChatConversation = z.infer<typeof insertChatConversationSchema>;
 export type ChatConversation = typeof chatConversations.$inferSelect;
 
-// Chat messages table
 export const chatMessages = pgTable("chat_messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   conversationId: varchar("conversation_id").notNull(),
-  senderType: text("sender_type").notNull(), // user, admin
+  senderType: text("sender_type").notNull(),
   senderName: text("sender_name").notNull(),
   message: text("message").notNull(),
   isRead: boolean("is_read").default(false),
@@ -236,7 +211,6 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 
-// FAQ table
 export const faqs = pgTable("faqs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   category: text("category").notNull(),
@@ -255,7 +229,6 @@ export const insertFaqSchema = createInsertSchema(faqs).omit({
 export type InsertFaq = z.infer<typeof insertFaqSchema>;
 export type Faq = typeof faqs.$inferSelect;
 
-// Reviews table (customer reviews - admin can manipulate all fields)
 export const reviews = pgTable("reviews", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   authorName: text("author_name").notNull(),
@@ -280,10 +253,9 @@ export const insertReviewSchema = createInsertSchema(reviews, {
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
 
-// Review Images table (stores images in database for persistence)
 export const reviewImages = pgTable("review_images", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  data: text("data").notNull(), // Base64 encoded image data
+  data: text("data").notNull(),
   mimeType: text("mime_type").notNull(),
   originalName: text("original_name"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -297,10 +269,9 @@ export const insertReviewImageSchema = createInsertSchema(reviewImages).omit({
 export type InsertReviewImage = z.infer<typeof insertReviewImageSchema>;
 export type ReviewImage = typeof reviewImages.$inferSelect;
 
-// Product Images table (stores product images in database for persistence)
 export const productImages = pgTable("product_images", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  data: text("data").notNull(), // Base64 encoded image data
+  data: text("data").notNull(),
   mimeType: text("mime_type").notNull(),
   originalName: text("original_name"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -314,7 +285,6 @@ export const insertProductImageSchema = createInsertSchema(productImages).omit({
 export type InsertProductImage = z.infer<typeof insertProductImageSchema>;
 export type ProductImage = typeof productImages.$inferSelect;
 
-// Notices table (announcements)
 export const notices = pgTable("notices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
@@ -347,7 +317,6 @@ export type InsertNotice = z.infer<typeof insertNoticeSchema>;
 export type UpdateNotice = z.infer<typeof updateNoticeSchema>;
 export type Notice = typeof notices.$inferSelect;
 
-// Site settings table (key-value store for site configuration)
 export const siteSettings = pgTable("site_settings", {
   key: varchar("key").primaryKey(),
   value: text("value").notNull(),
@@ -360,7 +329,6 @@ export const insertSiteSettingSchema = createInsertSchema(siteSettings);
 export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;
 export type SiteSetting = typeof siteSettings.$inferSelect;
 
-// Orders table (product orders)
 export const orders = pgTable("orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   orderNumber: text("order_number").notNull().unique(),
@@ -379,8 +347,8 @@ export const orders = pgTable("orders", {
   productPrice: text("product_price").notNull(),
   quantity: integer("quantity").default(1),
   totalAmount: text("total_amount").notNull(),
-  status: text("status").default("pending"), // pending, confirmed, shipped, delivered, cancelled
-  paymentStatus: text("payment_status").default("pending"), // pending, paid, refunded
+  status: text("status").default("pending"),
+  paymentStatus: text("payment_status").default("pending"),
   adminNote: text("admin_note"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -394,3 +362,13 @@ export const insertOrderSchema = createInsertSchema(orders).omit({
 
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type Order = typeof orders.$inferSelect;
+
+export const PRODUCT_CATEGORIES = [
+  { id: "home_interior", name: "홈 인테리어" },
+  { id: "beauty", name: "뷰티" },
+  { id: "electronics", name: "가전/디지털" },
+  { id: "living", name: "생활용품" },
+  { id: "health", name: "헬스/건강식품" },
+  { id: "luxury", name: "럭셔리/명품" },
+  { id: "baby", name: "유아/완구" },
+] as const;

@@ -19,7 +19,7 @@ interface WishlistContextType {
   clearWishlist: () => void;
 }
 
-const WISHLIST_KEY = "kaggold_wishlist";
+const WISHLIST_KEY = "blueblack_wishlist";
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 

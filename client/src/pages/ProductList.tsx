@@ -1,24 +1,25 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useRoute, Link } from "wouter";
 import { useState, useEffect } from "react";
 import type { Product } from "@shared/schema";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { useLivePrices } from "@/hooks/use-live-prices";
 
 const DEFAULT_CATEGORIES = [
-  { id: "gold_bar", name: "골드바", description: "한국실버골드거래소가 보증하는 최고 품질의 순금 바" },
-  { id: "silver_bar", name: "실버바", description: "투자 가치가 높은 고순도 실버바 컬렉션" },
-  { id: "baby_ring", name: "돌선물", description: "아기 돌선물, 돌반지, 돌팔찌" },
-  { id: "jewelry", name: "순금기념품", description: "순금 기념품, 행운의 열쇠, 감사패, 순금동물" },
-  { id: "pure_jewelry", name: "순금주얼리", description: "24K 순금 목걸이, 팔찌, 반지, 귀걸이" },
+  { id: "home_interior", name: "홈 인테리어", description: "감각적인 홈 인테리어 제품을 만나보세요" },
+  { id: "beauty", name: "뷰티", description: "뷰티 & 스킨케어 베스트 아이템" },
+  { id: "electronics", name: "가전/디지털", description: "최신 가전 및 디지털 제품" },
+  { id: "living", name: "생활용품", description: "실용적인 생활용품 모음" },
+  { id: "health", name: "헬스/건강식품", description: "건강을 위한 선택" },
+  { id: "luxury", name: "럭셔리/명품", description: "프리미엄 럭셔리 컬렉션" },
+  { id: "baby", name: "유아/완구", description: "아이를 위한 특별한 선물" },
 ];
 
-const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1610375461246-83df859d849d?w=500&h=500&fit=crop";
+const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop";
 
 export default function ProductList() {
   const [match, params] = useRoute("/products/:category");
@@ -27,9 +28,8 @@ export default function ProductList() {
   const [loading, setLoading] = useState(true);
   const { toggleItem, isInWishlist } = useWishlist();
   const { toast } = useToast();
-  const { calculateProductPrice } = useLivePrices();
   
-  const categoryInfo = DEFAULT_CATEGORIES.find(c => c.id === categoryId) || { name: "전체 상품 목록", description: "한국실버골드거래소가 보증하는 최고의 품질" };
+  const categoryInfo = DEFAULT_CATEGORIES.find(c => c.id === categoryId) || { name: "전체 상품", description: "블루블랙의 모든 상품을 만나보세요" };
 
   const handleWishlistToggle = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
@@ -73,26 +73,30 @@ export default function ProductList() {
     fetchProducts();
   }, [categoryId]);
 
+  const formatPrice = (price: string) => {
+    const numPrice = parseInt(price.replace(/,/g, ''), 10);
+    if (isNaN(numPrice)) return price;
+    return numPrice.toLocaleString();
+  };
+
   return (
     <div className="min-h-screen bg-white font-sans">
       <Header />
       
       <main className="container-custom py-12">
-        {/* Category Title Banner */}
-        <div className="bg-gray-50 p-8 mb-12 text-center border-b border-gray-100">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2" data-testid="text-category-title">{categoryInfo.name}</h1>
-          <p className="text-gray-500">
-             {categoryId === "all" ? "한국실버골드거래소가 보증하는 최고의 품질" : `한국실버골드거래소의 고품격 ${categoryInfo.name} 컬렉션`}
-          </p>
+        <div className="text-center mb-12">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2" data-testid="text-category-title">
+            {categoryInfo.name}
+          </h1>
+          <p className="text-gray-500 text-sm">{categoryInfo.description}</p>
         </div>
         
-        {/* Filter Bar (Simplified) */}
         <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
           <div className="text-sm text-gray-500">
-            총 <span className="font-bold text-primary" data-testid="text-product-count">{products.length}</span>개의 상품이 있습니다.
+            총 <span className="font-bold text-gray-900" data-testid="text-product-count">{products.length}</span>개의 상품
           </div>
           <div className="flex gap-2 text-sm">
-            <select className="border border-gray-200 rounded-none px-3 py-1.5 focus:outline-none focus:border-primary">
+            <select className="border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-900">
               <option>신상품순</option>
               <option>낮은가격순</option>
               <option>높은가격순</option>
@@ -101,101 +105,82 @@ export default function ProductList() {
           </div>
         </div>
 
-        {/* Product Grid */}
         {loading ? (
           <div className="py-20 text-center">
             <p className="text-gray-500">상품을 불러오는 중...</p>
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {products.map((product) => (
               <Link 
                 key={product.id}
                 href={`/product/${product.id}`}
-                className="group bg-white border border-gray-100 hover:border-primary/50 hover:shadow-lg transition-all duration-300 relative flex flex-col cursor-pointer"
+                className="group cursor-pointer"
                 data-testid={`card-product-${product.id}`}
               >
-                {/* Image Container */}
-                <div className="aspect-square bg-gray-50 relative overflow-hidden">
+                <div className="aspect-[3/4] bg-gray-100 relative overflow-hidden mb-3">
                   <img 
                     src={product.imageUrl || DEFAULT_IMAGE} 
                     alt={product.name} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   
-                  {/* Badges */}
                   <div className="absolute top-2 left-2 flex flex-col gap-1">
                     {product.isBest && (
-                      <span className="bg-gray-900 text-white text-[10px] px-2 py-1 font-bold uppercase tracking-wider inline-block text-center">
-                        Best
+                      <span className="bg-gray-900 text-white text-[10px] px-2 py-1 font-medium">
+                        BEST
                       </span>
                     )}
                     {product.isNew && (
-                      <span className="bg-red-600 text-white text-[10px] px-2 py-1 font-bold uppercase tracking-wider inline-block text-center">
-                        New
+                      <span className="bg-red-500 text-white text-[10px] px-2 py-1 font-medium">
+                        NEW
                       </span>
                     )}
                   </div>
                   
-                  {/* Hover Actions */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex gap-2 justify-center bg-white/90 backdrop-blur-sm border-t border-gray-100">
-                    <Button 
-                      size="icon" 
-                      variant="outline" 
-                      className={cn(
-                        "h-9 w-9 rounded-full transition-colors",
-                        isInWishlist(product.id) 
-                          ? "bg-primary text-white border-primary" 
-                          : "hover:bg-primary hover:text-white hover:border-primary"
-                      )} 
-                      onClick={(e) => handleWishlistToggle(e, product)}
-                      data-testid={`button-wishlist-${product.id}`}
-                    >
-                      <Heart className={cn("w-4 h-4", isInWishlist(product.id) && "fill-current")} />
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      variant="outline" 
-                      className="h-9 w-9 rounded-full hover:bg-primary hover:text-white hover:border-primary transition-colors" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleWishlistToggle(e, product);
-                      }}
-                      data-testid={`button-cart-${product.id}`}
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className={cn(
+                      "absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 hover:bg-white",
+                      isInWishlist(product.id) && "text-red-500"
+                    )} 
+                    onClick={(e) => handleWishlistToggle(e, product)}
+                    data-testid={`button-wishlist-${product.id}`}
+                  >
+                    <Heart className={cn("w-4 h-4", isInWishlist(product.id) && "fill-current")} />
+                  </Button>
                 </div>
                 
-                {/* Product Info */}
-                <div className="p-4 text-center flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">{product.purity} / {product.weight}</div>
-                    <h3 className="font-bold text-gray-900 mb-3 group-hover:text-primary transition-colors line-clamp-2 h-10 flex items-center justify-center text-sm">
-                      {product.name}
-                    </h3>
+                <div className="space-y-1">
+                  <h3 className="text-sm text-gray-900 line-clamp-2 group-hover:underline">
+                    {product.name}
+                  </h3>
+                  
+                  <div className="flex items-center gap-2">
+                    {product.originalPrice && (
+                      <span className="text-xs text-gray-400 line-through">
+                        {formatPrice(product.originalPrice)}원
+                      </span>
+                    )}
+                    {product.discountPercent && product.discountPercent > 0 && (
+                      <span className="text-xs text-red-500 font-medium">
+                        {product.discountPercent}%
+                      </span>
+                    )}
                   </div>
                   
-                  <div className="pt-3 border-t border-dashed border-gray-100 w-full">
-                    <div className="flex justify-center items-baseline gap-1">
-                      <span className="text-lg font-bold text-primary" data-testid={`price-product-${product.id}`}>
-                        {calculateProductPrice(product.category, product.weight) || product.price}
-                      </span>
-                      <span className="text-xs text-gray-500">원</span>
-                    </div>
-                  </div>
+                  <p className="text-sm font-bold text-gray-900" data-testid={`price-product-${product.id}`}>
+                    {formatPrice(product.price)}원
+                  </p>
                 </div>
               </Link>
             ))}
           </div>
         ) : (
-          <div className="py-20 text-center bg-gray-50 border border-dashed border-gray-200 rounded-lg">
-            <p className="text-gray-500 mb-4">해당 카테고리에 등록된 상품이 없습니다.</p>
+          <div className="py-20 text-center bg-gray-50">
+            <p className="text-gray-500 mb-4">등록된 상품이 없습니다.</p>
             <p className="text-sm text-gray-400">관리자 페이지에서 상품을 추가해주세요.</p>
-            <a href="/admin" className="inline-block mt-4 text-primary hover:underline text-sm">
-              관리자 페이지 바로가기 →
-            </a>
           </div>
         )}
       </main>

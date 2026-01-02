@@ -2,7 +2,6 @@ import {
   type User, type InsertUser, users,
   type Product, type InsertProduct, products,
   type Category, type InsertCategory, categories,
-  type GoldPrice, type InsertGoldPrice, goldPrices,
   type Member, type InsertMember, members,
   type MemberSession, type InsertMemberSession, memberSessions,
   type ChatConversation, type InsertChatConversation, chatConversations,
@@ -40,10 +39,6 @@ export interface IStorage {
   getCategory(id: string): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category | undefined>;
-  
-  // Gold Prices
-  getGoldPrices(): Promise<GoldPrice[]>;
-  updateGoldPrice(metalType: string, data: Omit<InsertGoldPrice, 'metalType'>): Promise<GoldPrice>;
   
   // Members
   getAllMembers(): Promise<Member[]>;
@@ -221,28 +216,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(categories.id, id))
       .returning();
     return category;
-  }
-
-  // Gold Prices
-  async getGoldPrices(): Promise<GoldPrice[]> {
-    return db.select().from(goldPrices);
-  }
-
-  async updateGoldPrice(metalType: string, data: Omit<InsertGoldPrice, 'metalType'>): Promise<GoldPrice> {
-    const [existing] = await db.select().from(goldPrices).where(eq(goldPrices.metalType, metalType));
-    
-    if (existing) {
-      const [updated] = await db.update(goldPrices)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(goldPrices.metalType, metalType))
-        .returning();
-      return updated;
-    } else {
-      const [created] = await db.insert(goldPrices)
-        .values({ metalType, ...data })
-        .returning();
-      return created;
-    }
   }
 
   // Members

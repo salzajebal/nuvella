@@ -192,7 +192,7 @@ export default function Deposit() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gold-50 to-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
       <Header />
       
       <main className="flex-1 py-6 md:py-12 px-4">
@@ -265,7 +265,7 @@ export default function Deposit() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-gold-200">
+            <Card className="shadow-lg border-gray-200">
               <CardHeader>
                 <CardTitle>입금신청서 작성</CardTitle>
                 <CardDescription>

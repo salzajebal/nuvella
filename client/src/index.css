@@ -9,17 +9,17 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   
-  /* Refined Luxury Gold Palette */
-  --color-gold-50: hsl(45 60% 98%);
-  --color-gold-100: hsl(45 55% 90%);
-  --color-gold-200: hsl(45 50% 80%);
-  --color-gold-300: hsl(44 48% 70%);
-  --color-gold-400: hsl(43 55% 60%); 
-  --color-gold-500: hsl(42 65% 50%); /* Base Gold - Metallic */
-  --color-gold-600: hsl(40 70% 40%);
-  --color-gold-700: hsl(38 75% 30%);
-  --color-gold-800: hsl(35 80% 20%);
-  --color-gold-900: hsl(30 85% 15%);
+  /* Blue Black Neutral Accent Palette */
+  --color-accent-50: hsl(220 15% 98%);
+  --color-accent-100: hsl(220 12% 92%);
+  --color-accent-200: hsl(220 10% 82%);
+  --color-accent-300: hsl(220 8% 70%);
+  --color-accent-400: hsl(220 6% 55%);
+  --color-accent-500: hsl(220 8% 40%);
+  --color-accent-600: hsl(220 12% 30%);
+  --color-accent-700: hsl(220 15% 22%);
+  --color-accent-800: hsl(220 18% 15%);
+  --color-accent-900: hsl(220 20% 10%);
 
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -57,8 +57,8 @@
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 10%;
 
-  /* Primary is Elegant Gold */
-  --primary: 42 65% 50%;
+  /* Primary is Blue Black Neutral */
+  --primary: 220 8% 20%;
   --primary-foreground: 0 0% 100%;
 
   /* Secondary is Dark Slate for contrast */
@@ -68,15 +68,15 @@
   --muted: 0 0% 96%;
   --muted-foreground: 0 0% 45%;
 
-  --accent: 45 60% 96%;
-  --accent-foreground: 42 65% 40%;
+  --accent: 220 10% 96%;
+  --accent-foreground: 220 8% 35%;
 
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
 
   --border: 0 0% 90%;
   --input: 0 0% 90%;
-  --ring: 42 65% 50%;
+  --ring: 220 8% 40%;
 
   --radius: 0rem; 
 }
@@ -88,7 +88,7 @@
   --card-foreground: 0 0% 98%;
   --popover: 0 0% 12%;
   --popover-foreground: 0 0% 98%;
-  --primary: 42 65% 50%;
+  --primary: 220 12% 70%;
   --primary-foreground: 0 0% 10%;
   --secondary: 0 0% 15%;
   --secondary-foreground: 0 0% 98%;
@@ -100,7 +100,7 @@
   --destructive-foreground: 0 0% 98%;
   --border: 0 0% 20%;
   --input: 0 0% 20%;
-  --ring: 42 65% 50%;
+  --ring: 220 8% 40%;
 }
 
 @layer base {
@@ -134,12 +134,12 @@
     width: 100%;
   }
   
-  .text-gold {
-    color: hsl(42 65% 50%);
+  .text-accent {
+    color: hsl(220 8% 20%);
   }
   
-  .bg-gold {
-    background-color: hsl(42 65% 50%);
+  .bg-accent {
+    background-color: hsl(220 8% 20%);
   }
   
   .scrollbar-hide {

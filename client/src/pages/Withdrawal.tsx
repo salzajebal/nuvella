@@ -180,7 +180,7 @@ export default function Withdrawal() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gold-50 to-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
       <Header />
       
       <main className="flex-1 py-6 md:py-12 px-4">
@@ -236,7 +236,7 @@ export default function Withdrawal() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-gold-200">
+            <Card className="shadow-lg border-gray-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Banknote className="w-5 h-5" />
