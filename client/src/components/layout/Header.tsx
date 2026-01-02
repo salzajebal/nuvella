@@ -57,7 +57,7 @@ export function Header() {
           <img 
             src="/images/estella-logo.jpg"
             alt="Estella"
-            className="h-8 sm:h-10 md:h-12 w-auto"
+            className="h-12 sm:h-14 md:h-16 w-auto"
             data-testid="logo-estella"
           />
         </Link>
@@ -129,7 +129,7 @@ export function Header() {
                     <img 
                       src="/images/estella-logo.jpg"
                       alt="Estella"
-                      className="h-8 w-auto"
+                      className="h-12 w-auto"
                     />
                   </Link>
                   
