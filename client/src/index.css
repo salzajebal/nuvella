@@ -9,7 +9,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   
-  /* Blue Black Neutral Accent Palette */
+  /* Estella Neutral Accent Palette */
   --color-accent-50: hsl(220 15% 98%);
   --color-accent-100: hsl(220 12% 92%);
   --color-accent-200: hsl(220 10% 82%);
@@ -57,7 +57,7 @@
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 10%;
 
-  /* Primary is Blue Black Neutral */
+  /* Primary is Estella Neutral */
   --primary: 220 8% 20%;
   --primary-foreground: 0 0% 100%;
 

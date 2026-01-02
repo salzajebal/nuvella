@@ -54,13 +54,12 @@ export function Header() {
     <header className="w-full bg-white sticky top-0 z-50">
       <div className="container-custom py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center cursor-pointer flex-shrink-0">
-          <span 
-            className="text-xl sm:text-2xl md:text-3xl tracking-tight text-gray-900"
-            style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontWeight: 700 }}
-            data-testid="logo-blue-black"
-          >
-            Blue Black
-          </span>
+          <img 
+            src="/images/estella-logo.jpg"
+            alt="Estella"
+            className="h-8 sm:h-10 md:h-12 w-auto"
+            data-testid="logo-estella"
+          />
         </Link>
 
         <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
@@ -127,12 +126,11 @@ export function Header() {
               <SheetContent side="right" className="w-[280px] sm:w-[320px] overflow-y-auto">
                 <div className="mt-8">
                   <Link href="/" className="block mb-6">
-                    <span 
-                      className="text-2xl tracking-tight text-gray-900"
-                      style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontWeight: 700 }}
-                    >
-                      Blue Black
-                    </span>
+                    <img 
+                      src="/images/estella-logo.jpg"
+                      alt="Estella"
+                      className="h-8 w-auto"
+                    />
                   </Link>
                   
                   {memberName && (

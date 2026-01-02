@@ -11,7 +11,7 @@ export function Footer() {
                 className="text-2xl text-white"
                 style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontWeight: 700 }}
               >
-                Blue Black
+                Estella
               </span>
             </Link>
             <p className="text-sm leading-relaxed mb-6 max-w-md">
@@ -52,7 +52,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-gray-800 text-xs text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>Copyright © 2025 Blue Black. All rights reserved.</p>
+          <p>Copyright © 2025 Estella. All rights reserved.</p>
           <div className="flex gap-4">
             <span className="text-gray-600">SSL 보안</span>
             <span className="text-gray-600">안전결제</span>

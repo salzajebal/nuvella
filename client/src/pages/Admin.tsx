@@ -1410,7 +1410,7 @@ export default function Admin() {
               <Lock className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">관리자 로그인</h1>
-            <p className="text-gray-500 mt-2">Blue Black 관리 시스템</p>
+            <p className="text-gray-500 mt-2">Estella 관리 시스템</p>
           </div>
           
           <form onSubmit={handleLogin} className="space-y-5">
@@ -1522,7 +1522,7 @@ export default function Admin() {
               <span className="font-bold text-gray-900">금</span>
             </div>
             <div>
-              <h1 className="font-bold italic">Blue Black</h1>
+              <h1 className="font-bold italic">Estella</h1>
               <p className="text-xs text-gray-400">관리자 패널</p>
             </div>
           </div>
@@ -3844,7 +3844,7 @@ export default function Admin() {
                         type="text"
                         value={depositAccountSettings.accountHolder}
                         onChange={(e) => setDepositAccountSettings(prev => ({ ...prev, accountHolder: e.target.value }))}
-                        placeholder="예: Blue Black"
+                        placeholder="예: Estella"
                         className="w-full max-w-md"
                       />
                     </div>

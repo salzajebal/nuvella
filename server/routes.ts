@@ -184,7 +184,7 @@ export async function registerRoutes(
         await storage.deleteProduct(product.id);
       }
 
-      // Seed categories - Blue Black lifestyle mall categories
+      // Seed categories - Estella lifestyle mall categories
       const categoryData = [
         { id: "home_interior", name: "홈 인테리어", description: "세련된 감각의 홈스타일링 아이템", count: 10 },
         { id: "beauty", name: "뷰티", description: "트렌디한 뷰티 & 스킨케어 제품", count: 10 },
@@ -208,7 +208,7 @@ export async function registerRoutes(
         return `https://placehold.co/400x400/f5f5f5/333333?text=${encodeURIComponent(category)}`;
       };
 
-      // Blue Black lifestyle mall product data
+      // Estella lifestyle mall product data
       const productData = [
         // ==================== HOME INTERIOR (10 items) ====================
         { name: "프리미엄 아로마 캔들 세트", weight: "", purity: "", price: "89,000", originalPrice: "120,000", discountPercent: 26, category: "home_interior", isBest: true, isNew: false, isHot: true, description: "3종 향기 세트, 최대 50시간 연소", imageUrl: placeholderImage("home_interior", 0) },
@@ -315,7 +315,7 @@ export async function registerRoutes(
   // Seed initial data (Admin - Protected)
   app.post("/api/seed", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      // Seed categories - Blue Black lifestyle mall categories
+      // Seed categories - Estella lifestyle mall categories
       const categoryData = [
         { id: "home_interior", name: "홈 인테리어", description: "세련된 감각의 홈스타일링 아이템", count: 3 },
         { id: "beauty", name: "뷰티", description: "트렌디한 뷰티 & 스킨케어 제품", count: 3 },
