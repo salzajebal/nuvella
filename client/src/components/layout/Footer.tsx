@@ -15,14 +15,19 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm leading-relaxed mb-6 max-w-md">
-              블루블랙은 최고의 품질과 합리적인 가격으로 다양한 라이프스타일 제품을 제공합니다.
+              에스텔라는 최고의 품질과 합리적인 가격으로 다양한 라이프스타일 제품을 제공합니다.
               홈 인테리어, 뷰티, 가전, 생활용품 등 다양한 카테고리의 엄선된 상품을 만나보세요.
             </p>
             <div className="text-xs space-y-1 text-gray-500">
-              <p><span className="text-gray-400">상호:</span> 블루블랙</p>
-              <p><span className="text-gray-400">대표:</span> 홍길동</p>
-              <p><span className="text-gray-400">사업자등록번호:</span> 000-00-00000</p>
-              <p><span className="text-gray-400">통신판매번호:</span> 제0000-서울강남-0000호</p>
+              <p><span className="text-gray-400">상호:</span> 에스텔라 (Estella)</p>
+              <p><span className="text-gray-400">대표:</span> 김지애</p>
+              <p><span className="text-gray-400">사업자등록번호:</span> 504-19-23773</p>
+              <p><span className="text-gray-400">사업자등록일:</span> 2017-02-03</p>
+              <p><span className="text-gray-400">업태:</span> 도매 및 소매업</p>
+              <p><span className="text-gray-400">종목:</span> 전자상거래업</p>
+              <p><span className="text-gray-400">통신판매업번호:</span> 2017-대구북구-0090</p>
+              <p><span className="text-gray-400">주소:</span> 대구광역시 북구 유통단지로 60, 1146호</p>
+              <p><span className="text-gray-400">전화:</span> 053-323-3694</p>
             </div>
           </div>
 
