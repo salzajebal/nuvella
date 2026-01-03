@@ -1679,8 +1679,8 @@ export default function Admin() {
       <div className="bg-gray-900 text-white">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center">
-              <span className="font-bold text-gray-900">금</span>
+            <div className="w-10 h-10 bg-gradient-to-r from-rose-300 to-rose-400 rounded-lg flex items-center justify-center">
+              <span className="font-bold text-white text-xl italic">E</span>
             </div>
             <div>
               <h1 className="font-bold italic">Estella</h1>
