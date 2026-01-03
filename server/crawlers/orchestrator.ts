@@ -2,6 +2,7 @@ import { Cafe24Adapter } from './adapters/cafe24';
 import { GodomallAdapter } from './adapters/godomall';
 import { ShopifyAdapter } from './adapters/shopify';
 import { BaseCrawlerAdapter } from './adapters/base';
+import { crawlProductsWithPuppeteer } from './puppeteer-crawler';
 import { 
   CrawlRequest, 
   CrawlSession, 
@@ -143,8 +144,17 @@ async function executeCrawl(sessionId: string, request: CrawlRequest): Promise<v
       throw new Error(`Site ${site} not found for ${category}/${subcategory}`);
     }
     
-    const adapter = getAdapter(source.platform, source.site, source.url);
-    const rawProducts = await adapter.fetchProducts(source.categories, limit);
+    let rawProducts: RawProduct[] = [];
+    
+    console.log(`Starting Puppeteer crawl for ${site}...`);
+    const keyword = source.categories[0] || subcategory;
+    rawProducts = await crawlProductsWithPuppeteer(site, keyword, limit);
+    
+    if (rawProducts.length === 0) {
+      console.log(`Puppeteer crawl returned no results, falling back to adapter...`);
+      const adapter = getAdapter(source.platform, source.site, source.url);
+      rawProducts = await adapter.fetchProducts(source.categories, limit);
+    }
     
     const drafts = rawProducts.map(raw => transformToProductDraft(raw, category, subcategory));
     
