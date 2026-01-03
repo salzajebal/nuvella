@@ -2027,30 +2027,43 @@ export async function registerRoutes(
       }
       
       const importedProducts = [];
+      const errors: string[] = [];
+      
       for (const draft of selectedProducts) {
         try {
+          console.log("Importing product:", draft.name);
+          
           const productData = {
-            name: draft.name,
-            weight: draft.weight || '',
-            purity: draft.purity || '',
-            price: draft.price,
-            originalPrice: draft.originalPrice || null,
-            discountPercent: draft.discountPercent || null,
-            imageUrl: draft.imageUrl || null,
-            imageUrls: draft.imageUrls || [],
-            category: draft.category,
-            description: draft.description || null,
-            isBest: draft.isBest || false,
-            isNew: draft.isNew || true,
-            isHot: draft.isHot || false,
-            useFixedPrice: draft.useFixedPrice || true,
+            name: draft.name || '상품명 없음',
+            weight: draft.weight || '-',
+            purity: draft.purity || '-',
+            price: typeof draft.price === 'string' ? draft.price : String(draft.price || '0'),
+            originalPrice: draft.originalPrice ? String(draft.originalPrice) : undefined,
+            discountPercent: typeof draft.discountPercent === 'number' ? draft.discountPercent : undefined,
+            imageUrl: draft.imageUrl || undefined,
+            imageUrls: Array.isArray(draft.imageUrls) ? draft.imageUrls : [],
+            category: draft.category || '기타',
+            description: draft.description || `${draft.sourceSite}에서 가져온 상품입니다.`,
+            isBest: Boolean(draft.isBest),
+            isNew: draft.isNew !== false,
+            isHot: Boolean(draft.isHot),
+            useFixedPrice: draft.useFixedPrice !== false,
           };
           
+          console.log("Product data:", JSON.stringify(productData, null, 2));
+          
           const product = await storage.createProduct(productData);
+          console.log("Product created successfully:", product.id);
           importedProducts.push(product);
         } catch (e) {
-          console.error("Error importing product:", e);
+          const errorMsg = e instanceof Error ? e.message : String(e);
+          console.error("Error importing product:", draft.name, errorMsg);
+          errors.push(`${draft.name}: ${errorMsg}`);
         }
+      }
+      
+      if (errors.length > 0) {
+        console.log("Import errors:", errors);
       }
       
       res.json({ 
