@@ -1922,5 +1922,167 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== CRAWLING API ====================
+  const { getCrawlSources, startCrawl, getCrawlSession, getCrawlResults, deleteCrawlSession } = await import("./crawlers");
+
+  // Get available crawl sources (categories, subcategories, sites)
+  app.get("/api/admin/crawling/sources", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const sources = await getCrawlSources();
+      res.json({ success: true, data: sources });
+    } catch (error) {
+      console.error("Error fetching crawl sources:", error);
+      res.status(500).json({ success: false, error: "크롤링 소스를 불러올 수 없습니다." });
+    }
+  });
+
+  // Start a new crawl
+  app.post("/api/admin/crawling/crawl", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { category, subcategory, site, limit } = req.body;
+      
+      if (!category || !subcategory || !site) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "카테고리, 소분류, 사이트를 모두 선택해주세요." 
+        });
+      }
+      
+      const result = await startCrawl({ category, subcategory, site, limit: limit || 20 });
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error("Error starting crawl:", error);
+      res.status(500).json({ success: false, error: "크롤링을 시작할 수 없습니다." });
+    }
+  });
+
+  // Get crawl session status
+  app.get("/api/admin/crawling/session/:sessionId", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.params;
+      const session = getCrawlSession(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ success: false, error: "크롤링 세션을 찾을 수 없습니다." });
+      }
+      
+      res.json({ success: true, data: session });
+    } catch (error) {
+      console.error("Error fetching crawl session:", error);
+      res.status(500).json({ success: false, error: "크롤링 세션을 불러올 수 없습니다." });
+    }
+  });
+
+  // Get crawl results with pagination
+  app.get("/api/admin/crawling/results/:sessionId", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.params;
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = parseInt(req.query.pageSize as string) || 20;
+      
+      const results = getCrawlResults(sessionId, page, pageSize);
+      
+      if (!results.session) {
+        return res.status(404).json({ success: false, error: "크롤링 세션을 찾을 수 없습니다." });
+      }
+      
+      res.json({ success: true, data: results });
+    } catch (error) {
+      console.error("Error fetching crawl results:", error);
+      res.status(500).json({ success: false, error: "크롤링 결과를 불러올 수 없습니다." });
+    }
+  });
+
+  // Import selected products from crawl session
+  app.post("/api/admin/crawling/import", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { sessionId, productIndices } = req.body;
+      
+      if (!sessionId || !Array.isArray(productIndices) || productIndices.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "세션 ID와 가져올 상품 인덱스를 지정해주세요." 
+        });
+      }
+      
+      const results = getCrawlResults(sessionId, 1, 1000);
+      
+      if (!results.session || results.session.status !== 'completed') {
+        return res.status(400).json({ 
+          success: false, 
+          error: "완료된 크롤링 세션이 아닙니다." 
+        });
+      }
+      
+      const allProducts = results.session.products;
+      const selectedProducts = productIndices
+        .filter((idx: number) => idx >= 0 && idx < allProducts.length)
+        .map((idx: number) => allProducts[idx]);
+      
+      if (selectedProducts.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "가져올 상품이 없습니다." 
+        });
+      }
+      
+      const importedProducts = [];
+      for (const draft of selectedProducts) {
+        try {
+          const productData = {
+            name: draft.name,
+            weight: draft.weight || '',
+            purity: draft.purity || '',
+            price: draft.price,
+            originalPrice: draft.originalPrice || null,
+            discountPercent: draft.discountPercent || null,
+            imageUrl: draft.imageUrl || null,
+            imageUrls: draft.imageUrls || [],
+            category: draft.category,
+            description: draft.description || null,
+            isBest: draft.isBest || false,
+            isNew: draft.isNew || true,
+            isHot: draft.isHot || false,
+            useFixedPrice: draft.useFixedPrice || true,
+          };
+          
+          const product = await storage.createProduct(productData);
+          importedProducts.push(product);
+        } catch (e) {
+          console.error("Error importing product:", e);
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        data: { 
+          imported: importedProducts.length,
+          total: selectedProducts.length,
+          products: importedProducts 
+        } 
+      });
+    } catch (error) {
+      console.error("Error importing products:", error);
+      res.status(500).json({ success: false, error: "상품 가져오기 중 오류가 발생했습니다." });
+    }
+  });
+
+  // Delete crawl session
+  app.delete("/api/admin/crawling/session/:sessionId", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.params;
+      const deleted = deleteCrawlSession(sessionId);
+      
+      if (!deleted) {
+        return res.status(404).json({ success: false, error: "크롤링 세션을 찾을 수 없습니다." });
+      }
+      
+      res.json({ success: true, message: "크롤링 세션이 삭제되었습니다." });
+    } catch (error) {
+      console.error("Error deleting crawl session:", error);
+      res.status(500).json({ success: false, error: "크롤링 세션 삭제 중 오류가 발생했습니다." });
+    }
+  });
+
   return httpServer;
 }

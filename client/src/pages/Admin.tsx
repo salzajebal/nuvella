@@ -96,7 +96,7 @@ export default function Admin() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "reviews" | "notices" | "chat" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "reviews" | "notices" | "chat" | "settings" | "crawling">("dashboard");
   const [stats, setStats] = useState<AdminStats | null>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -205,6 +205,40 @@ export default function Admin() {
   });
   const [depositAccountLoading, setDepositAccountLoading] = useState(false);
 
+  interface CrawlSource {
+    id: string;
+    name: string;
+    subcategories: { id: string; name: string; sites: string[] }[];
+  }
+  interface CrawlProductDraft {
+    name: string;
+    price: string;
+    originalPrice?: string;
+    discountPercent?: number;
+    imageUrl: string;
+    category: string;
+    subcategory?: string;
+    description?: string;
+    sourceUrl: string;
+    sourceSite: string;
+  }
+  interface CrawlSession {
+    id: string;
+    status: 'pending' | 'crawling' | 'completed' | 'error';
+    products: CrawlProductDraft[];
+    error?: string;
+  }
+
+  const [crawlSources, setCrawlSources] = useState<CrawlSource[]>([]);
+  const [crawlCategory, setCrawlCategory] = useState<string>("");
+  const [crawlSubcategory, setCrawlSubcategory] = useState<string>("");
+  const [crawlSite, setCrawlSite] = useState<string>("");
+  const [crawlLimit, setCrawlLimit] = useState<number>(20);
+  const [crawlSession, setCrawlSession] = useState<CrawlSession | null>(null);
+  const [crawlLoading, setCrawlLoading] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+  const [importLoading, setImportLoading] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (token) {
@@ -295,6 +329,132 @@ export default function Admin() {
       }
     } catch (error) {
       console.error("Error fetching stats:", error);
+    }
+  };
+
+  const fetchCrawlSources = async () => {
+    try {
+      const res = await fetchWithAuth("/api/admin/crawling/sources");
+      const data = await res.json();
+      if (data.success) {
+        setCrawlSources(data.data.categories);
+      }
+    } catch (error) {
+      console.error("Error fetching crawl sources:", error);
+    }
+  };
+
+  const startCrawl = async () => {
+    if (!crawlCategory || !crawlSubcategory || !crawlSite) {
+      toast({ title: "오류", description: "카테고리, 소분류, 사이트를 모두 선택해주세요.", variant: "destructive" });
+      return;
+    }
+    
+    setCrawlLoading(true);
+    setCrawlSession(null);
+    setSelectedProducts([]);
+    
+    try {
+      const res = await fetchWithAuth("/api/admin/crawling/crawl", {
+        method: "POST",
+        body: JSON.stringify({
+          category: crawlCategory,
+          subcategory: crawlSubcategory,
+          site: crawlSite,
+          limit: crawlLimit
+        })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        pollCrawlSession(data.data.sessionId);
+      } else {
+        toast({ title: "크롤링 실패", description: data.error, variant: "destructive" });
+        setCrawlLoading(false);
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "크롤링을 시작할 수 없습니다.", variant: "destructive" });
+      setCrawlLoading(false);
+    }
+  };
+
+  const pollCrawlSession = async (sessionId: string) => {
+    const poll = async () => {
+      try {
+        const res = await fetchWithAuth(`/api/admin/crawling/session/${sessionId}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          setCrawlSession(data.data);
+          
+          if (data.data.status === 'pending' || data.data.status === 'crawling') {
+            setTimeout(poll, 1000);
+          } else {
+            setCrawlLoading(false);
+            if (data.data.status === 'completed') {
+              toast({ title: "크롤링 완료", description: `${data.data.products.length}개 상품을 가져왔습니다.` });
+            } else if (data.data.status === 'error') {
+              toast({ title: "크롤링 실패", description: data.data.error, variant: "destructive" });
+            }
+          }
+        } else {
+          setCrawlLoading(false);
+        }
+      } catch (error) {
+        setCrawlLoading(false);
+      }
+    };
+    
+    poll();
+  };
+
+  const importSelectedProducts = async () => {
+    if (!crawlSession || selectedProducts.length === 0) {
+      toast({ title: "오류", description: "가져올 상품을 선택해주세요.", variant: "destructive" });
+      return;
+    }
+    
+    setImportLoading(true);
+    
+    try {
+      const res = await fetchWithAuth("/api/admin/crawling/import", {
+        method: "POST",
+        body: JSON.stringify({
+          sessionId: crawlSession.id,
+          productIndices: selectedProducts
+        })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        toast({ title: "상품 가져오기 완료", description: `${data.data.imported}개 상품이 추가되었습니다.` });
+        setSelectedProducts([]);
+        fetchProducts();
+        fetchStats();
+      } else {
+        toast({ title: "가져오기 실패", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "상품 가져오기 중 오류가 발생했습니다.", variant: "destructive" });
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const toggleProductSelection = (index: number) => {
+    setSelectedProducts(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
+  const selectAllProducts = () => {
+    if (!crawlSession) return;
+    if (selectedProducts.length === crawlSession.products.length) {
+      setSelectedProducts([]);
+    } else {
+      setSelectedProducts(crawlSession.products.map((_, i) => i));
     }
   };
 
@@ -585,6 +745,7 @@ export default function Admin() {
       fetchReviews();
       fetchNotices();
       fetchSiteSettings();
+      fetchCrawlSources();
     }
   }, [isAuthenticated]);
   
@@ -1649,6 +1810,15 @@ export default function Admin() {
           >
             <Settings className="w-4 h-4 md:mr-2" />
             <span className="hidden md:inline">설정</span>
+          </Button>
+          <Button
+            data-testid="tab-crawling"
+            variant={activeTab === "crawling" ? "default" : "outline"}
+            onClick={() => setActiveTab("crawling")}
+            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "crawling" ? "bg-purple-500 hover:bg-purple-600" : ""}`}
+          >
+            <Database className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">상품 크롤링</span>
           </Button>
         </div>
 
@@ -3898,6 +4068,259 @@ export default function Admin() {
                   </ul>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "crawling" && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="p-6 border-b border-gray-100">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <Database className="w-5 h-5 text-purple-600" />
+                  상품 크롤링
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">외부 쇼핑몰에서 상품을 가져와 에스텔라에 등록합니다.</p>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">카테고리</label>
+                    <select
+                      data-testid="select-crawl-category"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      value={crawlCategory}
+                      onChange={(e) => {
+                        setCrawlCategory(e.target.value);
+                        setCrawlSubcategory("");
+                        setCrawlSite("");
+                      }}
+                    >
+                      <option value="">카테고리 선택</option>
+                      {crawlSources.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">소분류</label>
+                    <select
+                      data-testid="select-crawl-subcategory"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      value={crawlSubcategory}
+                      onChange={(e) => {
+                        setCrawlSubcategory(e.target.value);
+                        setCrawlSite("");
+                      }}
+                      disabled={!crawlCategory}
+                    >
+                      <option value="">소분류 선택</option>
+                      {crawlSources.find(c => c.id === crawlCategory)?.subcategories.map(sub => (
+                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">크롤링 사이트</label>
+                    <select
+                      data-testid="select-crawl-site"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      value={crawlSite}
+                      onChange={(e) => setCrawlSite(e.target.value)}
+                      disabled={!crawlSubcategory}
+                    >
+                      <option value="">사이트 선택</option>
+                      {crawlSources.find(c => c.id === crawlCategory)?.subcategories.find(s => s.id === crawlSubcategory)?.sites.map(site => (
+                        <option key={site} value={site}>{site}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">가져올 개수</label>
+                    <select
+                      data-testid="select-crawl-limit"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      value={crawlLimit}
+                      onChange={(e) => setCrawlLimit(parseInt(e.target.value))}
+                    >
+                      <option value={10}>10개</option>
+                      <option value={20}>20개</option>
+                      <option value={30}>30개</option>
+                      <option value={50}>50개</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button
+                    data-testid="button-start-crawl"
+                    onClick={startCrawl}
+                    disabled={crawlLoading || !crawlCategory || !crawlSubcategory || !crawlSite}
+                    className="bg-purple-500 hover:bg-purple-600 text-white"
+                  >
+                    {crawlLoading ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        크롤링 중...
+                      </>
+                    ) : (
+                      <>
+                        <Database className="w-4 h-4 mr-2" />
+                        크롤링 시작
+                      </>
+                    )}
+                  </Button>
+                  
+                  {crawlSession && crawlSession.status === 'completed' && selectedProducts.length > 0 && (
+                    <Button
+                      data-testid="button-import-products"
+                      onClick={importSelectedProducts}
+                      disabled={importLoading}
+                      className="bg-green-500 hover:bg-green-600 text-white"
+                    >
+                      {importLoading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                          가져오는 중...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4 mr-2" />
+                          선택한 {selectedProducts.length}개 상품 가져오기
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {crawlSession && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      {crawlSession.status === 'pending' && <Clock className="w-5 h-5 text-gray-500" />}
+                      {crawlSession.status === 'crawling' && <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />}
+                      {crawlSession.status === 'completed' && <CheckCircle className="w-5 h-5 text-green-500" />}
+                      {crawlSession.status === 'error' && <XCircle className="w-5 h-5 text-red-500" />}
+                      크롤링 결과
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {crawlSession.status === 'pending' && '크롤링 준비 중...'}
+                      {crawlSession.status === 'crawling' && '상품을 가져오는 중입니다...'}
+                      {crawlSession.status === 'completed' && `${crawlSession.products.length}개 상품을 찾았습니다.`}
+                      {crawlSession.status === 'error' && `오류: ${crawlSession.error}`}
+                    </p>
+                  </div>
+                  
+                  {crawlSession.status === 'completed' && crawlSession.products.length > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={selectAllProducts}
+                      className="text-sm"
+                    >
+                      {selectedProducts.length === crawlSession.products.length ? '전체 해제' : '전체 선택'}
+                    </Button>
+                  )}
+                </div>
+                
+                {crawlSession.status === 'completed' && crawlSession.products.length > 0 && (
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {crawlSession.products.map((product, index) => (
+                        <div
+                          key={index}
+                          data-testid={`crawled-product-${index}`}
+                          className={`border rounded-lg overflow-hidden cursor-pointer transition-all ${
+                            selectedProducts.includes(index) 
+                              ? 'border-purple-500 ring-2 ring-purple-200 bg-purple-50' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => toggleProductSelection(index)}
+                        >
+                          <div className="aspect-square bg-gray-100 relative">
+                            {product.imageUrl ? (
+                              <img 
+                                src={product.imageUrl} 
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://placehold.co/400x400/f5f5f5/333333?text=No+Image';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <Package className="w-12 h-12" />
+                              </div>
+                            )}
+                            {selectedProducts.includes(index) && (
+                              <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                                <Check className="w-4 h-4 text-white" />
+                              </div>
+                            )}
+                            {product.discountPercent && product.discountPercent > 0 && (
+                              <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                                {product.discountPercent}% 할인
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <p className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">{product.name}</p>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-lg font-bold text-gray-900">{product.price}원</span>
+                              {product.originalPrice && (
+                                <span className="text-sm text-gray-400 line-through">{product.originalPrice}원</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                              <Link2 className="w-3 h-3" />
+                              {product.sourceSite}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
+              <h4 className="font-bold text-purple-900 mb-3">크롤링 가능 사이트 안내</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="font-medium text-purple-800">홈 인테리어</p>
+                  <p className="text-purple-600">polashop.co.kr, sosohome.co.kr, dailylike.co.kr</p>
+                </div>
+                <div>
+                  <p className="font-medium text-purple-800">뷰티</p>
+                  <p className="text-purple-600">romand.co.kr, innisfree.com, moremo.com</p>
+                </div>
+                <div>
+                  <p className="font-medium text-purple-800">가전/디지털</p>
+                  <p className="text-purple-600">missdal.com, polashop.co.kr</p>
+                </div>
+                <div>
+                  <p className="font-medium text-purple-800">생활용품</p>
+                  <p className="text-purple-600">missdal.com, sosohome.co.kr</p>
+                </div>
+                <div>
+                  <p className="font-medium text-purple-800">헬스/건강식품</p>
+                  <p className="text-purple-600">hurumshop.com, xexymix.com</p>
+                </div>
+                <div>
+                  <p className="font-medium text-purple-800">럭셔리/명품</p>
+                  <p className="text-purple-600">polashop.co.kr (명품악세서리, 소품)</p>
+                </div>
+              </div>
+              <p className="text-xs text-purple-500 mt-4">
+                ※ 명품가방, 디지털기기 카테고리는 크롤링 대상에서 제외됩니다. (보안 제한)
+              </p>
             </div>
           </div>
         )}
