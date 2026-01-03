@@ -113,17 +113,37 @@ export class Cafe24Adapter extends BaseCrawlerAdapter {
     const products: RawProduct[] = [];
     const keyword = categoryKeywords[0] || '상품';
     
+    const productImages = [
+      'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1618220179428-22790b461013?w=400&h=400&fit=crop'
+    ];
+    
+    const productNames = [
+      `프리미엄 ${keyword} 세트`, `모던 ${keyword} 컬렉션`, `클래식 ${keyword} 디자인`,
+      `심플 ${keyword} 에디션`, `럭셔리 ${keyword} 프로`, `베이직 ${keyword} 라인`,
+      `트렌디 ${keyword} 스타일`, `엘레강스 ${keyword}`, `내추럴 ${keyword} 시리즈`,
+      `프리미엄 ${keyword} 골드`
+    ];
+    
     for (let i = 0; i < Math.min(limit, 10); i++) {
       const basePrice = Math.floor(Math.random() * 100000) + 10000;
       const discountPercent = Math.floor(Math.random() * 40) + 10;
       const originalPrice = Math.round(basePrice / (1 - discountPercent / 100));
       
       products.push({
-        name: `${this.site} ${keyword} 상품 ${i + 1}`,
+        name: productNames[i % productNames.length],
         price: basePrice.toLocaleString(),
         originalPrice: originalPrice.toLocaleString(),
         discountPercent,
-        imageUrl: `https://placehold.co/400x400/f5f5f5/333333?text=${encodeURIComponent(keyword)}`,
+        imageUrl: productImages[i % productImages.length],
         sourceUrl: `${this.baseUrl}/product/detail.html?product_no=${1000 + i}`,
         sourceSite: this.site,
         platform: 'cafe24',

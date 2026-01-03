@@ -94,17 +94,37 @@ export class ShopifyAdapter extends BaseCrawlerAdapter {
     const products: RawProduct[] = [];
     const keyword = categoryKeywords[0] || 'Product';
     
+    const productImages = [
+      'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1491553895911-0055uj15s6f?w=400&h=400&fit=crop'
+    ];
+    
+    const productNames = [
+      `Premium ${keyword} Set`, `Classic ${keyword} Collection`, `Modern ${keyword} Design`,
+      `Essential ${keyword} Edition`, `Luxury ${keyword} Pro`, `Basic ${keyword} Line`,
+      `Trendy ${keyword} Style`, `Elegant ${keyword}`, `Natural ${keyword} Series`,
+      `Signature ${keyword}`
+    ];
+    
     for (let i = 0; i < Math.min(limit, 10); i++) {
       const basePrice = Math.floor(Math.random() * 50) + 10;
       const discountPercent = Math.floor(Math.random() * 30) + 10;
       const originalPrice = Math.round(basePrice / (1 - discountPercent / 100));
       
       products.push({
-        name: `${this.site} ${keyword} Item ${i + 1}`,
+        name: productNames[i % productNames.length],
         price: (basePrice * 1350).toLocaleString(),
         originalPrice: (originalPrice * 1350).toLocaleString(),
         discountPercent,
-        imageUrl: `https://placehold.co/400x400/faf0e6/8b4513?text=${encodeURIComponent(keyword)}`,
+        imageUrl: productImages[i % productImages.length],
         sourceUrl: `${this.baseUrl}/products/product-${3000 + i}`,
         sourceSite: this.site,
         platform: 'shopify',

@@ -113,17 +113,37 @@ export class GodomallAdapter extends BaseCrawlerAdapter {
     const products: RawProduct[] = [];
     const keyword = categoryKeywords[0] || '상품';
     
+    const productImages = [
+      'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1503236823255-94609f598e71?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1583209814683-c023dd293cc6?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&h=400&fit=crop'
+    ];
+    
+    const productNames = [
+      `베스트 ${keyword} 세트`, `인기 ${keyword} 컬렉션`, `NEW ${keyword} 라인`,
+      `스페셜 ${keyword} 에디션`, `프리미엄 ${keyword}`, `베이직 ${keyword} 시리즈`,
+      `한정판 ${keyword}`, `시그니처 ${keyword}`, `데일리 ${keyword}`,
+      `럭셔리 ${keyword} 프로`
+    ];
+    
     for (let i = 0; i < Math.min(limit, 10); i++) {
       const basePrice = Math.floor(Math.random() * 80000) + 15000;
       const discountPercent = Math.floor(Math.random() * 35) + 15;
       const originalPrice = Math.round(basePrice / (1 - discountPercent / 100));
       
       products.push({
-        name: `${this.site} ${keyword} 제품 ${i + 1}`,
+        name: productNames[i % productNames.length],
         price: basePrice.toLocaleString(),
         originalPrice: originalPrice.toLocaleString(),
         discountPercent,
-        imageUrl: `https://placehold.co/400x400/e8e8e8/666666?text=${encodeURIComponent(keyword)}`,
+        imageUrl: productImages[i % productImages.length],
         sourceUrl: `${this.baseUrl}/goods/goods_view.php?goodsNo=${2000 + i}`,
         sourceSite: this.site,
         platform: 'godomall',
