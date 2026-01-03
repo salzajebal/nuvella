@@ -40,57 +40,15 @@ const playNotificationSound = () => {
   }
 };
 
-const MAIN_CATEGORIES = [
+const CATEGORY_OPTIONS = [
   { id: "home_interior", name: "홈 인테리어" },
   { id: "beauty", name: "뷰티" },
   { id: "electronics", name: "가전/디지털" },
   { id: "living", name: "생활용품" },
   { id: "health", name: "헬스/건강식품" },
   { id: "luxury", name: "럭셔리/명품" },
+  { id: "baby", name: "유아/완구" },
 ];
-
-const SUB_CATEGORIES: Record<string, { id: string; name: string }[]> = {
-  home_interior: [
-    { id: "home_furniture", name: "가구" },
-    { id: "home_lighting", name: "조명" },
-    { id: "home_decor", name: "인테리어소품" },
-    { id: "home_fabric", name: "패브릭" },
-    { id: "home_wall", name: "벽장식" },
-  ],
-  beauty: [
-    { id: "beauty_skincare", name: "스킨케어" },
-    { id: "beauty_makeup", name: "메이크업" },
-    { id: "beauty_perfume", name: "향수" },
-    { id: "beauty_body", name: "바디케어" },
-    { id: "beauty_hair", name: "헤어케어" },
-  ],
-  electronics: [
-    { id: "elec_living", name: "생활가전" },
-    { id: "elec_kitchen", name: "주방가전" },
-    { id: "elec_audio", name: "오디오" },
-    { id: "elec_digital", name: "디지털기기" },
-  ],
-  living: [
-    { id: "living_kitchen", name: "주방용품" },
-    { id: "living_bathroom", name: "욕실용품" },
-    { id: "living_storage", name: "수납/정리" },
-    { id: "living_cleaning", name: "청소용품" },
-  ],
-  health: [
-    { id: "health_supplements", name: "건강보조제" },
-    { id: "health_drinks", name: "건강음료" },
-    { id: "health_fitness", name: "운동용품" },
-    { id: "health_diet", name: "다이어트" },
-  ],
-  luxury: [
-    { id: "luxury_bags", name: "명품가방" },
-    { id: "luxury_accessories", name: "명품악세서리" },
-    { id: "luxury_furniture", name: "프리미엄가구" },
-    { id: "luxury_items", name: "명품소품" },
-  ],
-};
-
-const CATEGORY_OPTIONS = MAIN_CATEGORIES;
 
 interface AdminStats {
   totalProducts: number;
@@ -138,7 +96,7 @@ export default function Admin() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "reviews" | "notices" | "chat" | "settings" | "import">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "reviews" | "notices" | "chat" | "settings">("dashboard");
   const [stats, setStats] = useState<AdminStats | null>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -246,35 +204,6 @@ export default function Admin() {
     accountHolder: "",
   });
   const [depositAccountLoading, setDepositAccountLoading] = useState(false);
-
-  const [importData, setImportData] = useState({
-    mainCategory: "home_interior",
-    subCategory: "home_furniture",
-    csvFile: null as File | null,
-    manualProducts: [] as Array<{
-      name: string;
-      price: string;
-      imageUrl: string;
-      imageUrls: string[];
-      description: string;
-    }>,
-  });
-  const [importLoading, setImportLoading] = useState(false);
-  const [importPreview, setImportPreview] = useState<Array<{
-    name: string;
-    price: string;
-    imageUrl: string;
-    imageUrls: string[];
-    description: string;
-  }>>([]);
-  const [manualProductForm, setManualProductForm] = useState({
-    name: "",
-    price: "",
-    imageUrl: "",
-    imageUrls: "",
-    description: "",
-  });
-  const csvFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -1720,15 +1649,6 @@ export default function Admin() {
           >
             <Settings className="w-4 h-4 md:mr-2" />
             <span className="hidden md:inline">설정</span>
-          </Button>
-          <Button
-            data-testid="tab-import"
-            variant={activeTab === "import" ? "default" : "outline"}
-            onClick={() => setActiveTab("import")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "import" ? "bg-green-500 hover:bg-green-600 text-white" : ""}`}
-          >
-            <Upload className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">상품 일괄등록</span>
           </Button>
         </div>
 
@@ -3977,298 +3897,6 @@ export default function Admin() {
                     </li>
                   </ul>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "import" && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-6 border-b border-gray-100">
-                <h3 className="text-lg font-bold flex items-center gap-2">
-                  <Upload className="w-5 h-5 text-green-600" />
-                  상품 일괄등록
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">CSV 파일 업로드 또는 직접 입력으로 상품을 일괄 등록합니다.</p>
-              </div>
-
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">대분류</label>
-                    <select
-                      data-testid="select-main-category"
-                      value={importData.mainCategory}
-                      onChange={(e) => {
-                        const mainCat = e.target.value;
-                        const firstSub = SUB_CATEGORIES[mainCat]?.[0]?.id || "";
-                        setImportData(prev => ({ ...prev, mainCategory: mainCat, subCategory: firstSub }));
-                      }}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    >
-                      {MAIN_CATEGORIES.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">소분류</label>
-                    <select
-                      data-testid="select-sub-category"
-                      value={importData.subCategory}
-                      onChange={(e) => setImportData(prev => ({ ...prev, subCategory: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                    >
-                      {(SUB_CATEGORIES[importData.mainCategory] || []).map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    CSV 파일 업로드
-                  </h4>
-                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <input
-                      ref={csvFileInputRef}
-                      type="file"
-                      accept=".csv"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setImportData(prev => ({ ...prev, csvFile: file }));
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            const text = event.target?.result as string;
-                            const lines = text.split('\n').filter(line => line.trim());
-                            if (lines.length > 1) {
-                              const products = lines.slice(1).map(line => {
-                                const cols = line.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
-                                return {
-                                  name: cols[0] || '',
-                                  price: cols[1] || '',
-                                  imageUrl: cols[2] || '',
-                                  imageUrls: cols[3] ? cols[3].split('|') : [],
-                                  description: cols[4] || '',
-                                };
-                              }).filter(p => p.name);
-                              setImportPreview(products);
-                            }
-                          };
-                          reader.readAsText(file);
-                        }
-                      }}
-                    />
-                    <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                    <p className="text-sm text-gray-600 mb-2">CSV 파일을 업로드하세요</p>
-                    <p className="text-xs text-gray-500 mb-4">형식: 상품명, 가격, 대표이미지URL, 상세이미지URL(|구분), 설명</p>
-                    <Button
-                      onClick={() => csvFileInputRef.current?.click()}
-                      variant="outline"
-                      className="mr-2"
-                    >
-                      파일 선택
-                    </Button>
-                    {importData.csvFile && (
-                      <span className="text-sm text-green-600">{importData.csvFile.name}</span>
-                    )}
-                  </div>
-
-                  <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h5 className="font-medium text-blue-800 mb-2">CSV 파일 형식 예시</h5>
-                    <code className="text-xs text-blue-700 block bg-blue-100 p-2 rounded">
-                      상품명,가격,대표이미지URL,상세이미지URL,설명<br/>
-                      "스킨케어 세트",45000,"https://example.com/main.jpg","https://example.com/d1.jpg|https://example.com/d2.jpg","보습 스킨케어"
-                    </code>
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    직접 입력
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">상품명 *</label>
-                      <Input
-                        data-testid="input-import-name"
-                        value={manualProductForm.name}
-                        onChange={(e) => setManualProductForm(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="상품명 입력"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">가격 *</label>
-                      <Input
-                        data-testid="input-import-price"
-                        value={manualProductForm.price}
-                        onChange={(e) => setManualProductForm(prev => ({ ...prev, price: e.target.value }))}
-                        placeholder="가격 입력 (숫자만)"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">대표 이미지 URL *</label>
-                      <Input
-                        data-testid="input-import-image"
-                        value={manualProductForm.imageUrl}
-                        onChange={(e) => setManualProductForm(prev => ({ ...prev, imageUrl: e.target.value }))}
-                        placeholder="https://example.com/image.jpg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">상세 이미지 URL (여러개는 | 구분)</label>
-                      <Input
-                        data-testid="input-import-detail-images"
-                        value={manualProductForm.imageUrls}
-                        onChange={(e) => setManualProductForm(prev => ({ ...prev, imageUrls: e.target.value }))}
-                        placeholder="https://example.com/d1.jpg|https://example.com/d2.jpg"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">상품 설명</label>
-                      <Textarea
-                        data-testid="input-import-description"
-                        value={manualProductForm.description}
-                        onChange={(e) => setManualProductForm(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="상품 설명 입력"
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    data-testid="button-add-to-preview"
-                    onClick={() => {
-                      if (manualProductForm.name && manualProductForm.price && manualProductForm.imageUrl) {
-                        setImportPreview(prev => [...prev, {
-                          name: manualProductForm.name,
-                          price: manualProductForm.price,
-                          imageUrl: manualProductForm.imageUrl,
-                          imageUrls: manualProductForm.imageUrls ? manualProductForm.imageUrls.split('|').map(u => u.trim()) : [],
-                          description: manualProductForm.description,
-                        }]);
-                        setManualProductForm({ name: '', price: '', imageUrl: '', imageUrls: '', description: '' });
-                        toast({ title: "상품 추가됨", description: "미리보기 목록에 상품이 추가되었습니다." });
-                      } else {
-                        toast({ title: "입력 오류", description: "상품명, 가격, 대표이미지는 필수입니다.", variant: "destructive" });
-                      }
-                    }}
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    미리보기에 추가
-                  </Button>
-                </div>
-
-                {importPreview.length > 0 && (
-                  <div className="border-t border-gray-200 pt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-                        <Eye className="w-4 h-4" />
-                        등록 미리보기 ({importPreview.length}개 상품)
-                      </h4>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setImportPreview([])}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        전체 삭제
-                      </Button>
-                    </div>
-                    <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50 sticky top-0">
-                          <tr>
-                            <th className="px-4 py-2 text-left">이미지</th>
-                            <th className="px-4 py-2 text-left">상품명</th>
-                            <th className="px-4 py-2 text-left">가격</th>
-                            <th className="px-4 py-2 text-left">상세이미지</th>
-                            <th className="px-4 py-2 text-center">삭제</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {importPreview.map((product, idx) => (
-                            <tr key={idx} className="border-t border-gray-100 hover:bg-gray-50">
-                              <td className="px-4 py-2">
-                                <img src={product.imageUrl} alt="" className="w-12 h-12 object-cover rounded" />
-                              </td>
-                              <td className="px-4 py-2 font-medium">{product.name}</td>
-                              <td className="px-4 py-2">{Number(product.price).toLocaleString()}원</td>
-                              <td className="px-4 py-2 text-gray-500">{product.imageUrls.length}장</td>
-                              <td className="px-4 py-2 text-center">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setImportPreview(prev => prev.filter((_, i) => i !== idx))}
-                                  className="text-red-500 hover:text-red-600"
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="mt-4 flex justify-end">
-                      <Button
-                        data-testid="button-import-products"
-                        onClick={async () => {
-                          if (importPreview.length === 0) {
-                            toast({ title: "등록할 상품 없음", description: "미리보기 목록에 상품을 추가해주세요.", variant: "destructive" });
-                            return;
-                          }
-                          setImportLoading(true);
-                          try {
-                            const res = await fetch('/api/admin/products/bulk-import', {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${authToken}`,
-                              },
-                              body: JSON.stringify({
-                                products: importPreview.map(p => ({
-                                  name: p.name,
-                                  price: parseInt(p.price) || 0,
-                                  imageUrl: p.imageUrl,
-                                  imageUrls: p.imageUrls,
-                                  description: p.description,
-                                  category: importData.subCategory || importData.mainCategory,
-                                })),
-                              }),
-                            });
-                            const data = await res.json();
-                            if (data.success) {
-                              toast({ title: "등록 완료", description: `${data.count}개 상품이 등록되었습니다.` });
-                              setImportPreview([]);
-                              setImportData(prev => ({ ...prev, csvFile: null }));
-                              fetchProducts();
-                            } else {
-                              toast({ title: "등록 실패", description: data.message || "상품 등록 중 오류가 발생했습니다.", variant: "destructive" });
-                            }
-                          } catch (error) {
-                            toast({ title: "오류", description: "서버 연결 중 오류가 발생했습니다.", variant: "destructive" });
-                          } finally {
-                            setImportLoading(false);
-                          }
-                        }}
-                        disabled={importLoading || importPreview.length === 0}
-                        className="bg-green-500 hover:bg-green-600 text-white"
-                      >
-                        {importLoading ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                        {importPreview.length}개 상품 일괄등록
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
