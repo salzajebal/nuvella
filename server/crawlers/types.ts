@@ -1,8 +1,9 @@
 export interface CrawlSource {
   site: string;
   url: string;
-  platform: 'cafe24' | 'godomall' | 'shopify';
+  platform: 'cafe24' | 'godomall' | 'shopify' | 'custom';
   categories: string[];
+  directUrl?: string;
 }
 
 export interface RawProduct {
@@ -58,90 +59,110 @@ export interface CrawlSession {
 export const CATEGORY_SITE_MAPPING: Record<string, Record<string, CrawlSource[]>> = {
   home_interior: {
     furniture: [
-      { site: 'polashop.co.kr', url: 'https://polashop.co.kr', platform: 'cafe24', categories: ['가구'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['가구', '소파', '책상', '의자'] },
+      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['가구', '테이블', '수납가구'] }
     ],
     lighting: [
-      { site: 'polashop.co.kr', url: 'https://polashop.co.kr', platform: 'cafe24', categories: ['조명'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['조명', 'LED조명', '스탠드'] },
+      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['조명', '무드등'] }
     ],
     decor: [
-      { site: 'polashop.co.kr', url: 'https://polashop.co.kr', platform: 'cafe24', categories: ['소품'] },
-      { site: 'sosohome.co.kr', url: 'https://sosohome.co.kr', platform: 'cafe24', categories: ['인테리어'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['인테리어소품', '화병', '조화'] },
+      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['데코', '소품'] }
     ],
     fabric: [
-      { site: 'dailylike.co.kr', url: 'https://dailylike.co.kr', platform: 'godomall', categories: ['패브릭'] },
-      { site: 'sosohome.co.kr', url: 'https://sosohome.co.kr', platform: 'cafe24', categories: ['패브릭'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['커튼', '러그', '쿠션'] },
+      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['패브릭', '침구'] }
     ],
     wall_decor: [
-      { site: 'polashop.co.kr', url: 'https://polashop.co.kr', platform: 'cafe24', categories: ['액자', '벽걸이'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['액자', '벽시계', '벽장식'] },
+      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['월데코', '액자'] }
     ]
   },
   beauty: {
     skincare: [
-      { site: 'innisfree.com', url: 'https://us.innisfree.com', platform: 'shopify', categories: ['skincare'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['스킨케어', '에센스', '크림'] },
+      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['스킨케어', '세럼'] }
     ],
     makeup: [
-      { site: 'romand.co.kr', url: 'https://romand.co.kr', platform: 'cafe24', categories: ['립', '아이'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['메이크업', '립스틱', '파운데이션'] },
+      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['메이크업', '립틴트'] }
     ],
     fragrance: [
-      { site: 'polashop.co.kr', url: 'https://polashop.co.kr', platform: 'cafe24', categories: ['캔들', '디퓨저'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['향수', '디퓨저', '캔들'] },
+      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['향수', '퍼퓸'] }
     ],
     bodycare: [
-      { site: 'dailylike.co.kr', url: 'https://dailylike.co.kr', platform: 'godomall', categories: ['바디'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['바디케어', '바디로션', '바디워시'] },
+      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['바디', '핸드크림'] }
     ],
     haircare: [
-      { site: 'moremo.com', url: 'https://moremo.com', platform: 'shopify', categories: ['hair'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['헤어케어', '샴푸', '트리트먼트'] },
+      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['헤어', '에센스'] }
     ]
   },
   electronics: {
     home_appliance: [
-      { site: 'missdal.com', url: 'https://missdal.com', platform: 'cafe24', categories: ['가전'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['가전', '청소기', '공기청정기'] },
+      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['생활가전', '청소기'] }
     ],
     kitchen_appliance: [
-      { site: 'missdal.com', url: 'https://missdal.com', platform: 'cafe24', categories: ['주방가전'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['주방가전', '에어프라이어', '믹서기'] },
+      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['주방가전', '전기밥솥'] }
     ],
     audio: [
-      { site: 'polashop.co.kr', url: 'https://polashop.co.kr', platform: 'cafe24', categories: ['오디오', '턴테이블'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['블루투스스피커', '이어폰', '헤드폰'] },
+      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['음향기기', '스피커'] }
     ]
   },
   living: {
     kitchen: [
-      { site: 'missdal.com', url: 'https://missdal.com', platform: 'cafe24', categories: ['주방'] },
-      { site: 'sosohome.co.kr', url: 'https://sosohome.co.kr', platform: 'cafe24', categories: ['주방'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['주방용품', '냄비', '프라이팬'] },
+      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['주방', '식기'] }
     ],
     bathroom: [
-      { site: 'sosohome.co.kr', url: 'https://sosohome.co.kr', platform: 'cafe24', categories: ['욕실'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['욕실용품', '수건', '욕실선반'] },
+      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['욕실', '화장실'] }
     ],
     storage: [
-      { site: 'sosohome.co.kr', url: 'https://sosohome.co.kr', platform: 'cafe24', categories: ['수납'] },
-      { site: 'polashop.co.kr', url: 'https://polashop.co.kr', platform: 'cafe24', categories: ['수납'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['수납', '수납박스', '옷장정리'] },
+      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['수납', '정리함'] }
     ],
     cleaning: [
-      { site: 'sosohome.co.kr', url: 'https://sosohome.co.kr', platform: 'cafe24', categories: ['청소'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['청소용품', '걸레', '청소도구'] },
+      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['청소', '세제'] }
     ]
   },
   health: {
     supplements: [
-      { site: 'hurumshop.com', url: 'https://hurumshop.com', platform: 'godomall', categories: ['건강보조제'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['영양제', '비타민', '오메가3'] },
+      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['건강기능식품', '영양제'] }
     ],
     drinks: [
-      { site: 'hurumshop.com', url: 'https://hurumshop.com', platform: 'godomall', categories: ['건강음료'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['건강음료', '홍삼', '비타민음료'] },
+      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['건강음료', '즙'] }
     ],
     fitness: [
-      { site: 'xexymix.com', url: 'https://xexymix.com', platform: 'godomall', categories: ['운동'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['운동용품', '요가매트', '덤벨'] },
+      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['헬스', '운동기구'] }
     ],
     diet: [
-      { site: 'hurumshop.com', url: 'https://hurumshop.com', platform: 'godomall', categories: ['다이어트'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['다이어트', '단백질', '체중관리'] },
+      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['다이어트', '슬리밍'] }
     ]
   },
   luxury: {
     accessories: [
-      { site: 'polashop.co.kr', url: 'https://polashop.co.kr', platform: 'cafe24', categories: ['악세서리', '보석함'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['주얼리', '목걸이', '귀걸이'] },
+      { site: '29cm.co.kr', url: 'https://www.29cm.co.kr', platform: 'custom', categories: ['악세서리', '주얼리'] }
     ],
     premium_furniture: [
-      { site: 'polashop.co.kr', url: 'https://polashop.co.kr', platform: 'cafe24', categories: ['프리미엄'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['프리미엄가구', '원목가구', '디자인가구'] },
+      { site: '29cm.co.kr', url: 'https://www.29cm.co.kr', platform: 'custom', categories: ['가구', '리빙'] }
     ],
     luxury_items: [
-      { site: 'polashop.co.kr', url: 'https://polashop.co.kr', platform: 'cafe24', categories: ['명품소품'] }
+      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['명품소품', '프리미엄', '디자이너'] },
+      { site: '29cm.co.kr', url: 'https://www.29cm.co.kr', platform: 'custom', categories: ['럭셔리', '프리미엄'] }
     ]
   }
 };

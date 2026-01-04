@@ -23,7 +23,8 @@ function generateSessionId(): string {
 
 function cleanupExpiredSessions(): void {
   const now = Date.now();
-  for (const [id, session] of crawlSessions.entries()) {
+  const entries = Array.from(crawlSessions.entries());
+  for (const [id, session] of entries) {
     if (now - session.startedAt.getTime() > SESSION_EXPIRY_MS) {
       crawlSessions.delete(id);
     }
@@ -81,7 +82,7 @@ export async function getCrawlSources(): Promise<{
       subcategoryList.push({
         id: subcategoryId,
         name: subcategoryName,
-        sites: [...new Set(sites)]
+        sites: Array.from(new Set(sites))
       });
     }
     
@@ -148,7 +149,7 @@ async function executeCrawl(sessionId: string, request: CrawlRequest): Promise<v
     
     console.log(`Starting Puppeteer crawl for ${site}...`);
     const keyword = source.categories[0] || subcategory;
-    rawProducts = await crawlProductsWithPuppeteer(site, keyword, limit);
+    rawProducts = await crawlProductsWithPuppeteer(site, keyword, limit, subcategory);
     
     if (rawProducts.length === 0) {
       console.log(`Puppeteer crawl returned no results, falling back to adapter...`);
