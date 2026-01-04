@@ -1,26 +1,22 @@
-import { Search, ShoppingCart, Menu, LogOut, User } from "lucide-react";
+import { Search, ShoppingCart, Menu, LogOut, User, ChevronDown, ChevronRight } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-
-const navItems = [
-  { name: '홈 인테리어', path: '/products/home_interior' },
-  { name: '뷰티', path: '/products/beauty' },
-  { name: '가전/디지털', path: '/products/electronics' },
-  { name: '생활용품', path: '/products/living' },
-  { name: '헬스/건강식품', path: '/products/health' },
-  { name: '럭셔리/명품', path: '/products/luxury' },
-];
+import { CATEGORIES } from "@/lib/categories";
 
 export function Header() {
   const [location, setLocation] = useLocation();
   const { count } = useWishlist();
   const { toast } = useToast();
   const [memberName, setMemberName] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const checkLoginStatus = () => {
@@ -36,6 +32,17 @@ export function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+        setActiveCategory(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("memberToken");
     localStorage.removeItem("memberName");
@@ -49,8 +56,31 @@ export function Header() {
     setLocation("/");
   };
 
+  const handleCategoryEnter = (categoryId: string) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setActiveCategory(categoryId);
+    setIsDropdownOpen(true);
+  };
+
+  const handleCategoryLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setIsDropdownOpen(false);
+      setActiveCategory(null);
+    }, 150);
+  };
+
+  const handleDropdownEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
+  const activeCategoryData = CATEGORIES.find(c => c.id === activeCategory);
+
   return (
-    <header className="w-full bg-white sticky top-0 z-50">
+    <header className="w-full bg-white sticky top-0 z-50 border-b border-gray-100">
       <div className="container-custom py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center cursor-pointer flex-shrink-0">
           <img 
@@ -61,20 +91,61 @@ export function Header() {
           />
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
-          {navItems.map((item) => (
-            <Link 
-              key={item.name} 
-              href={item.path} 
-              className={cn(
-                "text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors whitespace-nowrap",
-                location === item.path && "text-gray-900 font-semibold"
-              )}
-              data-testid={`nav-${item.path.split('/').pop()}`}
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2 relative" ref={dropdownRef}>
+          {CATEGORIES.map((category) => (
+            <div
+              key={category.id}
+              className="relative"
+              onMouseEnter={() => handleCategoryEnter(category.id)}
+              onMouseLeave={handleCategoryLeave}
             >
-              {item.name}
-            </Link>
+              <Link 
+                href={`/products/${category.id}`}
+                className={cn(
+                  "flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors whitespace-nowrap",
+                  location.startsWith(`/products/${category.id}`) && "text-gray-900 font-semibold bg-gray-50"
+                )}
+                data-testid={`nav-${category.id}`}
+              >
+                {category.name}
+                <ChevronDown className={cn(
+                  "w-3.5 h-3.5 transition-transform",
+                  activeCategory === category.id && "rotate-180"
+                )} />
+              </Link>
+            </div>
           ))}
+
+          {isDropdownOpen && activeCategoryData && (
+            <div 
+              className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[200px] z-50"
+              onMouseEnter={handleDropdownEnter}
+              onMouseLeave={handleCategoryLeave}
+            >
+              <div className="px-4 py-2 border-b border-gray-100">
+                <Link 
+                  href={`/products/${activeCategoryData.id}`}
+                  className="text-sm font-semibold text-gray-900 hover:text-blue-600"
+                  onClick={() => setIsDropdownOpen(false)}
+                  data-testid={`dropdown-${activeCategoryData.id}-all`}
+                >
+                  {activeCategoryData.name} 전체보기
+                </Link>
+              </div>
+              {activeCategoryData.subcategories.map((sub) => (
+                <Link
+                  key={sub.id}
+                  href={`/products/${activeCategoryData.id}?subcategory=${sub.id}`}
+                  className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                  onClick={() => setIsDropdownOpen(false)}
+                  data-testid={`dropdown-${activeCategoryData.id}-${sub.id}`}
+                >
+                  {sub.name}
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </Link>
+              ))}
+            </div>
+          )}
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
@@ -122,7 +193,7 @@ export function Header() {
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] sm:w-[320px] overflow-y-auto">
+              <SheetContent side="right" className="w-[300px] sm:w-[340px] overflow-y-auto">
                 <div className="mt-8">
                   <Link href="/" className="block mb-6">
                     <img 
@@ -141,18 +212,12 @@ export function Header() {
                     </div>
                   )}
                   
-                  <nav className="flex flex-col gap-3">
-                    {navItems.map((item) => (
-                      <Link 
-                        key={item.name} 
-                        href={item.path} 
-                        className="text-base font-medium text-gray-700 hover:text-gray-900 py-1"
-                      >
-                        {item.name}
-                      </Link>
+                  <nav className="flex flex-col gap-1">
+                    {CATEGORIES.map((category) => (
+                      <MobileCategoryItem key={category.id} category={category} />
                     ))}
                     
-                    <div className="border-t pt-4 mt-2 space-y-3">
+                    <div className="border-t pt-4 mt-4 space-y-3">
                       {memberName ? (
                         <>
                           <Link href="/profile" className="block text-base font-medium text-gray-600">마이페이지</Link>
@@ -176,5 +241,47 @@ export function Header() {
         </div>
       </div>
     </header>
+  );
+}
+
+function MobileCategoryItem({ category }: { category: typeof CATEGORIES[0] }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="border-b border-gray-100 last:border-b-0">
+      <div className="flex items-center justify-between">
+        <Link 
+          href={`/products/${category.id}`}
+          className="flex-1 text-base font-medium text-gray-700 hover:text-gray-900 py-3"
+        >
+          {category.name}
+        </Link>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="p-2 text-gray-500 hover:text-gray-700"
+          data-testid={`mobile-expand-${category.id}`}
+        >
+          <ChevronDown className={cn(
+            "w-5 h-5 transition-transform",
+            isExpanded && "rotate-180"
+          )} />
+        </button>
+      </div>
+      
+      {isExpanded && (
+        <div className="pl-4 pb-3 space-y-1">
+          {category.subcategories.map((sub) => (
+            <Link
+              key={sub.id}
+              href={`/products/${category.id}?subcategory=${sub.id}`}
+              className="block py-2 text-sm text-gray-600 hover:text-gray-900"
+              data-testid={`mobile-${category.id}-${sub.id}`}
+            >
+              {sub.name}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
