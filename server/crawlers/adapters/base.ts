@@ -1,5 +1,7 @@
 import { RawProduct } from '../types';
 
+const USD_TO_KRW_RATE = 1350;
+
 export abstract class BaseCrawlerAdapter {
   protected site: string;
   protected baseUrl: string;
@@ -18,9 +20,23 @@ export abstract class BaseCrawlerAdapter {
     return this.userAgents[Math.floor(Math.random() * this.userAgents.length)];
   }
 
+  protected convertToKRW(priceStr: string): string {
+    if (!priceStr) return '0';
+    
+    const hasDollar = priceStr.includes('$') || priceStr.toLowerCase().includes('usd');
+    const numericValue = parseFloat(priceStr.replace(/[^\d.]/g, '')) || 0;
+    
+    if (hasDollar && numericValue < 10000) {
+      const krwValue = Math.round(numericValue * USD_TO_KRW_RATE);
+      return krwValue.toLocaleString();
+    }
+    
+    return Math.round(numericValue).toLocaleString();
+  }
+
   protected normalizePrice(priceStr: string): string {
     if (!priceStr) return '0';
-    return priceStr.replace(/[^\d]/g, '').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+    return this.convertToKRW(priceStr);
   }
 
   protected calculateDiscount(original: string, current: string): number {

@@ -2,6 +2,21 @@ import puppeteer, { Browser, Page } from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 import { RawProduct } from './types';
 
+const USD_TO_KRW_RATE = 1350;
+
+function convertToKRW(priceStr: string): number {
+  if (!priceStr) return 0;
+  
+  const hasDollar = priceStr.includes('$') || priceStr.toLowerCase().includes('usd');
+  const numericValue = parseFloat(priceStr.replace(/[^\d.]/g, '')) || 0;
+  
+  if (hasDollar && numericValue < 10000) {
+    return Math.round(numericValue * USD_TO_KRW_RATE);
+  }
+  
+  return Math.round(numericValue);
+}
+
 let browserInstance: Browser | null = null;
 
 async function getBrowser(): Promise<Browser> {
@@ -252,8 +267,8 @@ export async function crawlProductsWithPuppeteer(
         sourceUrl = config.baseUrl + sourceUrl;
       }
       
-      const priceNum = parseInt(p.price.replace(/,/g, ''), 10) || 0;
-      const origPriceNum = p.originalPrice ? parseInt(p.originalPrice.replace(/,/g, ''), 10) : 0;
+      const priceNum = convertToKRW(p.price);
+      const origPriceNum = p.originalPrice ? convertToKRW(p.originalPrice) : 0;
       let discountPercent: number | undefined;
       if (origPriceNum > priceNum) {
         discountPercent = Math.round(((origPriceNum - priceNum) / origPriceNum) * 100);
