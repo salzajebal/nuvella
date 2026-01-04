@@ -1996,9 +1996,16 @@ export async function registerRoutes(
   // Import selected products from crawl session
   app.post("/api/admin/crawling/import", requireAdminAuth, async (req: Request, res: Response) => {
     try {
+      console.log("=== IMPORT REQUEST RECEIVED ===");
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      
       const { sessionId, productIndices } = req.body;
       
+      console.log("Session ID:", sessionId);
+      console.log("Product Indices:", productIndices);
+      
       if (!sessionId || !Array.isArray(productIndices) || productIndices.length === 0) {
+        console.log("Validation failed - missing sessionId or productIndices");
         return res.status(400).json({ 
           success: false, 
           error: "세션 ID와 가져올 상품 인덱스를 지정해주세요." 
@@ -2006,8 +2013,12 @@ export async function registerRoutes(
       }
       
       const results = getCrawlResults(sessionId, 1, 1000);
+      console.log("Crawl results found:", results.session ? "Yes" : "No");
+      console.log("Session status:", results.session?.status);
+      console.log("Total products in session:", results.session?.products?.length);
       
       if (!results.session || results.session.status !== 'completed') {
+        console.log("Session not completed or not found");
         return res.status(400).json({ 
           success: false, 
           error: "완료된 크롤링 세션이 아닙니다." 
