@@ -2,34 +2,38 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useSearch } from "wouter";
 import { useState, useEffect } from "react";
 import type { Product } from "@shared/schema";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-const DEFAULT_CATEGORIES = [
-  { id: "home_interior", name: "홈 인테리어", description: "감각적인 홈 인테리어 제품을 만나보세요" },
-  { id: "beauty", name: "뷰티", description: "뷰티 & 스킨케어 베스트 아이템" },
-  { id: "electronics", name: "가전/디지털", description: "최신 가전 및 디지털 제품" },
-  { id: "living", name: "생활용품", description: "실용적인 생활용품 모음" },
-  { id: "health", name: "헬스/건강식품", description: "건강을 위한 선택" },
-  { id: "luxury", name: "럭셔리/명품", description: "프리미엄 럭셔리 컬렉션" },
-  { id: "baby", name: "유아/완구", description: "아이를 위한 특별한 선물" },
-];
+import { CATEGORIES, getCategoryById, getSubcategoryName } from "@/lib/categories";
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop";
+
+function getProductImage(product: Product): string {
+  if (product.imageUrl) return product.imageUrl;
+  if (product.imageUrls && product.imageUrls.length > 0) return product.imageUrls[0];
+  return DEFAULT_IMAGE;
+}
 
 export default function ProductList() {
   const [match, params] = useRoute("/products/:category");
   const categoryId = match ? params.category : "all";
+  const searchString = useSearch();
+  const searchParams = new URLSearchParams(searchString);
+  const subcategoryId = searchParams.get("subcategory");
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { toggleItem, isInWishlist } = useWishlist();
   const { toast } = useToast();
   
-  const categoryInfo = DEFAULT_CATEGORIES.find(c => c.id === categoryId) || { name: "전체 상품", description: "블루블랙의 모든 상품을 만나보세요" };
+  const categoryData = getCategoryById(categoryId);
+  const categoryName = categoryData?.name || "전체 상품";
+  const categoryDescription = categoryData?.description || "에스텔라의 모든 상품을 만나보세요";
+  const subcategoryName = subcategoryId ? getSubcategoryName(categoryId, subcategoryId) : null;
 
   const handleWishlistToggle = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
@@ -54,9 +58,20 @@ export default function ProductList() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const url = categoryId === "all" 
-          ? "/api/products" 
-          : `/api/products?category=${categoryId}`;
+        let url = "/api/products";
+        const queryParams = [];
+        
+        if (categoryId && categoryId !== "all") {
+          queryParams.push(`category=${categoryId}`);
+        }
+        if (subcategoryId) {
+          queryParams.push(`subcategory=${subcategoryId}`);
+        }
+        
+        if (queryParams.length > 0) {
+          url += "?" + queryParams.join("&");
+        }
+        
         const res = await fetch(url);
         const data = await res.json();
         if (data.success) {
@@ -71,7 +86,7 @@ export default function ProductList() {
     
     setLoading(true);
     fetchProducts();
-  }, [categoryId]);
+  }, [categoryId, subcategoryId]);
 
   const formatPrice = (price: string) => {
     const numPrice = parseInt(price.replace(/,/g, ''), 10);
@@ -83,20 +98,66 @@ export default function ProductList() {
     <div className="min-h-screen bg-white font-sans">
       <Header />
       
-      <main className="container-custom py-12">
-        <div className="text-center mb-12">
+      <main className="container-custom py-8 sm:py-12">
+        <div className="mb-8">
+          <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+            <Link href="/" className="hover:text-gray-700">홈</Link>
+            <span>/</span>
+            <Link href={`/products/${categoryId}`} className="hover:text-gray-700">{categoryName}</Link>
+            {subcategoryName && (
+              <>
+                <span>/</span>
+                <span className="text-gray-900">{subcategoryName}</span>
+              </>
+            )}
+          </div>
+          
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2" data-testid="text-category-title">
-            {categoryInfo.name}
+            {subcategoryName || categoryName}
           </h1>
-          <p className="text-gray-500 text-sm">{categoryInfo.description}</p>
+          <p className="text-gray-500 text-sm">{categoryDescription}</p>
         </div>
+
+        {categoryData && (
+          <div className="mb-8 overflow-x-auto">
+            <div className="flex gap-2 pb-2">
+              <Link
+                href={`/products/${categoryId}`}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium rounded-full border whitespace-nowrap transition-colors",
+                  !subcategoryId
+                    ? "bg-gray-900 text-white border-gray-900"
+                    : "bg-white text-gray-700 border-gray-200 hover:border-gray-400"
+                )}
+                data-testid={`filter-${categoryId}-all`}
+              >
+                전체
+              </Link>
+              {categoryData.subcategories.map((sub) => (
+                <Link
+                  key={sub.id}
+                  href={`/products/${categoryId}?subcategory=${sub.id}`}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium rounded-full border whitespace-nowrap transition-colors",
+                    subcategoryId === sub.id
+                      ? "bg-gray-900 text-white border-gray-900"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-gray-400"
+                  )}
+                  data-testid={`filter-${categoryId}-${sub.id}`}
+                >
+                  {sub.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
         
         <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
           <div className="text-sm text-gray-500">
             총 <span className="font-bold text-gray-900" data-testid="text-product-count">{products.length}</span>개의 상품
           </div>
           <div className="flex gap-2 text-sm">
-            <select className="border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-900">
+            <select className="border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-900 rounded">
               <option>신상품순</option>
               <option>낮은가격순</option>
               <option>높은가격순</option>
@@ -118,22 +179,27 @@ export default function ProductList() {
                 className="group cursor-pointer"
                 data-testid={`card-product-${product.id}`}
               >
-                <div className="aspect-[3/4] bg-gray-100 relative overflow-hidden mb-3">
+                <div className="aspect-[3/4] bg-gray-100 relative overflow-hidden mb-3 rounded-lg">
                   <img 
-                    src={product.imageUrl || DEFAULT_IMAGE} 
+                    src={getProductImage(product)} 
                     alt={product.name} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   
                   <div className="absolute top-2 left-2 flex flex-col gap-1">
                     {product.isBest && (
-                      <span className="bg-gray-900 text-white text-[10px] px-2 py-1 font-medium">
+                      <span className="bg-gray-900 text-white text-[10px] px-2 py-1 font-medium rounded">
                         BEST
                       </span>
                     )}
                     {product.isNew && (
-                      <span className="bg-red-500 text-white text-[10px] px-2 py-1 font-medium">
+                      <span className="bg-red-500 text-white text-[10px] px-2 py-1 font-medium rounded">
                         NEW
+                      </span>
+                    )}
+                    {product.isHot && (
+                      <span className="bg-orange-500 text-white text-[10px] px-2 py-1 font-medium rounded">
+                        HOT
                       </span>
                     )}
                   </div>
@@ -178,7 +244,7 @@ export default function ProductList() {
             ))}
           </div>
         ) : (
-          <div className="py-20 text-center bg-gray-50">
+          <div className="py-20 text-center bg-gray-50 rounded-lg">
             <p className="text-gray-500 mb-4">등록된 상품이 없습니다.</p>
             <p className="text-sm text-gray-400">관리자 페이지에서 상품을 추가해주세요.</p>
           </div>

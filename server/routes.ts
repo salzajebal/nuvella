@@ -67,11 +67,14 @@ export async function registerRoutes(
   // Get all products
   app.get("/api/products", async (req: Request, res: Response) => {
     try {
-      const { category } = req.query;
+      const { category, subcategory } = req.query;
       let productList;
       
       if (category && category !== "all") {
         productList = await storage.getProductsByCategory(category as string);
+        if (subcategory) {
+          productList = productList.filter(p => p.subcategory === subcategory);
+        }
       } else {
         productList = await storage.getAllProducts();
       }
@@ -2044,6 +2047,9 @@ export async function registerRoutes(
         try {
           console.log("Importing product:", draft.name);
           
+          const imageUrls = Array.isArray(draft.imageUrls) ? draft.imageUrls : [];
+          const primaryImageUrl = draft.imageUrl || (imageUrls.length > 0 ? imageUrls[0] : undefined);
+          
           const productData = {
             name: draft.name || '상품명 없음',
             weight: draft.weight || '-',
@@ -2051,9 +2057,10 @@ export async function registerRoutes(
             price: typeof draft.price === 'string' ? draft.price : String(draft.price || '0'),
             originalPrice: draft.originalPrice ? String(draft.originalPrice) : undefined,
             discountPercent: typeof draft.discountPercent === 'number' ? draft.discountPercent : undefined,
-            imageUrl: draft.imageUrl || undefined,
-            imageUrls: Array.isArray(draft.imageUrls) ? draft.imageUrls : [],
+            imageUrl: primaryImageUrl,
+            imageUrls: imageUrls,
             category: draft.category || '기타',
+            subcategory: draft.subcategory || undefined,
             description: draft.description || `${draft.sourceSite}에서 가져온 상품입니다.`,
             isBest: Boolean(draft.isBest),
             isNew: draft.isNew !== false,

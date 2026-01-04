@@ -19,6 +19,12 @@ const DEFAULT_CATEGORIES = [
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop";
 
+function getProductImage(product: Product): string {
+  if (product.imageUrl) return product.imageUrl;
+  if (product.imageUrls && product.imageUrls.length > 0) return product.imageUrls[0];
+  return DEFAULT_IMAGE;
+}
+
 interface ProductGridProps {
   title?: string;
   showCategoryFilter?: boolean;
@@ -165,7 +171,7 @@ export function ProductGrid({
             >
               <div className="aspect-[3/4] bg-gray-100 relative overflow-hidden mb-3">
                 <img 
-                  src={product.imageUrl || DEFAULT_IMAGE} 
+                  src={getProductImage(product)} 
                   alt={product.name} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
