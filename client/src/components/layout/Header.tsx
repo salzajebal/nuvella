@@ -227,10 +227,11 @@ export function Header() {
                           </button>
                         </>
                       ) : (
-                        <>
-                          <Link href="/login" className="block text-base font-medium text-gray-600">로그인</Link>
-                          <Link href="/signup" className="block text-base font-medium text-gray-600">회원가입</Link>
-                        </>
+                        <div className="flex items-center gap-3">
+                          <Link href="/login" className="text-base font-medium text-gray-600">로그인</Link>
+                          <span className="text-gray-300">|</span>
+                          <Link href="/signup" className="text-base font-medium text-gray-600">회원가입</Link>
+                        </div>
                       )}
                     </div>
                   </nav>
