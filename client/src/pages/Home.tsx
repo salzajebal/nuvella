@@ -10,23 +10,27 @@ import type { Review } from "@shared/schema";
 
 function BrandSection() {
   return (
-    <section className="py-12 sm:py-16 bg-gradient-to-r from-blue-50 via-white to-blue-50">
+    <section className="py-12 sm:py-16 bg-gradient-to-r from-gold-50 via-white to-gold-50">
       <div className="container-custom">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
-            <div className="inline-block border border-gray-300 px-4 py-2">
-              <span className="text-sm text-gray-600">블루블랙</span>
+            <div className="inline-block border border-gold-400 px-4 py-2 bg-gold-50">
+              <span className="text-sm text-gold-700">ESTELLA</span>
             </div>
             <h2 
               className="text-3xl sm:text-4xl font-bold text-gray-900"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              블루블랙
+              에스텔라
             </h2>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              프리미엄 라이프스타일을 위한 엄선된 상품들을 만나보세요.
+              홈 인테리어부터 뷰티, 럭셔리까지 당신의 일상을 특별하게 합니다.
+            </p>
             <Link href="/products">
               <Button 
                 variant="outline" 
-                className="rounded-full px-6 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white"
+                className="rounded-full px-6 border-gold-600 text-gold-700 hover:bg-gold-600 hover:text-white"
                 data-testid="button-view-more"
               >
                 자세히보기
@@ -38,24 +42,23 @@ function BrandSection() {
             <div 
               className="absolute inset-0 rounded-lg"
               style={{
-                background: "linear-gradient(135deg, #87CEEB 0%, #4682B4 50%, #1E90FF 100%)",
-                opacity: 0.3
+                background: "linear-gradient(135deg, #D4AF37 0%, #C5A028 50%, #B8860B 100%)",
+                opacity: 0.15
               }}
             />
             <div className="relative grid grid-cols-2 gap-4 p-4">
               <div className="bg-white rounded-lg overflow-hidden shadow-sm">
                 <div className="aspect-square bg-gray-100">
                   <img 
-                    src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop" 
-                    alt="Beauty product" 
+                    src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=400&fit=crop" 
+                    alt="홈 인테리어" 
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="p-3">
-                  <p className="text-xs text-gray-600 line-clamp-2">아네트 레비쉬 미라클 듀얼 세럼 13g</p>
+                  <p className="text-xs text-gray-600 line-clamp-2">프리미엄 홈 인테리어 컬렉션</p>
                   <div className="mt-2">
-                    <span className="text-xs text-gray-400 line-through">34,000원</span>
-                    <span className="text-sm font-bold text-gray-900 ml-2">28,900원</span>
+                    <span className="text-sm font-bold text-gold-700">홈 인테리어</span>
                   </div>
                 </div>
               </div>
@@ -64,15 +67,14 @@ function BrandSection() {
                 <div className="aspect-square bg-gray-100">
                   <img 
                     src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&h=400&fit=crop" 
-                    alt="Beauty product" 
+                    alt="뷰티" 
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="p-3">
-                  <p className="text-xs text-gray-600 line-clamp-2">오아드 포어 퍼펙팅 미라클 쿠션 2 colors</p>
+                  <p className="text-xs text-gray-600 line-clamp-2">럭셔리 뷰티 & 스킨케어</p>
                   <div className="mt-2">
-                    <span className="text-xs text-gray-400 line-through">45,000원</span>
-                    <span className="text-sm font-bold text-gray-900 ml-2">39,000원</span>
+                    <span className="text-sm font-bold text-gold-700">뷰티</span>
                   </div>
                 </div>
               </div>
