@@ -2115,6 +2115,24 @@ export async function registerRoutes(
     }
   });
 
+  // Delete all products
+  app.delete("/api/admin/products/all", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      console.log("=== DELETE ALL PRODUCTS STARTED ===");
+      const deletedCount = await storage.deleteAllProducts();
+      console.log(`=== DELETED ${deletedCount} PRODUCTS ===`);
+      
+      res.json({
+        success: true,
+        data: { deletedCount },
+        message: `${deletedCount}개의 상품이 삭제되었습니다.`
+      });
+    } catch (error) {
+      console.error("Error deleting all products:", error);
+      res.status(500).json({ success: false, error: "전체 상품 삭제 중 오류가 발생했습니다." });
+    }
+  });
+
   // Batch crawl vivian-mall.com - automatic full crawling
   app.post("/api/admin/crawling/batch-vivian", requireAdminAuth, async (req: Request, res: Response) => {
     try {
@@ -2138,17 +2156,23 @@ export async function registerRoutes(
         if (autoImport && result.success && result.products.length > 0) {
           for (const product of result.products) {
             try {
-              const imageUrls = product.imageUrl ? [product.imageUrl] : [];
+              const allImages = product.imageUrls && product.imageUrls.length > 0 
+                ? product.imageUrls 
+                : (product.imageUrl ? [product.imageUrl] : []);
+              
+              const descImages = product.descriptionImages || [];
+              
               const productData = {
                 name: product.name || '상품명 없음',
                 weight: '-',
                 purity: '-',
                 price: product.price || '0',
                 originalPrice: product.originalPrice,
-                imageUrl: product.imageUrl,
-                imageUrls,
+                imageUrl: allImages[0] || product.imageUrl,
+                imageUrls: allImages,
+                descriptionImageUrls: descImages,
                 category: product.category,
-                description: `에스텔라 프리미엄 상품입니다.`,
+                description: product.description || `에스텔라 프리미엄 상품입니다.`,
                 isBest: Math.random() > 0.7,
                 isNew: true,
                 isHot: Math.random() > 0.8,
@@ -2207,17 +2231,23 @@ export async function registerRoutes(
       if (autoImport && result.success && result.products.length > 0) {
         for (const product of result.products) {
           try {
-            const imageUrls = product.imageUrl ? [product.imageUrl] : [];
+            const allImages = product.imageUrls && product.imageUrls.length > 0 
+              ? product.imageUrls 
+              : (product.imageUrl ? [product.imageUrl] : []);
+            
+            const descImages = product.descriptionImages || [];
+            
             const productData = {
               name: product.name || '상품명 없음',
               weight: '-',
               purity: '-',
               price: product.price || '0',
               originalPrice: product.originalPrice,
-              imageUrl: product.imageUrl,
-              imageUrls,
+              imageUrl: allImages[0] || product.imageUrl,
+              imageUrls: allImages,
+              descriptionImageUrls: descImages,
               category: product.category,
-              description: `에스텔라 프리미엄 상품입니다.`,
+              description: product.description || `에스텔라 프리미엄 상품입니다.`,
               isBest: Math.random() > 0.7,
               isNew: true,
               isHot: Math.random() > 0.8,

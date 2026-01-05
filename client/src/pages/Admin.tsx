@@ -209,6 +209,8 @@ export default function Admin() {
   const [crawlLimit, setCrawlLimit] = useState<number>(20);
   const [crawlLoading, setCrawlLoading] = useState(false);
   const [batchCrawlLoading, setBatchCrawlLoading] = useState(false);
+  const [deleteAllLoading, setDeleteAllLoading] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -3918,6 +3920,79 @@ export default function Admin() {
 
         {activeTab === "crawling" && (
           <div className="space-y-6">
+            <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold flex items-center gap-2">
+                    <Trash2 className="w-6 h-6" />
+                    기존 상품 전체 삭제
+                  </h3>
+                  <p className="text-red-100 mt-1">모든 등록된 상품을 삭제합니다. 이 작업은 되돌릴 수 없습니다.</p>
+                </div>
+                {!showDeleteAllConfirm ? (
+                  <Button
+                    data-testid="button-delete-all-products"
+                    onClick={() => setShowDeleteAllConfirm(true)}
+                    disabled={deleteAllLoading}
+                    className="bg-white text-red-600 hover:bg-red-50 font-bold px-6 py-3"
+                  >
+                    <Trash2 className="w-5 h-5 mr-2" />
+                    전체 상품 삭제
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <span className="text-white font-medium">정말 삭제하시겠습니까?</span>
+                    <Button
+                      data-testid="button-confirm-delete-all"
+                      onClick={async () => {
+                        setDeleteAllLoading(true);
+                        try {
+                          const res = await fetchWithAuth("/api/admin/products/all", {
+                            method: "DELETE"
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            toast({ 
+                              title: "삭제 완료", 
+                              description: data.message 
+                            });
+                            fetchProducts();
+                          } else {
+                            toast({ title: "오류", description: data.error, variant: "destructive" });
+                          }
+                        } catch (error) {
+                          toast({ title: "오류", description: "상품 삭제 중 오류가 발생했습니다.", variant: "destructive" });
+                        } finally {
+                          setDeleteAllLoading(false);
+                          setShowDeleteAllConfirm(false);
+                        }
+                      }}
+                      disabled={deleteAllLoading}
+                      className="bg-white text-red-600 hover:bg-red-50 font-bold"
+                    >
+                      {deleteAllLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          삭제 중...
+                        </>
+                      ) : (
+                        "확인"
+                      )}
+                    </Button>
+                    <Button
+                      data-testid="button-cancel-delete-all"
+                      onClick={() => setShowDeleteAllConfirm(false)}
+                      disabled={deleteAllLoading}
+                      variant="outline"
+                      className="border-white text-white hover:bg-white/10"
+                    >
+                      취소
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-lg p-6 text-white">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>

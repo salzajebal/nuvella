@@ -6,8 +6,11 @@ export interface VivianProduct {
   price: string;
   originalPrice?: string;
   imageUrl: string;
+  imageUrls: string[];
+  descriptionImages: string[];
   sourceUrl: string;
   category: string;
+  description?: string;
 }
 
 export interface VivianCrawlResult {
@@ -19,6 +22,8 @@ export interface VivianCrawlResult {
 }
 
 const VIVIAN_BASE_URL = 'https://vivian-mall.com';
+
+const USD_TO_KRW_RATE = 1450;
 
 const CATEGORY_MAPPING: Record<number, string> = {
   10: 'home_interior',
@@ -40,10 +45,45 @@ const CATEGORY_NAMES: Record<number, string> = {
   70: '유아/완구'
 };
 
-function parsePrice(priceStr: string): string {
+function convertUsdToKrw(usdPrice: number): number {
+  const krwPrice = usdPrice * USD_TO_KRW_RATE;
+  return Math.round(krwPrice / 100) * 100;
+}
+
+function parseAndConvertPrice(priceStr: string): string {
   if (!priceStr) return '0';
-  const numericValue = priceStr.replace(/[^\d]/g, '');
-  return numericValue || '0';
+  
+  const cleanedStr = priceStr.replace(/[,\s]/g, '');
+  
+  const dollarMatch = cleanedStr.match(/\$\s*([\d.]+)/);
+  if (dollarMatch) {
+    const usdAmount = parseFloat(dollarMatch[1]);
+    if (!isNaN(usdAmount) && usdAmount > 0) {
+      const krwAmount = convertUsdToKrw(usdAmount);
+      return String(krwAmount);
+    }
+  }
+  
+  const numericMatch = cleanedStr.match(/([\d.]+)/);
+  if (numericMatch) {
+    const value = parseFloat(numericMatch[1]);
+    if (!isNaN(value)) {
+      if (priceStr.includes('₩') || priceStr.includes('원') || value >= 10000) {
+        return String(Math.round(value));
+      }
+      const krwAmount = convertUsdToKrw(value);
+      return String(krwAmount);
+    }
+  }
+  
+  return '0';
+}
+
+function absoluteUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('//')) return `https:${url}`;
+  return `${VIVIAN_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
 async function fetchWithRetry(url: string, retries = 3): Promise<string> {
@@ -69,6 +109,73 @@ async function fetchWithRetry(url: string, retries = 3): Promise<string> {
   throw new Error('Failed after retries');
 }
 
+async function fetchProductDetail(sourceUrl: string): Promise<{
+  imageUrls: string[];
+  descriptionImages: string[];
+  description: string;
+}> {
+  try {
+    const html = await fetchWithRetry(sourceUrl);
+    const $ = cheerio.load(html);
+    
+    const imageUrls: string[] = [];
+    const descriptionImages: string[] = [];
+    const seenUrls = new Set<string>();
+    
+    $('#sit_pvi img, .product-image img, .item-photo img, .prd-detail-img img, .main-image img').each((_, el) => {
+      const src = $(el).attr('src') || $(el).attr('data-src');
+      if (src) {
+        const fullUrl = absoluteUrl(src);
+        if (!seenUrls.has(fullUrl) && !fullUrl.includes('icon') && !fullUrl.includes('logo')) {
+          seenUrls.add(fullUrl);
+          imageUrls.push(fullUrl);
+        }
+      }
+    });
+    
+    $('.thumbnail img, .thumb-list img, .slider img, .gallery img').each((_, el) => {
+      const src = $(el).attr('src') || $(el).attr('data-src');
+      if (src) {
+        const fullUrl = absoluteUrl(src);
+        if (!seenUrls.has(fullUrl) && !fullUrl.includes('icon') && !fullUrl.includes('logo')) {
+          seenUrls.add(fullUrl);
+          imageUrls.push(fullUrl);
+        }
+      }
+    });
+    
+    $('#sit_inf img, .product-description img, .item-detail img, .detail-content img, #sit_inf_explan img, .info-box img').each((_, el) => {
+      const src = $(el).attr('src') || $(el).attr('data-src');
+      if (src) {
+        const fullUrl = absoluteUrl(src);
+        if (!seenUrls.has(fullUrl) && !fullUrl.includes('icon') && !fullUrl.includes('logo') && !fullUrl.includes('button')) {
+          seenUrls.add(fullUrl);
+          descriptionImages.push(fullUrl);
+        }
+      }
+    });
+    
+    let description = '';
+    const descText = $('#sit_inf, .product-description, .item-detail, .detail-content').text().trim();
+    if (descText) {
+      description = descText.substring(0, 500).replace(/\s+/g, ' ');
+    }
+    
+    return {
+      imageUrls: imageUrls.slice(0, 10),
+      descriptionImages: descriptionImages.slice(0, 20),
+      description
+    };
+  } catch (error) {
+    console.error(`[Vivian Crawler] Error fetching detail page ${sourceUrl}:`, error);
+    return {
+      imageUrls: [],
+      descriptionImages: [],
+      description: ''
+    };
+  }
+}
+
 export async function crawlVivianCategory(categoryId: number, limit: number = 20): Promise<VivianCrawlResult> {
   const category = CATEGORY_MAPPING[categoryId];
   if (!category) {
@@ -88,10 +195,10 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 20
     const html = await fetchWithRetry(url);
     const $ = cheerio.load(html);
     
-    const products: VivianProduct[] = [];
+    const basicProducts: { id: string; name: string; price: string; originalPrice?: string; imageUrl: string; sourceUrl: string }[] = [];
 
     $('li.prd-item, .product-item, .sct_li').each((index, element) => {
-      if (products.length >= limit) return false;
+      if (basicProducts.length >= limit) return false;
 
       const $el = $(element);
       
@@ -105,36 +212,33 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 20
                    $el.find('.title').text().trim();
       
       const priceText = $el.find('.prd-price, .price, .sale-price, .sct_price').text().trim();
-      const price = parsePrice(priceText);
+      const price = parseAndConvertPrice(priceText);
       
       const originalPriceText = $el.find('.original-price, .base-price, del').text().trim();
-      const originalPrice = originalPriceText ? parsePrice(originalPriceText) : undefined;
+      const originalPrice = originalPriceText ? parseAndConvertPrice(originalPriceText) : undefined;
       
       let imageUrl = $el.find('img').first().attr('src') || 
                      $el.find('img').first().attr('data-src') || '';
       
-      if (imageUrl && !imageUrl.startsWith('http')) {
-        imageUrl = imageUrl.startsWith('//') ? `https:${imageUrl}` : `${VIVIAN_BASE_URL}${imageUrl}`;
-      }
+      imageUrl = absoluteUrl(imageUrl);
       
-      const sourceUrl = href.startsWith('http') ? href : `${VIVIAN_BASE_URL}${href}`;
+      const sourceUrl = absoluteUrl(href);
       
       if (name && (price !== '0' || imageUrl)) {
-        products.push({
+        basicProducts.push({
           id: productId,
           name: name.substring(0, 200),
           price,
           originalPrice,
           imageUrl,
-          sourceUrl,
-          category
+          sourceUrl
         });
       }
     });
 
-    if (products.length === 0) {
+    if (basicProducts.length === 0) {
       $('a[href*="item.php"]').each((index, element) => {
-        if (products.length >= limit) return false;
+        if (basicProducts.length >= limit) return false;
         
         const $el = $(element);
         const href = $el.attr('href') || '';
@@ -143,30 +247,58 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 20
         
         const productId = productIdMatch[1];
         const $img = $el.find('img').first();
-        const imageUrl = $img.attr('src') || '';
+        const imageUrl = absoluteUrl($img.attr('src') || '');
         const name = $img.attr('alt') || $el.text().trim();
         
         const $parent = $el.closest('li, div, article');
         const priceText = $parent.find('.price, [class*="price"]').text() || '';
-        const price = parsePrice(priceText);
+        const price = parseAndConvertPrice(priceText);
         
         if (name && imageUrl) {
-          const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${VIVIAN_BASE_URL}${imageUrl}`;
-          const fullSourceUrl = href.startsWith('http') ? href : `${VIVIAN_BASE_URL}${href}`;
-          
-          products.push({
+          basicProducts.push({
             id: productId,
             name: name.substring(0, 200),
             price: price || '0',
-            imageUrl: fullImageUrl,
-            sourceUrl: fullSourceUrl,
-            category
+            imageUrl,
+            sourceUrl: absoluteUrl(href)
           });
         }
       });
     }
 
-    console.log(`[Vivian Crawler] Found ${products.length} products in ${CATEGORY_NAMES[categoryId]}`);
+    console.log(`[Vivian Crawler] Found ${basicProducts.length} products in ${CATEGORY_NAMES[categoryId]}, fetching details...`);
+    
+    const products: VivianProduct[] = [];
+    
+    for (let i = 0; i < basicProducts.length; i++) {
+      const basicProduct = basicProducts[i];
+      
+      console.log(`[Vivian Crawler] Fetching detail ${i + 1}/${basicProducts.length}: ${basicProduct.name.substring(0, 30)}...`);
+      
+      const detail = await fetchProductDetail(basicProduct.sourceUrl);
+      
+      const allImages = [basicProduct.imageUrl, ...detail.imageUrls].filter(Boolean);
+      const uniqueImages = Array.from(new Set(allImages));
+      
+      products.push({
+        id: basicProduct.id,
+        name: basicProduct.name,
+        price: basicProduct.price,
+        originalPrice: basicProduct.originalPrice,
+        imageUrl: uniqueImages[0] || basicProduct.imageUrl,
+        imageUrls: uniqueImages,
+        descriptionImages: detail.descriptionImages,
+        sourceUrl: basicProduct.sourceUrl,
+        category,
+        description: detail.description || `에스텔라 프리미엄 ${CATEGORY_NAMES[categoryId]} 상품입니다.`
+      });
+      
+      if (i < basicProducts.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+    }
+
+    console.log(`[Vivian Crawler] Completed ${products.length} products with details in ${CATEGORY_NAMES[categoryId]}`);
     
     return {
       category,

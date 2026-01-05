@@ -142,6 +142,7 @@ export const products = pgTable("products", {
   discountPercent: integer("discount_percent"),
   imageUrl: text("image_url"),
   imageUrls: text("image_urls").array().default([]),
+  descriptionImageUrls: text("description_image_urls").array().default([]),
   category: text("category").notNull(),
   subcategory: text("subcategory"),
   isBest: boolean("is_best").default(false),
