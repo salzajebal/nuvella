@@ -112,7 +112,7 @@ const PRODUCT_DETAILS: Record<string, { features: string[]; specs: { label: stri
     ],
     notice: "럭셔리 제품은 정품 보증서와 함께 배송됩니다. A/S는 브랜드 공식 서비스센터를 이용해주세요."
   },
-  baby: {
+  kids: {
     features: [
       "유해물질 없는 안전한 소재",
       "KC 안전 인증 완료 제품",

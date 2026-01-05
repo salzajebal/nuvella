@@ -2115,22 +2115,18 @@ export async function registerRoutes(
     }
   });
 
-  // Batch crawl W Concept - automatic full crawling
-  app.post("/api/admin/crawling/batch-wconcept", requireAdminAuth, async (req: Request, res: Response) => {
+  // Batch crawl vivian-mall.com - automatic full crawling
+  app.post("/api/admin/crawling/batch-vivian", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      const { categories, productsPerKeyword = 15, autoImport = true } = req.body;
+      const { productsPerCategory = 20, autoImport = true } = req.body;
       
-      console.log("=== BATCH CRAWL WCONCEPT STARTED ===");
-      console.log("Categories:", categories || "ALL");
-      console.log("Products per keyword:", productsPerKeyword);
+      console.log("=== BATCH CRAWL VIVIAN-MALL STARTED ===");
+      console.log("Products per category:", productsPerCategory);
       console.log("Auto import:", autoImport);
       
-      const { batchCrawlWconcept, getWconceptCategories } = await import('./crawlers/puppeteer-crawler');
+      const { crawlAllVivianCategories, getVivianCategoryName } = await import('./crawlers/vivian-crawler');
       
-      const results = await batchCrawlWconcept(
-        categories,
-        productsPerKeyword
-      );
+      const results = await crawlAllVivianCategories(productsPerCategory);
       
       let totalCrawled = 0;
       let totalImported = 0;
@@ -2149,17 +2145,15 @@ export async function registerRoutes(
                 purity: '-',
                 price: product.price || '0',
                 originalPrice: product.originalPrice,
-                discountPercent: product.discountPercent,
                 imageUrl: product.imageUrl,
                 imageUrls,
-                category: result.category,
-                subcategory: result.keyword,
+                category: product.category,
                 description: `에스텔라 프리미엄 상품입니다.`,
                 isBest: Math.random() > 0.7,
                 isNew: true,
                 isHot: Math.random() > 0.8,
                 useFixedPrice: true,
-                sourceSite: 'estella.kr',
+                sourceSite: 'vivian-mall.com',
                 sourceUrl: product.sourceUrl
               };
               
@@ -2181,10 +2175,9 @@ export async function registerRoutes(
         data: {
           totalCrawled,
           totalImported,
-          categories: getWconceptCategories(),
           results: results.map(r => ({
             category: r.category,
-            keyword: r.keyword,
+            categoryName: getVivianCategoryName(r.categoryId),
             productCount: r.products.length,
             success: r.success,
             error: r.error
@@ -2200,20 +2193,80 @@ export async function registerRoutes(
     }
   });
 
-  // Get W Concept categories for batch crawl
-  app.get("/api/admin/crawling/wconcept-categories", requireAdminAuth, async (req: Request, res: Response) => {
+  // Crawl single category from vivian-mall
+  app.post("/api/admin/crawling/vivian-category", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      const { getWconceptCategories, getWconceptKeywords } = await import('./crawlers/puppeteer-crawler');
+      const { categoryId, limit = 20, autoImport = true } = req.body;
       
-      const categories = getWconceptCategories();
-      const categoryDetails = categories.map(cat => ({
-        name: cat,
-        keywords: getWconceptKeywords(cat)
+      const { crawlVivianCategory, getVivianCategoryName } = await import('./crawlers/vivian-crawler');
+      
+      const result = await crawlVivianCategory(categoryId, limit);
+      
+      let importedCount = 0;
+      
+      if (autoImport && result.success && result.products.length > 0) {
+        for (const product of result.products) {
+          try {
+            const imageUrls = product.imageUrl ? [product.imageUrl] : [];
+            const productData = {
+              name: product.name || '상품명 없음',
+              weight: '-',
+              purity: '-',
+              price: product.price || '0',
+              originalPrice: product.originalPrice,
+              imageUrl: product.imageUrl,
+              imageUrls,
+              category: product.category,
+              description: `에스텔라 프리미엄 상품입니다.`,
+              isBest: Math.random() > 0.7,
+              isNew: true,
+              isHot: Math.random() > 0.8,
+              useFixedPrice: true,
+              sourceSite: 'vivian-mall.com',
+              sourceUrl: product.sourceUrl
+            };
+            
+            await storage.createProduct(productData);
+            importedCount++;
+          } catch (e) {
+            console.error("Error importing product:", e);
+          }
+        }
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          category: result.category,
+          categoryName: getVivianCategoryName(result.categoryId),
+          productCount: result.products.length,
+          importedCount,
+          products: result.products
+        }
+      });
+    } catch (error) {
+      console.error("Category crawl error:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "카테고리 크롤링 중 오류가 발생했습니다." 
+      });
+    }
+  });
+
+  // Get vivian-mall category list
+  app.get("/api/admin/crawling/vivian-categories", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { getVivianCategoryIds, getVivianCategoryName } = await import('./crawlers/vivian-crawler');
+      
+      const categoryIds = getVivianCategoryIds();
+      const categories = categoryIds.map(id => ({
+        id,
+        name: getVivianCategoryName(id)
       }));
       
-      res.json({ success: true, data: categoryDetails });
+      res.json({ success: true, data: categories });
     } catch (error) {
-      console.error("Error getting W Concept categories:", error);
+      console.error("Error getting vivian categories:", error);
       res.status(500).json({ success: false, error: "카테고리 조회 중 오류가 발생했습니다." });
     }
   });

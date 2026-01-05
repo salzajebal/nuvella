@@ -14,7 +14,7 @@ const DEFAULT_CATEGORIES = [
   { id: "living", name: "생활용품" },
   { id: "health", name: "헬스/건강식품" },
   { id: "luxury", name: "럭셔리/명품" },
-  { id: "baby", name: "유아/완구" },
+  { id: "kids", name: "유아/완구" },
 ];
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop";

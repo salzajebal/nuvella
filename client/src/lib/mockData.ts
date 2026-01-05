@@ -5,7 +5,7 @@ export const CATEGORIES = [
   { id: "living", name: "생활용품", count: 42, description: "실용적인 생활용품 모음" },
   { id: "health", name: "헬스/건강식품", count: 18, description: "건강을 위한 선택" },
   { id: "luxury", name: "럭셔리/명품", count: 15, description: "프리미엄 럭셔리 컬렉션" },
-  { id: "baby", name: "유아/완구", count: 22, description: "아이를 위한 특별한 선물" },
+  { id: "kids", name: "유아/완구", count: 22, description: "아이를 위한 특별한 선물" },
 ];
 
 export const PRODUCTS = [
