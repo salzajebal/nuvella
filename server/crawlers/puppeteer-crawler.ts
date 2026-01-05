@@ -123,25 +123,27 @@ const SITE_CONFIGS: Record<string, CrawlConfig> = {
     site: 'wconcept.co.kr',
     baseUrl: 'https://www.wconcept.co.kr',
     searchPath: '/Search?keyword=',
-    productSelector: '[class*="ProductCard"], [class*="product-card"], .product-item, li[class*="item"]',
-    nameSelector: '[class*="product-name"], [class*="name"], .brand-name + span, p[class*="name"]',
-    priceSelector: '[class*="price"], .sale-price, span[class*="price"]',
-    originalPriceSelector: '[class*="original"], del, .origin-price',
-    imageSelector: 'img[src*="product-image.wconcept"], img[src*="wimage.wconcept"], img',
-    linkSelector: 'a[href*="/Product/"]',
-    scrollCount: 3
+    productSelector: 'CUSTOM_WCONCEPT',
+    nameSelector: '',
+    priceSelector: '',
+    originalPriceSelector: '',
+    imageSelector: '',
+    linkSelector: '',
+    scrollCount: 4,
+    waitForSelector: 'img[src*="product-image.wconcept"]'
   },
   'display.wconcept.co.kr': {
     site: 'display.wconcept.co.kr',
     baseUrl: 'https://display.wconcept.co.kr',
-    searchPath: '/Search?keyword=',
-    productSelector: '[class*="ProductCard"], [class*="product-card"], .product-item, li[class*="item"]',
-    nameSelector: '[class*="product-name"], [class*="name"], .brand-name + span, p[class*="name"]',
-    priceSelector: '[class*="price"], .sale-price, span[class*="price"]',
-    originalPriceSelector: '[class*="original"], del, .origin-price',
-    imageSelector: 'img[src*="product-image.wconcept"], img[src*="wimage.wconcept"], img',
-    linkSelector: 'a[href*="/Product/"]',
-    scrollCount: 3
+    searchPath: '/search?keyword=',
+    productSelector: 'CUSTOM_WCONCEPT',
+    nameSelector: '',
+    priceSelector: '',
+    originalPriceSelector: '',
+    imageSelector: '',
+    linkSelector: '',
+    scrollCount: 4,
+    waitForSelector: 'img[src*="product-image.wconcept"]'
   }
 };
 
@@ -320,7 +322,10 @@ export async function crawlProductsWithPuppeteer(
     
     await page.setRequestInterception(true);
     page.on('request', (req) => {
-      if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
+      const isWconcept = site.includes('wconcept');
+      if (req.resourceType() === 'image' && isWconcept) {
+        req.continue();
+      } else if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
         req.abort();
       } else {
         req.continue();
@@ -347,6 +352,123 @@ export async function crawlProductsWithPuppeteer(
     }
     
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Custom extraction for W Concept
+    if (config.productSelector === 'CUSTOM_WCONCEPT') {
+      const wconceptProducts = await page.evaluate((maxProducts: number) => {
+        const results: Array<{
+          name: string;
+          brand: string;
+          price: string;
+          originalPrice?: string;
+          imageUrl: string;
+          sourceUrl: string;
+        }> = [];
+        
+        // Find all product images from W Concept CDN
+        const productImages = document.querySelectorAll('img[src*="product-image.wconcept.co.kr"]');
+        
+        for (let i = 0; i < Math.min(productImages.length, maxProducts); i++) {
+          const img = productImages[i] as HTMLImageElement;
+          const imageUrl = img.src || img.dataset.src || '';
+          
+          // Find the closest product container (usually parent link or div)
+          let container = img.closest('a[href*="/Product/"]') || img.parentElement?.parentElement;
+          if (!container) continue;
+          
+          // Get product link
+          const linkEl = container.tagName === 'A' ? container : container.querySelector('a[href*="/Product/"]');
+          const sourceUrl = (linkEl as HTMLAnchorElement)?.href || '';
+          
+          // Get all text content and parse it
+          const textContent = container.textContent || '';
+          
+          // Extract price patterns: numbers with commas
+          const priceMatches = textContent.match(/[\d,]+/g) || [];
+          const prices = priceMatches
+            .map(p => parseInt(p.replace(/,/g, '')))
+            .filter(p => p >= 1000 && p <= 10000000); // Filter reasonable prices
+          
+          let price = '';
+          let originalPrice = '';
+          
+          if (prices.length >= 2) {
+            // Usually: original price, discount %, sale price
+            originalPrice = prices[0].toLocaleString();
+            price = prices[prices.length - 1].toLocaleString();
+          } else if (prices.length === 1) {
+            price = prices[0].toLocaleString();
+          }
+          
+          // Extract brand and name from text
+          // Pattern: brand name + product name (separated by special characters or line breaks)
+          const lines = textContent.split(/[\n\r]+/).map(l => l.trim()).filter(l => l.length > 0);
+          let brand = '';
+          let name = '';
+          
+          for (const line of lines) {
+            // Skip price-like lines, percentage lines, badge texts
+            if (/^[\d,%원]+$/.test(line)) continue;
+            if (/^(오늘출발|쿠폰|단독|뉴이어|찜|하기)/.test(line)) continue;
+            if (line.length < 2) continue;
+            
+            if (!brand && line.length < 20) {
+              brand = line;
+            } else if (!name && line.length > 3) {
+              name = line;
+              break;
+            }
+          }
+          
+          if (!name) name = brand;
+          if (name && price && imageUrl) {
+            results.push({
+              name: brand ? `[${brand}] ${name}` : name,
+              brand,
+              price,
+              originalPrice: originalPrice || undefined,
+              imageUrl,
+              sourceUrl
+            });
+          }
+        }
+        
+        return results;
+      }, limit);
+      
+      console.log(`Found ${wconceptProducts.length} products from W Concept`);
+      
+      if (wconceptProducts.length === 0) {
+        console.log(`No products found, using mock data for ${subcategory || keyword}`);
+        return generateMockProducts(subcategory || keyword, site, limit);
+      }
+      
+      return wconceptProducts.map(p => {
+        let imageUrl = p.imageUrl;
+        if (imageUrl && imageUrl.startsWith('//')) {
+          imageUrl = 'https:' + imageUrl;
+        }
+        
+        const priceNum = parseInt(p.price.replace(/,/g, '')) || 0;
+        const origPriceNum = p.originalPrice ? parseInt(p.originalPrice.replace(/,/g, '')) : 0;
+        let discountPercent: number | undefined;
+        if (origPriceNum > priceNum) {
+          discountPercent = Math.round(((origPriceNum - priceNum) / origPriceNum) * 100);
+        }
+        
+        return {
+          name: p.name,
+          price: priceNum.toLocaleString(),
+          originalPrice: origPriceNum ? origPriceNum.toLocaleString() : undefined,
+          discountPercent,
+          imageUrl,
+          sourceUrl: p.sourceUrl,
+          sourceSite: site,
+          platform: 'puppeteer',
+          crawledAt: new Date()
+        };
+      });
+    }
     
     const products = await page.evaluate((cfg: CrawlConfig, maxProducts: number) => {
       const results: Array<{
