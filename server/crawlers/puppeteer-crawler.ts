@@ -118,6 +118,30 @@ const SITE_CONFIGS: Record<string, CrawlConfig> = {
     originalPriceSelector: '.original-price, del',
     imageSelector: '.product-image img, img',
     linkSelector: 'a[href*="/product/"]'
+  },
+  'wconcept.co.kr': {
+    site: 'wconcept.co.kr',
+    baseUrl: 'https://www.wconcept.co.kr',
+    searchPath: '/Search?keyword=',
+    productSelector: '[class*="ProductCard"], [class*="product-card"], .product-item, li[class*="item"]',
+    nameSelector: '[class*="product-name"], [class*="name"], .brand-name + span, p[class*="name"]',
+    priceSelector: '[class*="price"], .sale-price, span[class*="price"]',
+    originalPriceSelector: '[class*="original"], del, .origin-price',
+    imageSelector: 'img[src*="product-image.wconcept"], img[src*="wimage.wconcept"], img',
+    linkSelector: 'a[href*="/Product/"]',
+    scrollCount: 3
+  },
+  'display.wconcept.co.kr': {
+    site: 'display.wconcept.co.kr',
+    baseUrl: 'https://display.wconcept.co.kr',
+    searchPath: '/Search?keyword=',
+    productSelector: '[class*="ProductCard"], [class*="product-card"], .product-item, li[class*="item"]',
+    nameSelector: '[class*="product-name"], [class*="name"], .brand-name + span, p[class*="name"]',
+    priceSelector: '[class*="price"], .sale-price, span[class*="price"]',
+    originalPriceSelector: '[class*="original"], del, .origin-price',
+    imageSelector: 'img[src*="product-image.wconcept"], img[src*="wimage.wconcept"], img',
+    linkSelector: 'a[href*="/Product/"]',
+    scrollCount: 3
   }
 };
 
