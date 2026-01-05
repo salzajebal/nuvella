@@ -132,7 +132,7 @@ export async function startCrawl(request: CrawlRequest): Promise<{ sessionId: st
   return { sessionId };
 }
 
-function transformVivianToProductDraft(product: VivianProduct, subcategory: string): ProductDraft {
+function transformVivianToProductDraft(product: VivianProduct, category: string, subcategory: string): ProductDraft {
   return {
     name: product.name,
     weight: '',
@@ -143,7 +143,7 @@ function transformVivianToProductDraft(product: VivianProduct, subcategory: stri
     imageUrl: product.imageUrl,
     imageUrls: product.imageUrls,
     descriptionImageUrls: product.descriptionImages,
-    category: product.category,
+    category: category,
     subcategory,
     description: product.description || `에스텔라 프리미엄 상품입니다.`,
     isBest: false,
@@ -195,7 +195,7 @@ async function executeCrawl(sessionId: string, request: CrawlRequest): Promise<v
         throw new Error(result.error || 'Vivian crawl failed');
       }
       
-      drafts = result.products.map(p => transformVivianToProductDraft(p, subcategory));
+      drafts = result.products.map(p => transformVivianToProductDraft(p, category, subcategory));
       console.log(`[Orchestrator] Vivian crawl returned ${drafts.length} products`);
     } else {
       // Use Puppeteer for other sites
