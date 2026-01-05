@@ -190,7 +190,10 @@ async function fetchProductDetail(sourceUrl: string): Promise<{
 
 export async function crawlVivianCategory(categoryId: number, limit: number = 20): Promise<VivianCrawlResult> {
   const category = CATEGORY_MAPPING[categoryId];
+  const categoryName = CATEGORY_NAMES[categoryId];
+  
   if (!category) {
+    console.error(`[Vivian Crawler] Unknown category ID: ${categoryId}`);
     return {
       category: '',
       categoryId,
@@ -199,6 +202,12 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 20
       error: `Unknown category ID: ${categoryId}`
     };
   }
+
+  console.log(`[Vivian Crawler] === Starting category crawl ===`);
+  console.log(`[Vivian Crawler] Category ID: ${categoryId}`);
+  console.log(`[Vivian Crawler] Category Name: ${categoryName}`);
+  console.log(`[Vivian Crawler] Estella Category: ${category}`);
+  console.log(`[Vivian Crawler] Limit: ${limit}`);
 
   try {
     // Fetch multiple pages to get more products
@@ -310,17 +319,19 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 20
         
         allProducts.push(product);
         foundOnPage++;
-        console.log(`[Vivian Crawler] Added product: ${name} (₩${parseInt(price).toLocaleString()})`);
+        console.log(`[Vivian Crawler] ✓ Added: "${name.substring(0, 30)}..." → ${category} (₩${parseInt(price).toLocaleString()})`);
         
         // Small delay between detail page fetches to be polite
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 150));
       }
       
       console.log(`[Vivian Crawler] Page ${page}: Found ${foundOnPage} products, total: ${allProducts.length}`);
       page++;
     }
     
-    console.log(`[Vivian Crawler] Category ${CATEGORY_NAMES[categoryId]}: Total ${allProducts.length} products crawled`);
+    console.log(`[Vivian Crawler] === Category Complete ===`);
+    console.log(`[Vivian Crawler] ${CATEGORY_NAMES[categoryId]} (${category}): ${allProducts.length} products`);
+    console.log(`[Vivian Crawler] ========================`);
     
     return {
       category,
