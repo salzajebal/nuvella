@@ -10,7 +10,7 @@ import {
   Lock, User, Mail, Phone, CheckCircle, XCircle,
   Star, FileText, Bell, Calendar,
   Wallet, Clock, Snowflake, Unlock, Settings, Link2, Upload,
-  MessageCircle, Send, Circle, Volume2
+  MessageCircle, Send, Circle, Volume2, Zap, Download, Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Product, Category, Member, Review, Notice, ChatConversation, ChatMessage, Order } from "@shared/schema";
@@ -238,6 +238,7 @@ export default function Admin() {
   const [crawlLoading, setCrawlLoading] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [importLoading, setImportLoading] = useState(false);
+  const [batchCrawlLoading, setBatchCrawlLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -4074,13 +4075,74 @@ export default function Admin() {
 
         {activeTab === "crawling" && (
           <div className="space-y-6">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-lg p-6 text-white">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold flex items-center gap-2">
+                    <Zap className="w-6 h-6" />
+                    W Concept 자동 크롤링
+                  </h3>
+                  <p className="text-purple-100 mt-1">한 번의 클릭으로 모든 카테고리 상품을 자동으로 가져옵니다.</p>
+                </div>
+                <Button
+                  data-testid="button-batch-crawl"
+                  onClick={async () => {
+                    if (batchCrawlLoading) return;
+                    setBatchCrawlLoading(true);
+                    try {
+                      const res = await fetchWithAuth("/api/admin/crawling/batch-wconcept", {
+                        method: "POST",
+                        body: JSON.stringify({ autoImport: true, productsPerKeyword: 15 })
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        toast({ 
+                          title: "자동 크롤링 완료", 
+                          description: `${data.data.totalCrawled}개 상품 발견, ${data.data.totalImported}개 상품 등록됨` 
+                        });
+                        fetchProducts();
+                      } else {
+                        toast({ title: "오류", description: data.error, variant: "destructive" });
+                      }
+                    } catch (error) {
+                      toast({ title: "오류", description: "크롤링 중 오류가 발생했습니다.", variant: "destructive" });
+                    } finally {
+                      setBatchCrawlLoading(false);
+                    }
+                  }}
+                  disabled={batchCrawlLoading}
+                  className="bg-white text-purple-600 hover:bg-purple-50 font-bold px-6 py-3"
+                >
+                  {batchCrawlLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      크롤링 중...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-5 h-5 mr-2" />
+                      전체 크롤링 시작
+                    </>
+                  )}
+                </Button>
+              </div>
+              <div className="mt-4 grid grid-cols-3 md:grid-cols-6 gap-2 text-xs">
+                <span className="bg-white/20 rounded px-2 py-1 text-center">럭셔리/명품</span>
+                <span className="bg-white/20 rounded px-2 py-1 text-center">뷰티</span>
+                <span className="bg-white/20 rounded px-2 py-1 text-center">홈 인테리어</span>
+                <span className="bg-white/20 rounded px-2 py-1 text-center">생활용품</span>
+                <span className="bg-white/20 rounded px-2 py-1 text-center">가전/디지털</span>
+                <span className="bg-white/20 rounded px-2 py-1 text-center">헬스/건강식품</span>
+              </div>
+            </div>
+
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="p-6 border-b border-gray-100">
                 <h3 className="text-lg font-bold flex items-center gap-2">
                   <Database className="w-5 h-5 text-purple-600" />
-                  상품 크롤링
+                  수동 상품 크롤링
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">외부 쇼핑몰에서 상품을 가져와 에스텔라에 등록합니다.</p>
+                <p className="text-sm text-gray-500 mt-1">특정 카테고리와 키워드로 상품을 개별 검색합니다.</p>
               </div>
               
               <div className="p-6 space-y-6">

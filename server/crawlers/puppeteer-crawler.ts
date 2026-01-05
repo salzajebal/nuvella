@@ -365,65 +365,113 @@ export async function crawlProductsWithPuppeteer(
           sourceUrl: string;
         }> = [];
         
-        // Find all product images from W Concept CDN
-        const productImages = document.querySelectorAll('img[src*="product-image.wconcept.co.kr"]');
+        // Find all product images from W Concept CDN - check multiple sources
+        const allImages = document.querySelectorAll('img');
+        const productImages: HTMLImageElement[] = [];
         
-        for (let i = 0; i < Math.min(productImages.length, maxProducts); i++) {
-          const img = productImages[i] as HTMLImageElement;
-          const imageUrl = img.src || img.dataset.src || '';
+        allImages.forEach(img => {
+          const src = img.src || img.dataset.src || img.dataset.original || img.getAttribute('data-lazy-src') || '';
+          const srcset = img.srcset || img.dataset.srcset || '';
+          if (src.includes('product-image.wconcept') || src.includes('wimage.wconcept') || 
+              srcset.includes('product-image.wconcept') || srcset.includes('wimage.wconcept')) {
+            productImages.push(img);
+          }
+        });
+        
+        const seenUrls = new Set<string>();
+        
+        for (let i = 0; i < Math.min(productImages.length, maxProducts * 2); i++) {
+          if (results.length >= maxProducts) break;
           
-          // Find the closest product container (usually parent link or div)
-          let container = img.closest('a[href*="/Product/"]') || img.parentElement?.parentElement;
+          const img = productImages[i];
+          
+          // Get image URL from multiple possible sources
+          let imageUrl = '';
+          const srcset = img.srcset || img.dataset.srcset || '';
+          if (srcset) {
+            // Parse srcset and get highest resolution
+            const srcsetParts = srcset.split(',').map(s => s.trim().split(' ')[0]);
+            imageUrl = srcsetParts[srcsetParts.length - 1] || '';
+          }
+          if (!imageUrl) {
+            imageUrl = img.src || img.dataset.src || img.dataset.original || 
+                       img.getAttribute('data-lazy-src') || img.currentSrc || '';
+          }
+          
+          // Normalize URL
+          if (imageUrl.startsWith('//')) {
+            imageUrl = 'https:' + imageUrl;
+          }
+          
+          // Remove query params for deduplication but keep for display
+          const urlForDedupe = imageUrl.split('?')[0];
+          if (seenUrls.has(urlForDedupe)) continue;
+          seenUrls.add(urlForDedupe);
+          
+          // Find the closest product container - walk up DOM tree
+          let container: Element | null = img;
+          let sourceUrl = '';
+          for (let j = 0; j < 10; j++) {
+            container = container.parentElement;
+            if (!container) break;
+            const link = container.tagName === 'A' ? container : container.querySelector('a[href*="/Product/"]');
+            if (link) {
+              sourceUrl = (link as HTMLAnchorElement).href || '';
+              break;
+            }
+          }
+          
           if (!container) continue;
-          
-          // Get product link
-          const linkEl = container.tagName === 'A' ? container : container.querySelector('a[href*="/Product/"]');
-          const sourceUrl = (linkEl as HTMLAnchorElement)?.href || '';
           
           // Get all text content and parse it
           const textContent = container.textContent || '';
           
-          // Extract price patterns: numbers with commas
-          const priceMatches = textContent.match(/[\d,]+/g) || [];
+          // Extract price patterns: numbers with commas (at least 4 digits)
+          const priceMatches = textContent.match(/\d{1,3}(,\d{3})+|\d{4,}/g) || [];
           const prices = priceMatches
             .map(p => parseInt(p.replace(/,/g, '')))
-            .filter(p => p >= 1000 && p <= 10000000); // Filter reasonable prices
+            .filter(p => p >= 5000 && p <= 50000000);
           
           let price = '';
           let originalPrice = '';
           
           if (prices.length >= 2) {
-            // Usually: original price, discount %, sale price
-            originalPrice = prices[0].toLocaleString();
-            price = prices[prices.length - 1].toLocaleString();
+            // Sort to find original (higher) and sale (lower) prices
+            const uniquePrices = prices.filter((v, i, a) => a.indexOf(v) === i);
+            const sortedPrices = uniquePrices.sort((a, b) => b - a);
+            if (sortedPrices.length >= 2) {
+              originalPrice = sortedPrices[0].toLocaleString();
+              price = sortedPrices[sortedPrices.length - 1].toLocaleString();
+            } else {
+              price = sortedPrices[0].toLocaleString();
+            }
           } else if (prices.length === 1) {
             price = prices[0].toLocaleString();
           }
           
           // Extract brand and name from text
-          // Pattern: brand name + product name (separated by special characters or line breaks)
           const lines = textContent.split(/[\n\r]+/).map(l => l.trim()).filter(l => l.length > 0);
           let brand = '';
           let name = '';
           
           for (const line of lines) {
             // Skip price-like lines, percentage lines, badge texts
-            if (/^[\d,%원]+$/.test(line)) continue;
-            if (/^(오늘출발|쿠폰|단독|뉴이어|찜|하기)/.test(line)) continue;
-            if (line.length < 2) continue;
+            if (/^[\d,%원\s]+$/.test(line)) continue;
+            if (/^(오늘출발|쿠폰|단독|뉴이어|찜|하기|NEW|BEST|HOT)$/i.test(line)) continue;
+            if (line.length < 2 || line.length > 100) continue;
             
-            if (!brand && line.length < 20) {
+            if (!brand && line.length <= 25 && !line.includes('[') && !line.includes('%')) {
               brand = line;
             } else if (!name && line.length > 3) {
-              name = line;
-              break;
+              name = line.replace(/\[.*?\]/g, '').trim();
+              if (name.length > 5) break;
             }
           }
           
-          if (!name) name = brand;
+          if (!name && brand) name = brand;
           if (name && price && imageUrl) {
             results.push({
-              name: brand ? `[${brand}] ${name}` : name,
+              name: brand && brand !== name ? `[${brand}] ${name}` : name,
               brand,
               price,
               originalPrice: originalPrice || undefined,
@@ -438,19 +486,31 @@ export async function crawlProductsWithPuppeteer(
       
       console.log(`Found ${wconceptProducts.length} products from W Concept`);
       
-      if (wconceptProducts.length === 0) {
-        console.log(`No products found, using mock data for ${subcategory || keyword}`);
+      // Filter out invalid products (missing name, price, or image)
+      const validProducts = wconceptProducts.filter(p => {
+        const hasName = p.name && p.name.length > 3;
+        const priceValue = parseInt(p.price.replace(/[^\d]/g, '')) || 0;
+        const hasPrice = priceValue >= 5000;
+        const hasImage = p.imageUrl && (p.imageUrl.includes('product-image') || p.imageUrl.includes('wimage'));
+        return hasName && hasPrice && hasImage;
+      });
+      
+      console.log(`Valid products after filtering: ${validProducts.length}`);
+      
+      if (validProducts.length === 0) {
+        console.log(`No valid products found, using mock data for ${subcategory || keyword}`);
         return generateMockProducts(subcategory || keyword, site, limit);
       }
       
-      return wconceptProducts.map(p => {
+      return validProducts.map(p => {
         let imageUrl = p.imageUrl;
         if (imageUrl && imageUrl.startsWith('//')) {
           imageUrl = 'https:' + imageUrl;
         }
         
-        const priceNum = parseInt(p.price.replace(/,/g, '')) || 0;
-        const origPriceNum = p.originalPrice ? parseInt(p.originalPrice.replace(/,/g, '')) : 0;
+        // Convert to numeric string (no commas, no won symbol) for database
+        const priceNum = parseInt(p.price.replace(/[^\d]/g, '')) || 0;
+        const origPriceNum = p.originalPrice ? parseInt(p.originalPrice.replace(/[^\d]/g, '')) : 0;
         let discountPercent: number | undefined;
         if (origPriceNum > priceNum) {
           discountPercent = Math.round(((origPriceNum - priceNum) / origPriceNum) * 100);
@@ -458,8 +518,8 @@ export async function crawlProductsWithPuppeteer(
         
         return {
           name: p.name,
-          price: priceNum.toLocaleString(),
-          originalPrice: origPriceNum ? origPriceNum.toLocaleString() : undefined,
+          price: String(priceNum), // Numeric string for database
+          originalPrice: origPriceNum ? String(origPriceNum) : undefined,
           discountPercent,
           imageUrl,
           sourceUrl: p.sourceUrl,
@@ -571,4 +631,101 @@ export async function crawlProductsWithPuppeteer(
       await page.close().catch(() => {});
     }
   }
+}
+
+// W Concept batch crawl configuration
+const WCONCEPT_CRAWL_KEYWORDS: Record<string, string[]> = {
+  '럭셔리/명품': ['명품가방', '명품지갑', '명품벨트', '명품스카프', '프리미엄주얼리'],
+  '뷰티': ['스킨케어', '메이크업', '향수', '헤어케어', '바디케어'],
+  '홈 인테리어': ['홈데코', '침구', '커튼', '조명', '수납'],
+  '생활용품': ['주방용품', '욕실용품', '청소용품', '수납정리'],
+  '가전/디지털': ['가습기', '공기청정기', '헤어드라이어', '전기포트'],
+  '헬스/건강식품': ['운동복', '요가매트', '건강보조식품']
+};
+
+export interface BatchCrawlResult {
+  category: string;
+  keyword: string;
+  products: RawProduct[];
+  success: boolean;
+  error?: string;
+}
+
+export async function batchCrawlWconcept(
+  categories?: string[],
+  productsPerKeyword: number = 20,
+  onProgress?: (progress: { current: number; total: number; category: string; keyword: string }) => void
+): Promise<BatchCrawlResult[]> {
+  const results: BatchCrawlResult[] = [];
+  const categoriesToCrawl = categories || Object.keys(WCONCEPT_CRAWL_KEYWORDS);
+  
+  let totalKeywords = 0;
+  for (const cat of categoriesToCrawl) {
+    if (WCONCEPT_CRAWL_KEYWORDS[cat]) {
+      totalKeywords += WCONCEPT_CRAWL_KEYWORDS[cat].length;
+    }
+  }
+  
+  let current = 0;
+  
+  for (const category of categoriesToCrawl) {
+    const keywords = WCONCEPT_CRAWL_KEYWORDS[category];
+    if (!keywords) continue;
+    
+    for (const keyword of keywords) {
+      current++;
+      
+      if (onProgress) {
+        onProgress({ current, total: totalKeywords, category, keyword });
+      }
+      
+      console.log(`[Batch Crawl] ${current}/${totalKeywords}: ${category} - ${keyword}`);
+      
+      try {
+        const products = await crawlProductsWithPuppeteer(
+          'display.wconcept.co.kr',
+          keyword,
+          productsPerKeyword,
+          category
+        );
+        
+        // Add category and subcategory to products
+        const enrichedProducts = products.map(p => ({
+          ...p,
+          category,
+          subcategory: keyword
+        }));
+        
+        results.push({
+          category,
+          keyword,
+          products: enrichedProducts,
+          success: true
+        });
+        
+        // Throttle between requests
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+      } catch (error) {
+        console.error(`[Batch Crawl] Error for ${keyword}:`, error);
+        results.push({
+          category,
+          keyword,
+          products: [],
+          success: false,
+          error: String(error)
+        });
+      }
+    }
+  }
+  
+  return results;
+}
+
+export function getWconceptCategories(): string[] {
+  return Object.keys(WCONCEPT_CRAWL_KEYWORDS);
+}
+
+export function getWconceptKeywords(category: string): string[] {
+  return WCONCEPT_CRAWL_KEYWORDS[category] || [];
 }

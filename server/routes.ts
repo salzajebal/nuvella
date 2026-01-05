@@ -2115,5 +2115,108 @@ export async function registerRoutes(
     }
   });
 
+  // Batch crawl W Concept - automatic full crawling
+  app.post("/api/admin/crawling/batch-wconcept", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { categories, productsPerKeyword = 15, autoImport = true } = req.body;
+      
+      console.log("=== BATCH CRAWL WCONCEPT STARTED ===");
+      console.log("Categories:", categories || "ALL");
+      console.log("Products per keyword:", productsPerKeyword);
+      console.log("Auto import:", autoImport);
+      
+      const { batchCrawlWconcept, getWconceptCategories } = await import('./crawlers/puppeteer-crawler');
+      
+      const results = await batchCrawlWconcept(
+        categories,
+        productsPerKeyword
+      );
+      
+      let totalCrawled = 0;
+      let totalImported = 0;
+      const importedProducts: any[] = [];
+      
+      for (const result of results) {
+        totalCrawled += result.products.length;
+        
+        if (autoImport && result.success && result.products.length > 0) {
+          for (const product of result.products) {
+            try {
+              const imageUrls = product.imageUrl ? [product.imageUrl] : [];
+              const productData = {
+                name: product.name || '상품명 없음',
+                weight: '-',
+                purity: '-',
+                price: product.price || '0',
+                originalPrice: product.originalPrice,
+                discountPercent: product.discountPercent,
+                imageUrl: product.imageUrl,
+                imageUrls,
+                category: result.category,
+                subcategory: result.keyword,
+                description: `W Concept에서 가져온 상품입니다.`,
+                isBest: false,
+                isNew: true,
+                isHot: false,
+                useFixedPrice: true,
+                sourceSite: 'display.wconcept.co.kr',
+                sourceUrl: product.sourceUrl
+              };
+              
+              const savedProduct = await storage.createProduct(productData);
+              importedProducts.push(savedProduct);
+              totalImported++;
+            } catch (e) {
+              console.error("Error importing batch product:", e);
+            }
+          }
+        }
+      }
+      
+      console.log(`=== BATCH CRAWL COMPLETE ===`);
+      console.log(`Total crawled: ${totalCrawled}, Total imported: ${totalImported}`);
+      
+      res.json({
+        success: true,
+        data: {
+          totalCrawled,
+          totalImported,
+          categories: getWconceptCategories(),
+          results: results.map(r => ({
+            category: r.category,
+            keyword: r.keyword,
+            productCount: r.products.length,
+            success: r.success,
+            error: r.error
+          }))
+        }
+      });
+    } catch (error) {
+      console.error("Batch crawl error:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "배치 크롤링 중 오류가 발생했습니다." 
+      });
+    }
+  });
+
+  // Get W Concept categories for batch crawl
+  app.get("/api/admin/crawling/wconcept-categories", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { getWconceptCategories, getWconceptKeywords } = await import('./crawlers/puppeteer-crawler');
+      
+      const categories = getWconceptCategories();
+      const categoryDetails = categories.map(cat => ({
+        name: cat,
+        keywords: getWconceptKeywords(cat)
+      }));
+      
+      res.json({ success: true, data: categoryDetails });
+    } catch (error) {
+      console.error("Error getting W Concept categories:", error);
+      res.status(500).json({ success: false, error: "카테고리 조회 중 오류가 발생했습니다." });
+    }
+  });
+
   return httpServer;
 }
