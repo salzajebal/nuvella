@@ -286,7 +286,7 @@ async function fetchProductDetail(sourceUrl: string): Promise<{
   }
 }
 
-export async function crawlVivianCategory(categoryId: number, limit: number = 20): Promise<VivianCrawlResult> {
+export async function crawlVivianCategory(categoryId: number, limit: number = 0): Promise<VivianCrawlResult> {
   const category = CATEGORY_MAPPING[categoryId];
   const categoryName = CATEGORY_NAMES[categoryId];
   
@@ -301,33 +301,45 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 20
     };
   }
 
+  // limit = 0 means fetch ALL products
+  const fetchAll = limit === 0;
+  const effectiveLimit = fetchAll ? Number.MAX_SAFE_INTEGER : limit;
+
   console.log(`[Vivian Crawler] === Starting category crawl ===`);
   console.log(`[Vivian Crawler] Category ID: ${categoryId}`);
   console.log(`[Vivian Crawler] Category Name: ${categoryName}`);
   console.log(`[Vivian Crawler] Estella Category: ${category}`);
-  console.log(`[Vivian Crawler] Limit: ${limit}`);
+  console.log(`[Vivian Crawler] Limit: ${fetchAll ? 'ALL (unlimited)' : limit}`);
 
   try {
     // Fetch multiple pages to get more products
     const allProducts: VivianProduct[] = [];
     let page = 1;
-    const maxPages = 30; // Safety cap to prevent infinite loops
+    const maxPages = 500; // High cap for safety but allows many pages
     const seenProductIds = new Set<string>();
+    let consecutiveEmptyPages = 0;
     
-    while (allProducts.length < limit && page <= maxPages) {
+    while (allProducts.length < effectiveLimit && page <= maxPages) {
       const url = `${VIVIAN_BASE_URL}/shop/list.php?ca_id=${categoryId}&page=${page}`;
-      console.log(`[Vivian Crawler] Fetching page ${page}: ${url}`);
+      console.log(`[Vivian Crawler] Fetching page ${page}: ${url} (total so far: ${allProducts.length})`);
       
       let html: string;
       try {
         html = await fetchWithRetry(url);
       } catch (error) {
         console.error(`[Vivian Crawler] Failed to fetch page ${page}:`, error);
-        break;
+        consecutiveEmptyPages++;
+        if (consecutiveEmptyPages >= 3) {
+          console.log(`[Vivian Crawler] 3 consecutive failures, stopping`);
+          break;
+        }
+        page++;
+        continue;
       }
       
       const $ = cheerio.load(html);
       let foundOnPage = 0;
+      let newProductsOnPage = 0;
       
       // Each product is in div.item-list
       const items = $('div.item-list');
@@ -335,10 +347,18 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 20
       
       if (items.length === 0) {
         // No more products found
-        break;
+        consecutiveEmptyPages++;
+        if (consecutiveEmptyPages >= 2) {
+          console.log(`[Vivian Crawler] No more products found, stopping`);
+          break;
+        }
+        page++;
+        continue;
       }
       
-      for (let i = 0; i < items.length && allProducts.length < limit; i++) {
+      consecutiveEmptyPages = 0;
+      
+      for (let i = 0; i < items.length && allProducts.length < effectiveLimit; i++) {
         const element = items[i];
         const $el = $(element);
         
@@ -421,13 +441,23 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 20
         
         allProducts.push(product);
         foundOnPage++;
+        newProductsOnPage++;
         console.log(`[Vivian Crawler] ✓ Added: "${name.substring(0, 30)}..." → ${category}/${subcategory} (₩${parseInt(price).toLocaleString()})`);
         
         // Small delay between detail page fetches to be polite
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
-      console.log(`[Vivian Crawler] Page ${page}: Found ${foundOnPage} products, total: ${allProducts.length}`);
+      console.log(`[Vivian Crawler] Page ${page}: ${newProductsOnPage} new products (${foundOnPage} total on page), running total: ${allProducts.length}`);
+      
+      // If no new products found on this page, we may have reached the end
+      if (newProductsOnPage === 0) {
+        console.log(`[Vivian Crawler] No new products on page ${page}, stopping`);
+        break;
+      }
+      
+      // Small delay between pages to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 200));
       page++;
     }
     

@@ -2003,7 +2003,9 @@ export async function registerRoutes(
         });
       }
       
-      const result = await startCrawl({ category, subcategory, site, limit: limit || 20 });
+      // limit = 0 means fetch ALL products from the category
+      const effectiveLimit = limit === 0 ? 0 : (limit || 20);
+      const result = await startCrawl({ category, subcategory, site, limit: effectiveLimit });
       res.json({ success: true, data: result });
     } catch (error) {
       console.error("Error starting crawl:", error);
@@ -2361,11 +2363,13 @@ export async function registerRoutes(
   // Crawl single category from vivian-mall
   app.post("/api/admin/crawling/vivian-category", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      const { categoryId, limit = 20, autoImport = true } = req.body;
+      const { categoryId, limit = 0, autoImport = true } = req.body;
       
       const { crawlVivianCategory, getVivianCategoryName } = await import('./crawlers/vivian-crawler');
       
-      const result = await crawlVivianCategory(categoryId, limit);
+      // limit = 0 means fetch ALL products
+      const effectiveLimit = limit === 0 ? 0 : limit;
+      const result = await crawlVivianCategory(categoryId, effectiveLimit);
       
       let importedCount = 0;
       
@@ -2388,6 +2392,7 @@ export async function registerRoutes(
               imageUrls: allImages,
               descriptionImageUrls: descImages,
               category: product.category,
+              subcategory: product.subcategory,
               description: product.description || `에스텔라 프리미엄 상품입니다.`,
               isBest: Math.random() > 0.7,
               isNew: true,
