@@ -197,63 +197,87 @@ async function fetchProductDetail(sourceUrl: string): Promise<{
     const descriptionImages: string[] = [];
     const seenUrls = new Set<string>();
     
-    // Helper to check if URL is valid image
-    const isValidImageUrl = (url: string): boolean => {
+    // Helper to check if URL is valid product image
+    const isValidProductImage = (url: string): boolean => {
       if (!url) return false;
+      // Skip UI/icon images
       if (url.includes('icon') || url.includes('logo') || url.includes('button')) return false;
       if (url.includes('spacer') || url.includes('blank') || url.includes('loading')) return false;
-      // Must have image extension or be from known image CDNs
-      return url.match(/\.(jpg|jpeg|png|gif|webp)/i) !== null || 
+      if (url.includes('s_star') || url.includes('facebook') || url.includes('twitter')) return false;
+      if (url.includes('/skin/') || url.includes('/theme/')) return false;
+      // Must be product image or from known CDNs
+      return url.includes('/data/item/') || 
              url.includes('pstatic.net') || 
              url.includes('proxy-smartstore') ||
-             url.includes('/data/item/');
+             url.includes('godohosting.com') ||
+             url.match(/\.(jpg|jpeg|png|gif|webp)/i) !== null;
     };
     
-    // Main product images - gallery/slider images in #sit_pvi
-    $('#sit_pvi img, .sit_pvi_big img, .swiper-slide img').each((_, el) => {
+    // Helper to check if URL is valid description image (from Naver SmartStore or similar)
+    const isValidDescriptionImage = (url: string): boolean => {
+      if (!url) return false;
+      // Skip UI/icon images
+      if (url.includes('icon') || url.includes('logo') || url.includes('button')) return false;
+      if (url.includes('s_star') || url.includes('facebook') || url.includes('twitter')) return false;
+      if (url.includes('/skin/') || url.includes('/theme/')) return false;
+      // Accept images from known CDNs or product data
+      return url.includes('pstatic.net') || 
+             url.includes('proxy-smartstore') ||
+             url.includes('godohosting.com') ||
+             url.includes('naver.net') ||
+             (url.includes('/data/') && url.match(/\.(jpg|jpeg|png|gif|webp)/i) !== null);
+    };
+    
+    // Main product images - gallery/slider images
+    $('img').each((_, el) => {
       const src = $(el).attr('src') || $(el).attr('data-src') || $(el).attr('data-original');
-      if (src && isValidImageUrl(src)) {
+      if (src && src.includes('/data/item/') && isValidProductImage(src)) {
         const fullUrl = absoluteUrl(src);
-        if (!seenUrls.has(fullUrl)) {
+        // Get high-res version by checking for thumb- prefix
+        const highResUrl = fullUrl.replace(/thumb-([^_]+)_\d+x\d+/, 'thumb-$1_1000x1000');
+        if (!seenUrls.has(highResUrl) && !seenUrls.has(fullUrl)) {
+          seenUrls.add(highResUrl);
           seenUrls.add(fullUrl);
-          imageUrls.push(fullUrl);
+          imageUrls.push(highResUrl);
         }
       }
     });
     
-    // Thumbnail images
-    $('.sit_pvi_thumb img, .thumbnail-list img, #sit_pvi_slide img').each((_, el) => {
-      const src = $(el).attr('src') || $(el).attr('data-src');
-      if (src && isValidImageUrl(src)) {
-        const fullUrl = absoluteUrl(src);
-        if (!seenUrls.has(fullUrl)) {
-          seenUrls.add(fullUrl);
-          imageUrls.push(fullUrl);
+    // Description images - specifically target Naver SmartStore images
+    // These have classes like .se-inline-image-resource, .se-image-resource
+    $('img.se-inline-image-resource, img.se-image-resource').each((_, el) => {
+      const src = $(el).attr('src');
+      if (src && isValidDescriptionImage(src)) {
+        if (!seenUrls.has(src)) {
+          seenUrls.add(src);
+          descriptionImages.push(src);
         }
       }
     });
     
-    // Description images - inside #sit_inf_explan (main detail content)
-    // These include .se-inline-image-resource, .se-image-resource, and regular img tags
-    $('#sit_inf_explan img').each((_, el) => {
-      const src = $(el).attr('src') || $(el).attr('data-src');
-      if (src && isValidImageUrl(src)) {
-        const fullUrl = absoluteUrl(src);
-        if (!seenUrls.has(fullUrl)) {
-          seenUrls.add(fullUrl);
-          descriptionImages.push(fullUrl);
+    // Also look for images from proxy-smartstore.naver.net and shop-phinf.pstatic.net
+    $('img').each((_, el) => {
+      const src = $(el).attr('src');
+      if (src && (src.includes('proxy-smartstore') || src.includes('shop-phinf.pstatic.net') || src.includes('godohosting.com'))) {
+        if (!seenUrls.has(src)) {
+          seenUrls.add(src);
+          descriptionImages.push(src);
         }
       }
     });
     
-    // Also check for images in other detail sections
-    $('#sit_inf img, .product-detail-content img, .item-detail img').each((_, el) => {
-      const src = $(el).attr('src') || $(el).attr('data-src');
-      if (src && isValidImageUrl(src)) {
-        const fullUrl = absoluteUrl(src);
-        if (!seenUrls.has(fullUrl)) {
-          seenUrls.add(fullUrl);
-          descriptionImages.push(fullUrl);
+    // Also extract from inline HTML (some images might be in raw HTML strings)
+    const smartStoreMatches = html.match(/src="(https:\/\/proxy-smartstore\.naver\.net[^"]+)"/g) || [];
+    const pstaticMatches = html.match(/src="(https:\/\/shop-phinf\.pstatic\.net[^"]+)"/g) || [];
+    const godoMatches = html.match(/src="(https?:\/\/[^"]*godohosting\.com[^"]+)"/g) || [];
+    
+    [...smartStoreMatches, ...pstaticMatches, ...godoMatches].forEach(match => {
+      const urlMatch = match.match(/src="([^"]+)"/);
+      if (urlMatch && urlMatch[1]) {
+        const url = urlMatch[1];
+        if (!seenUrls.has(url)) {
+          seenUrls.add(url);
+          descriptionImages.push(url);
         }
       }
     });
@@ -272,8 +296,8 @@ async function fetchProductDetail(sourceUrl: string): Promise<{
     console.log(`[Vivian Crawler] Detail: ${imageUrls.length} gallery images, ${descriptionImages.length} description images`);
     
     return {
-      imageUrls: imageUrls.slice(0, 15),
-      descriptionImages: descriptionImages.slice(0, 30),
+      imageUrls: imageUrls.slice(0, 20),
+      descriptionImages: descriptionImages.slice(0, 50),
       description
     };
   } catch (error) {
