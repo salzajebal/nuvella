@@ -10,6 +10,7 @@ export interface VivianProduct {
   descriptionImages: string[];
   sourceUrl: string;
   category: string;
+  subcategory: string;
   description?: string;
 }
 
@@ -46,6 +47,71 @@ const CATEGORY_NAMES: Record<number, string> = {
 };
 
 export const VIVIAN_CATEGORIES = CATEGORY_NAMES;
+
+// Subcategory keywords for automatic classification
+const SUBCATEGORY_KEYWORDS: Record<string, Record<string, string[]>> = {
+  home_interior: {
+    furniture: ['소파', '의자', '테이블', '책상', '침대', '서랍', '수납장', '선반', '행거', '옷장', '화장대', '협탁'],
+    lighting: ['조명', '램프', 'LED', '스탠드', '무드등', '전구', '펜던트', '샹들리에'],
+    decor: ['소품', '화병', '조화', '액자', '시계', '거울', '오브제', '장식', '캔들홀더', '트레이'],
+    fabric: ['커튼', '러그', '쿠션', '이불', '베개', '담요', '카페트', '매트', '침구', '패브릭'],
+    wall_decor: ['벽', '월데코', '포스터', '타일', '스티커', '월아트']
+  },
+  beauty: {
+    skincare: ['스킨', '토너', '에센스', '세럼', '크림', '로션', '앰플', '마스크팩', '클렌징', '선크림', '모이스처'],
+    makeup: ['립스틱', '립', '파운데이션', '아이섀도', '마스카라', '블러셔', '컨실러', '메이크업', '화장품', '팔레트'],
+    fragrance: ['향수', '퍼퓸', '캔들', '디퓨저', '룸스프레이', '인센스', '향'],
+    bodycare: ['바디', '핸드크림', '풋크림', '바디워시', '바디로션', '스크럽', '입욕제'],
+    haircare: ['샴푸', '린스', '트리트먼트', '헤어', '두피', '염색', '헤어오일', '에센스']
+  },
+  electronics: {
+    home_appliance: ['청소기', '공기청정기', '가습기', '제습기', '선풍기', '에어컨', '히터', '살균기', '로봇청소기'],
+    kitchen_appliance: ['에어프라이어', '믹서기', '블렌더', '전기밥솥', '전자레인지', '오븐', '토스터', '커피머신', '정수기'],
+    audio: ['스피커', '이어폰', '헤드폰', '블루투스', '사운드바', '오디오', 'AirPods', '무선이어폰']
+  },
+  living: {
+    kitchen: ['냄비', '프라이팬', '칼', '도마', '그릇', '접시', '컵', '수저', '조리도구', '키친', '주방'],
+    bathroom: ['욕실', '수건', '샤워', '비누', '치약', '칫솔', '목욕', '욕조', '변기'],
+    storage: ['수납', '정리', '박스', '바구니', '선반', '행거', '옷걸이', '보관', '케이스'],
+    cleaning: ['청소', '걸레', '빗자루', '세제', '스펀지', '세척', '먼지떨이']
+  },
+  health: {
+    supplements: ['비타민', '영양제', '오메가', '유산균', '프로바이오틱스', '콜라겐', '철분', '칼슘', '마그네슘'],
+    drinks: ['홍삼', '즙', '건강음료', '차', '녹즙', '건강즙', '비타민음료'],
+    fitness: ['덤벨', '요가매트', '운동', '헬스', '스트레칭', '밴드', '푸쉬업', '아령', '케틀벨'],
+    diet: ['다이어트', '단백질', '프로틴', '슬리밍', '체중', '쉐이크']
+  },
+  luxury: {
+    accessories: ['목걸이', '귀걸이', '반지', '팔찌', '브로치', '주얼리', '시계', '선글라스', '스카프'],
+    premium_furniture: ['원목', '대리석', '프리미엄', '이탈리아', '디자이너', '명품가구'],
+    luxury_items: ['명품', '브랜드', '럭셔리', '프리미엄소품', 'VIP']
+  },
+  kids: {
+    toys: ['장난감', '완구', '블록', '레고', '인형', '로봇', '퍼즐', '보드게임', '피규어'],
+    baby: ['유아', '아기', '기저귀', '젖병', '이유식', '유모차', '카시트', '아기옷', '신생아'],
+    education: ['교육', '학습', '동화책', '교구', '악기', '그림책', '학습지', '영어']
+  }
+};
+
+function classifySubcategory(productName: string, category: string): string {
+  const keywords = SUBCATEGORY_KEYWORDS[category];
+  if (!keywords) return 'all';
+  
+  const lowerName = productName.toLowerCase();
+  
+  // Check each subcategory's keywords
+  for (const [subcategoryId, subcategoryKeywords] of Object.entries(keywords)) {
+    for (const keyword of subcategoryKeywords) {
+      if (lowerName.includes(keyword.toLowerCase())) {
+        return subcategoryId;
+      }
+    }
+  }
+  
+  // Return first subcategory as default if no match found
+  const subcategoryIds = Object.keys(keywords);
+  return subcategoryIds[0] || 'all';
+}
 
 function convertUsdToKrw(usdPrice: number): number {
   const krwPrice = usdPrice * USD_TO_KRW_RATE;
@@ -336,6 +402,9 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 20
           }
         });
         
+        // Auto-classify subcategory based on product name
+        const subcategory = classifySubcategory(name, category);
+        
         const product: VivianProduct = {
           id: productId,
           name,
@@ -346,12 +415,13 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 20
           descriptionImages: detail.descriptionImages,
           sourceUrl,
           category,
+          subcategory,
           description: detail.description || `${CATEGORY_NAMES[categoryId]} 상품입니다.`
         };
         
         allProducts.push(product);
         foundOnPage++;
-        console.log(`[Vivian Crawler] ✓ Added: "${name.substring(0, 30)}..." → ${category} (₩${parseInt(price).toLocaleString()})`);
+        console.log(`[Vivian Crawler] ✓ Added: "${name.substring(0, 30)}..." → ${category}/${subcategory} (₩${parseInt(price).toLocaleString()})`);
         
         // Small delay between detail page fetches to be polite
         await new Promise(resolve => setTimeout(resolve, 150));
