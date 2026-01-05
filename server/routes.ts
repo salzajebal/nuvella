@@ -2363,13 +2363,28 @@ export async function registerRoutes(
   // Crawl single category from vivian-mall
   app.post("/api/admin/crawling/vivian-category", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      const { categoryId, limit = 0, autoImport = true } = req.body;
+      const { 
+        categoryId, 
+        limit = 0, 
+        autoImport = true,
+        subcategory,  // Admin-selected subcategory (optional)
+        targetCategory  // Admin-selected target Estella category (optional)
+      } = req.body;
       
       const { crawlVivianCategory, getVivianCategoryName } = await import('./crawlers/vivian-crawler');
       
       // limit = 0 means fetch ALL products
       const effectiveLimit = limit === 0 ? 0 : limit;
-      const result = await crawlVivianCategory(categoryId, effectiveLimit);
+      
+      // Pass subcategory and targetCategory options to crawler
+      const crawlOptions = {
+        subcategory: subcategory || undefined,
+        targetCategory: targetCategory || undefined
+      };
+      
+      console.log(`[Admin Crawl] Starting vivian category ${categoryId}, limit=${effectiveLimit}, subcategory=${subcategory || 'auto'}, targetCategory=${targetCategory || 'auto'}`);
+      
+      const result = await crawlVivianCategory(categoryId, effectiveLimit, crawlOptions);
       
       let importedCount = 0;
       

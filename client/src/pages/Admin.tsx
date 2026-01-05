@@ -206,11 +206,72 @@ export default function Admin() {
   const [depositAccountLoading, setDepositAccountLoading] = useState(false);
 
   const [crawlCategory, setCrawlCategory] = useState<string>("");
+  const [crawlSubcategory, setCrawlSubcategory] = useState<string>("all");
   const [crawlLimit, setCrawlLimit] = useState<number>(20);
   const [crawlLoading, setCrawlLoading] = useState(false);
   const [batchCrawlLoading, setBatchCrawlLoading] = useState(false);
   const [deleteAllLoading, setDeleteAllLoading] = useState(false);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  
+  // Subcategory mapping for each Vivian category
+  const SUBCATEGORY_OPTIONS: Record<string, { id: string; name: string; estellaCategory: string }[]> = {
+    "10": [ // 홈 인테리어
+      { id: "all", name: "전체 (자동분류)", estellaCategory: "home_interior" },
+      { id: "furniture", name: "가구", estellaCategory: "home_interior" },
+      { id: "lighting", name: "조명", estellaCategory: "home_interior" },
+      { id: "decor", name: "인테리어소품", estellaCategory: "home_interior" },
+      { id: "fabric", name: "패브릭", estellaCategory: "home_interior" },
+      { id: "wall_decor", name: "벽장식", estellaCategory: "home_interior" },
+    ],
+    "20": [ // 뷰티
+      { id: "all", name: "전체 (자동분류)", estellaCategory: "beauty" },
+      { id: "skincare", name: "스킨케어", estellaCategory: "beauty" },
+      { id: "makeup", name: "메이크업", estellaCategory: "beauty" },
+      { id: "fragrance", name: "향수/캔들", estellaCategory: "beauty" },
+      { id: "bodycare", name: "바디케어", estellaCategory: "beauty" },
+      { id: "haircare", name: "헤어케어", estellaCategory: "beauty" },
+    ],
+    "30": [ // 가전/디지털
+      { id: "all", name: "전체 (자동분류)", estellaCategory: "electronics" },
+      { id: "home_appliance", name: "생활가전", estellaCategory: "electronics" },
+      { id: "kitchen_appliance", name: "주방가전", estellaCategory: "electronics" },
+      { id: "audio", name: "오디오", estellaCategory: "electronics" },
+    ],
+    "40": [ // 생활용품
+      { id: "all", name: "전체 (자동분류)", estellaCategory: "living" },
+      { id: "kitchen", name: "주방용품", estellaCategory: "living" },
+      { id: "bathroom", name: "욕실용품", estellaCategory: "living" },
+      { id: "storage", name: "수납/정리", estellaCategory: "living" },
+      { id: "cleaning", name: "청소용품", estellaCategory: "living" },
+    ],
+    "50": [ // 헬스/건강식품
+      { id: "all", name: "전체 (자동분류)", estellaCategory: "health" },
+      { id: "supplements", name: "건강보조제", estellaCategory: "health" },
+      { id: "drinks", name: "건강음료", estellaCategory: "health" },
+      { id: "fitness", name: "운동용품", estellaCategory: "health" },
+      { id: "diet", name: "다이어트", estellaCategory: "health" },
+    ],
+    "60": [ // 럭셔리/명품
+      { id: "all", name: "전체 (자동분류)", estellaCategory: "luxury" },
+      { id: "accessories", name: "명품악세서리", estellaCategory: "luxury" },
+      { id: "premium_furniture", name: "프리미엄가구", estellaCategory: "luxury" },
+      { id: "luxury_items", name: "명품소품", estellaCategory: "luxury" },
+    ],
+    "70": [ // 유아/완구
+      { id: "all", name: "전체 (자동분류)", estellaCategory: "kids" },
+      { id: "toys", name: "완구", estellaCategory: "kids" },
+      { id: "baby", name: "유아용품", estellaCategory: "kids" },
+      { id: "education", name: "교육/학습", estellaCategory: "kids" },
+    ],
+  };
+  
+  const getEstellaCategoryForVivian = (vivianCatId: string): string => {
+    const mapping: Record<string, string> = {
+      "10": "home_interior", "20": "beauty", "30": "electronics",
+      "40": "living", "50": "health", "60": "luxury", "70": "kids"
+    };
+    return mapping[vivianCatId] || "home_interior";
+  };
   
   interface CrawlProgress {
     status: 'idle' | 'crawling' | 'importing' | 'completed' | 'error';
@@ -4164,14 +4225,17 @@ export default function Admin() {
               </div>
               
               <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">카테고리</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">대분류 (Vivian 카테고리)</label>
                     <select
                       data-testid="select-crawl-category"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       value={crawlCategory}
-                      onChange={(e) => setCrawlCategory(e.target.value)}
+                      onChange={(e) => {
+                        setCrawlCategory(e.target.value);
+                        setCrawlSubcategory("all"); // Reset subcategory when category changes
+                      }}
                     >
                       <option value="">카테고리 선택</option>
                       <option value="10">홈 인테리어</option>
@@ -4182,6 +4246,27 @@ export default function Admin() {
                       <option value="60">럭셔리/명품</option>
                       <option value="70">유아/완구</option>
                     </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">소분류 (저장될 카테고리)</label>
+                    <select
+                      data-testid="select-crawl-subcategory"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      value={crawlSubcategory}
+                      onChange={(e) => setCrawlSubcategory(e.target.value)}
+                      disabled={!crawlCategory}
+                    >
+                      {crawlCategory && SUBCATEGORY_OPTIONS[crawlCategory]?.map(sub => (
+                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                      ))}
+                      {!crawlCategory && <option value="all">대분류를 먼저 선택하세요</option>}
+                    </select>
+                    {crawlSubcategory !== "all" && crawlCategory && (
+                      <p className="text-xs text-purple-600 mt-1">
+                        모든 상품이 "{SUBCATEGORY_OPTIONS[crawlCategory]?.find(s => s.id === crawlSubcategory)?.name}" 소분류로 저장됩니다.
+                      </p>
+                    )}
                   </div>
                   
                   <div>
@@ -4196,6 +4281,8 @@ export default function Admin() {
                       <option value={20}>20개</option>
                       <option value={30}>30개</option>
                       <option value={50}>50개</option>
+                      <option value={100}>100개</option>
+                      <option value={0}>전체 (무제한)</option>
                     </select>
                   </div>
                   
@@ -4206,19 +4293,25 @@ export default function Admin() {
                         if (crawlLoading || !crawlCategory) return;
                         setCrawlLoading(true);
                         try {
+                          const targetCategory = getEstellaCategoryForVivian(crawlCategory);
                           const res = await fetchWithAuth("/api/admin/crawling/vivian-category", {
                             method: "POST",
                             body: JSON.stringify({ 
                               categoryId: parseInt(crawlCategory), 
                               limit: crawlLimit,
-                              autoImport: true 
+                              autoImport: true,
+                              subcategory: crawlSubcategory !== "all" ? crawlSubcategory : undefined,
+                              targetCategory: targetCategory
                             })
                           });
                           const data = await res.json();
                           if (data.success) {
+                            const subcatName = crawlSubcategory !== "all" 
+                              ? SUBCATEGORY_OPTIONS[crawlCategory]?.find(s => s.id === crawlSubcategory)?.name 
+                              : "자동분류";
                             toast({ 
                               title: "크롤링 완료", 
-                              description: `${data.data.categoryName}에서 ${data.data.importedCount}개 상품이 등록되었습니다.` 
+                              description: `${data.data.categoryName} → ${subcatName}: ${data.data.importedCount}개 상품이 등록되었습니다.` 
                             });
                             fetchProducts();
                           } else {
@@ -4246,6 +4339,15 @@ export default function Admin() {
                       )}
                     </Button>
                   </div>
+                </div>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h5 className="font-medium text-blue-800 mb-2">카테고리 설정 안내</h5>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• <strong>대분류</strong>: vivian-mall에서 가져올 카테고리를 선택합니다.</li>
+                    <li>• <strong>소분류</strong>: 상품이 저장될 에스텔라 소분류를 지정합니다. "전체"를 선택하면 상품명을 기반으로 자동 분류됩니다.</li>
+                    <li>• <strong>전체 (무제한)</strong>: 해당 카테고리의 모든 상품을 가져옵니다 (시간이 오래 걸릴 수 있습니다).</li>
+                  </ul>
                 </div>
               </div>
             </div>

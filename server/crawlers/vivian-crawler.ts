@@ -65,9 +65,9 @@ const SUBCATEGORY_KEYWORDS: Record<string, Record<string, string[]>> = {
     haircare: ['샴푸', '린스', '트리트먼트', '헤어', '두피', '염색', '헤어오일', '에센스']
   },
   electronics: {
-    home_appliance: ['청소기', '공기청정기', '가습기', '제습기', '선풍기', '에어컨', '히터', '살균기', '로봇청소기'],
-    kitchen_appliance: ['에어프라이어', '믹서기', '블렌더', '전기밥솥', '전자레인지', '오븐', '토스터', '커피머신', '정수기'],
-    audio: ['스피커', '이어폰', '헤드폰', '블루투스', '사운드바', '오디오', 'AirPods', '무선이어폰']
+    home_appliance: ['청소기', '공기청정기', '가습기', '제습기', '선풍기', '에어컨', '히터', '살균기', '로봇청소기', '드라이어', '헤어드라이기', '다리미', '세탁기', '건조기', '냉장고', 'TV', '모니터', '노트북', '태블릿', '안마기', '마사지기'],
+    kitchen_appliance: ['에어프라이어', '믹서기', '블렌더', '전기밥솥', '전자레인지', '오븐', '토스터', '커피머신', '정수기', '식기세척기', '전기포트', '인덕션', '전기그릴', '제빙기'],
+    audio: ['스피커', '이어폰', '헤드폰', '블루투스', '사운드바', '오디오', 'AirPods', '무선이어폰', '앰프', '턴테이블']
   },
   living: {
     kitchen: ['냄비', '프라이팬', '칼', '도마', '그릇', '접시', '컵', '수저', '조리도구', '키친', '주방'],
@@ -99,18 +99,38 @@ function classifySubcategory(productName: string, category: string): string {
   
   const lowerName = productName.toLowerCase();
   
-  // Check each subcategory's keywords
+  // Score-based matching for better accuracy
+  const scores: Record<string, number> = {};
+  
   for (const [subcategoryId, subcategoryKeywords] of Object.entries(keywords)) {
+    scores[subcategoryId] = 0;
     for (const keyword of subcategoryKeywords) {
-      if (lowerName.includes(keyword.toLowerCase())) {
-        return subcategoryId;
+      const lowerKeyword = keyword.toLowerCase();
+      if (lowerName.includes(lowerKeyword)) {
+        // Longer keyword matches are more specific, give higher score
+        scores[subcategoryId] += lowerKeyword.length;
       }
     }
   }
   
-  // Return first subcategory as default if no match found
-  const subcategoryIds = Object.keys(keywords);
-  return subcategoryIds[0] || 'all';
+  // Find subcategory with highest score
+  let bestMatch = 'all';
+  let highestScore = 0;
+  
+  for (const [subcategoryId, score] of Object.entries(scores)) {
+    if (score > highestScore) {
+      highestScore = score;
+      bestMatch = subcategoryId;
+    }
+  }
+  
+  // Only return a match if we actually found keywords
+  if (highestScore > 0) {
+    return bestMatch;
+  }
+  
+  // Return 'all' if no match found (will use admin-selected subcategory)
+  return 'all';
 }
 
 function convertUsdToKrw(usdPrice: number): number {
@@ -310,9 +330,17 @@ async function fetchProductDetail(sourceUrl: string): Promise<{
   }
 }
 
-export async function crawlVivianCategory(categoryId: number, limit: number = 0): Promise<VivianCrawlResult> {
-  const category = CATEGORY_MAPPING[categoryId];
+export interface CrawlOptions {
+  categoryId: number;
+  limit?: number;
+  subcategory?: string; // Admin-selected subcategory (overrides auto-classification)
+  targetCategory?: string; // Admin-selected target category (overrides vivian category mapping)
+}
+
+export async function crawlVivianCategory(categoryId: number, limit: number = 0, options?: { subcategory?: string; targetCategory?: string }): Promise<VivianCrawlResult> {
+  const category = options?.targetCategory || CATEGORY_MAPPING[categoryId];
   const categoryName = CATEGORY_NAMES[categoryId];
+  const forcedSubcategory = options?.subcategory; // If provided, all products get this subcategory
   
   if (!category) {
     console.error(`[Vivian Crawler] Unknown category ID: ${categoryId}`);
@@ -333,6 +361,7 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 0)
   console.log(`[Vivian Crawler] Category ID: ${categoryId}`);
   console.log(`[Vivian Crawler] Category Name: ${categoryName}`);
   console.log(`[Vivian Crawler] Estella Category: ${category}`);
+  console.log(`[Vivian Crawler] Forced Subcategory: ${forcedSubcategory || 'auto-classify'}`);
   console.log(`[Vivian Crawler] Limit: ${fetchAll ? 'ALL (unlimited)' : limit}`);
 
   try {
@@ -446,8 +475,19 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 0)
           }
         });
         
-        // Auto-classify subcategory based on product name
-        const subcategory = classifySubcategory(name, category);
+        // Use forced subcategory if provided, otherwise auto-classify
+        let subcategory: string;
+        if (forcedSubcategory && forcedSubcategory !== 'all') {
+          // Admin selected a specific subcategory
+          subcategory = forcedSubcategory;
+        } else {
+          // Auto-classify based on product name
+          subcategory = classifySubcategory(name, category);
+          // If auto-classification failed and no forced subcategory, use 'all'
+          if (subcategory === 'all' && !forcedSubcategory) {
+            subcategory = 'all';
+          }
+        }
         
         const product: VivianProduct = {
           id: productId,
@@ -466,7 +506,8 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 0)
         allProducts.push(product);
         foundOnPage++;
         newProductsOnPage++;
-        console.log(`[Vivian Crawler] ✓ Added: "${name.substring(0, 30)}..." → ${category}/${subcategory} (₩${parseInt(price).toLocaleString()})`);
+        const subcatLabel = forcedSubcategory ? `[강제:${subcategory}]` : subcategory;
+        console.log(`[Vivian Crawler] ✓ Added: "${name.substring(0, 30)}..." → ${category}/${subcatLabel} (₩${parseInt(price).toLocaleString()})`);
         
         // Small delay between detail page fetches to be polite
         await new Promise(resolve => setTimeout(resolve, 100));
