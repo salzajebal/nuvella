@@ -1,8 +1,29 @@
 # Overview
 
-This is a Korean gold exchange e-commerce platform (한국실버골드거래소 - Korea Gold Exchange) built as a full-stack web application. The platform allows users to browse and purchase precious metals (gold, silver, platinum) and related products, view real-time precious metal prices, and includes an admin panel for product management.
+This is "Estella" (에스텔라), a Korean lifestyle shopping mall built as a full-stack web application. The platform features automatic product crawling from vivian-mall.com with 7 product categories: 홈 인테리어, 뷰티, 가전/디지털, 생활용품, 헬스/건강식품, 럭셔리/명품, and 유아/완구.
 
-The application serves as an online marketplace for gold bars, silver bars, jewelry, diamonds, and corporate gifts with real-time pricing updates based on international metal markets.
+Products are automatically imported with USD-to-KRW price conversion (1450 rate, rounded to nearest 100 won), accurate category classification, and comprehensive image collection (gallery images and description images stored separately).
+
+## Crawling System Architecture
+
+**Category Mapping (vivian-mall.com ca_id values):**
+- 10: home_interior (홈 인테리어)
+- 20: beauty (뷰티)
+- 30: electronics (가전/디지털)
+- 40: living (생활용품)
+- 50: health (헬스/건강식품)
+- 60: luxury (럭셔리/명품)
+- 70: kids (유아/완구)
+
+**Crawler Components:**
+- `server/crawlers/vivian-crawler.ts`: Direct vivian-mall.com crawler using Cheerio for HTML parsing
+- `server/crawlers/orchestrator.ts`: Manages crawl sessions and dispatches to appropriate crawler
+- `server/crawlers/types.ts`: Category mappings and type definitions
+
+**Image Handling:**
+- Gallery images stored in `imageUrls[]` field
+- Description/detail images stored in `descriptionImageUrls[]` field
+- Main product image in `imageUrl` field
 
 # User Preferences
 

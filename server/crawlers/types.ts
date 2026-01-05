@@ -29,6 +29,7 @@ export interface ProductDraft {
   discountPercent?: number;
   imageUrl: string;
   imageUrls?: string[];
+  descriptionImageUrls?: string[];
   category: string;
   subcategory?: string;
   description?: string;
@@ -58,117 +59,126 @@ export interface CrawlSession {
 
 export const CATEGORY_SITE_MAPPING: Record<string, Record<string, CrawlSource[]>> = {
   home_interior: {
+    all: [
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=10', platform: 'custom', categories: ['홈인테리어'], directUrl: 'https://vivian-mall.com/shop/list.php?ca_id=10' }
+    ],
     furniture: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['가구', '소파', '책상', '의자'] },
-      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['가구', '테이블', '수납가구'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=10', platform: 'custom', categories: ['가구'] }
     ],
     lighting: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['조명', 'LED조명', '스탠드'] },
-      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['조명', '무드등'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=10', platform: 'custom', categories: ['조명'] }
     ],
     decor: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['인테리어소품', '화병', '조화'] },
-      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['데코', '소품'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=10', platform: 'custom', categories: ['인테리어소품'] }
     ],
     fabric: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['커튼', '러그', '쿠션'] },
-      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['패브릭', '침구'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=10', platform: 'custom', categories: ['패브릭'] }
     ],
     wall_decor: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['액자', '벽시계', '벽장식'] },
-      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['월데코', '액자'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=10', platform: 'custom', categories: ['벽장식'] }
     ]
   },
   beauty: {
+    all: [
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=20', platform: 'custom', categories: ['뷰티'], directUrl: 'https://vivian-mall.com/shop/list.php?ca_id=20' }
+    ],
     skincare: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['스킨케어', '에센스', '크림'] },
-      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['스킨케어', '세럼'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=20', platform: 'custom', categories: ['스킨케어'] }
     ],
     makeup: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['메이크업', '립스틱', '파운데이션'] },
-      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['메이크업', '립틴트'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=20', platform: 'custom', categories: ['메이크업'] }
     ],
     fragrance: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['향수', '디퓨저', '캔들'] },
-      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['향수', '퍼퓸'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=20', platform: 'custom', categories: ['향수/캔들'] }
     ],
     bodycare: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['바디케어', '바디로션', '바디워시'] },
-      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['바디', '핸드크림'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=20', platform: 'custom', categories: ['바디케어'] }
     ],
     haircare: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['헤어케어', '샴푸', '트리트먼트'] },
-      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['헤어', '에센스'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=20', platform: 'custom', categories: ['헤어케어'] }
     ]
   },
   electronics: {
+    all: [
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=30', platform: 'custom', categories: ['가전/디지털'], directUrl: 'https://vivian-mall.com/shop/list.php?ca_id=30' }
+    ],
     home_appliance: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['가전', '청소기', '공기청정기'] },
-      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['생활가전', '청소기'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=30', platform: 'custom', categories: ['생활가전'] }
     ],
     kitchen_appliance: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['주방가전', '에어프라이어', '믹서기'] },
-      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['주방가전', '전기밥솥'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=30', platform: 'custom', categories: ['주방가전'] }
     ],
     audio: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['블루투스스피커', '이어폰', '헤드폰'] },
-      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['음향기기', '스피커'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=30', platform: 'custom', categories: ['오디오'] }
     ]
   },
   living: {
+    all: [
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=40', platform: 'custom', categories: ['생활용품'], directUrl: 'https://vivian-mall.com/shop/list.php?ca_id=40' }
+    ],
     kitchen: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['주방용품', '냄비', '프라이팬'] },
-      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['주방', '식기'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=40', platform: 'custom', categories: ['주방용품'] }
     ],
     bathroom: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['욕실용품', '수건', '욕실선반'] },
-      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['욕실', '화장실'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=40', platform: 'custom', categories: ['욕실용품'] }
     ],
     storage: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['수납', '수납박스', '옷장정리'] },
-      { site: 'ohou.se', url: 'https://ohou.se', platform: 'custom', categories: ['수납', '정리함'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=40', platform: 'custom', categories: ['수납/정리'] }
     ],
     cleaning: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['청소용품', '걸레', '청소도구'] },
-      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['청소', '세제'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=40', platform: 'custom', categories: ['청소용품'] }
     ]
   },
   health: {
+    all: [
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=50', platform: 'custom', categories: ['헬스/건강식품'], directUrl: 'https://vivian-mall.com/shop/list.php?ca_id=50' }
+    ],
     supplements: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['영양제', '비타민', '오메가3'] },
-      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['건강기능식품', '영양제'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=50', platform: 'custom', categories: ['건강보조제'] }
     ],
     drinks: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['건강음료', '홍삼', '비타민음료'] },
-      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['건강음료', '즙'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=50', platform: 'custom', categories: ['건강음료'] }
     ],
     fitness: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['운동용품', '요가매트', '덤벨'] },
-      { site: '11st.co.kr', url: 'https://www.11st.co.kr', platform: 'custom', categories: ['헬스', '운동기구'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=50', platform: 'custom', categories: ['운동용품'] }
     ],
     diet: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['다이어트', '단백질', '체중관리'] },
-      { site: 'oliveyoung.co.kr', url: 'https://www.oliveyoung.co.kr', platform: 'custom', categories: ['다이어트', '슬리밍'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=50', platform: 'custom', categories: ['다이어트'] }
     ]
   },
   luxury: {
+    all: [
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=60', platform: 'custom', categories: ['럭셔리/명품'], directUrl: 'https://vivian-mall.com/shop/list.php?ca_id=60' }
+    ],
     accessories: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['주얼리', '목걸이', '귀걸이'] },
-      { site: '29cm.co.kr', url: 'https://www.29cm.co.kr', platform: 'custom', categories: ['악세서리', '주얼리'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=60', platform: 'custom', categories: ['명품악세서리'] }
     ],
     premium_furniture: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['프리미엄가구', '원목가구', '디자인가구'] },
-      { site: '29cm.co.kr', url: 'https://www.29cm.co.kr', platform: 'custom', categories: ['가구', '리빙'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=60', platform: 'custom', categories: ['프리미엄가구'] }
     ],
     luxury_items: [
-      { site: 'coupang.com', url: 'https://www.coupang.com', platform: 'custom', categories: ['명품소품', '프리미엄', '디자이너'] },
-      { site: '29cm.co.kr', url: 'https://www.29cm.co.kr', platform: 'custom', categories: ['럭셔리', '프리미엄'] }
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=60', platform: 'custom', categories: ['명품소품'] }
+    ]
+  },
+  kids: {
+    all: [
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=70', platform: 'custom', categories: ['유아/완구'], directUrl: 'https://vivian-mall.com/shop/list.php?ca_id=70' }
+    ],
+    toys: [
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=70', platform: 'custom', categories: ['완구'] }
+    ],
+    baby: [
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=70', platform: 'custom', categories: ['유아용품'] }
+    ],
+    education: [
+      { site: 'vivian-mall.com', url: 'https://vivian-mall.com/shop/list.php?ca_id=70', platform: 'custom', categories: ['교육/학습'] }
     ]
   }
 };
 
 export const SUBCATEGORY_NAMES: Record<string, Record<string, string>> = {
   home_interior: {
+    all: '전체',
     furniture: '가구',
     lighting: '조명',
     decor: '인테리어소품',
@@ -176,6 +186,7 @@ export const SUBCATEGORY_NAMES: Record<string, Record<string, string>> = {
     wall_decor: '벽장식'
   },
   beauty: {
+    all: '전체',
     skincare: '스킨케어',
     makeup: '메이크업',
     fragrance: '향수/캔들',
@@ -183,26 +194,36 @@ export const SUBCATEGORY_NAMES: Record<string, Record<string, string>> = {
     haircare: '헤어케어'
   },
   electronics: {
+    all: '전체',
     home_appliance: '생활가전',
     kitchen_appliance: '주방가전',
     audio: '오디오'
   },
   living: {
+    all: '전체',
     kitchen: '주방용품',
     bathroom: '욕실용품',
     storage: '수납/정리',
     cleaning: '청소용품'
   },
   health: {
+    all: '전체',
     supplements: '건강보조제',
     drinks: '건강음료',
     fitness: '운동용품',
     diet: '다이어트'
   },
   luxury: {
+    all: '전체',
     accessories: '명품악세서리',
     premium_furniture: '프리미엄가구',
     luxury_items: '명품소품'
+  },
+  kids: {
+    all: '전체',
+    toys: '완구',
+    baby: '유아용품',
+    education: '교육/학습'
   }
 };
 
@@ -212,5 +233,6 @@ export const CATEGORY_NAMES: Record<string, string> = {
   electronics: '가전/디지털',
   living: '생활용품',
   health: '헬스/건강식품',
-  luxury: '럭셔리/명품'
+  luxury: '럭셔리/명품',
+  kids: '유아/완구'
 };

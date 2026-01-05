@@ -3,6 +3,7 @@ import { GodomallAdapter } from './adapters/godomall';
 import { ShopifyAdapter } from './adapters/shopify';
 import { BaseCrawlerAdapter } from './adapters/base';
 import { crawlProductsWithPuppeteer } from './puppeteer-crawler';
+import { crawlVivianCategory, VivianProduct } from './vivian-crawler';
 import { 
   CrawlRequest, 
   CrawlSession, 
@@ -12,6 +13,16 @@ import {
   CATEGORY_NAMES,
   SUBCATEGORY_NAMES 
 } from './types';
+
+const VIVIAN_CATEGORY_IDS: Record<string, number> = {
+  home_interior: 10,
+  beauty: 20,
+  electronics: 30,
+  living: 40,
+  health: 50,
+  luxury: 60,
+  kids: 70
+};
 
 const crawlSessions = new Map<string, CrawlSession>();
 
@@ -121,6 +132,29 @@ export async function startCrawl(request: CrawlRequest): Promise<{ sessionId: st
   return { sessionId };
 }
 
+function transformVivianToProductDraft(product: VivianProduct, subcategory: string): ProductDraft {
+  return {
+    name: product.name,
+    weight: '',
+    purity: '',
+    price: product.price,
+    originalPrice: product.originalPrice,
+    discountPercent: undefined,
+    imageUrl: product.imageUrl,
+    imageUrls: product.imageUrls,
+    descriptionImageUrls: product.descriptionImages,
+    category: product.category,
+    subcategory,
+    description: product.description || `에스텔라 프리미엄 상품입니다.`,
+    isBest: false,
+    isNew: true,
+    isHot: false,
+    useFixedPrice: true,
+    sourceUrl: product.sourceUrl,
+    sourceSite: 'vivian-mall.com'
+  };
+}
+
 async function executeCrawl(sessionId: string, request: CrawlRequest): Promise<void> {
   const session = crawlSessions.get(sessionId);
   if (!session) return;
@@ -145,19 +179,40 @@ async function executeCrawl(sessionId: string, request: CrawlRequest): Promise<v
       throw new Error(`Site ${site} not found for ${category}/${subcategory}`);
     }
     
-    let rawProducts: RawProduct[] = [];
+    let drafts: ProductDraft[] = [];
     
-    console.log(`Starting Puppeteer crawl for ${site}...`);
-    const keyword = source.categories[0] || subcategory;
-    rawProducts = await crawlProductsWithPuppeteer(site, keyword, limit, subcategory);
-    
-    if (rawProducts.length === 0) {
-      console.log(`Puppeteer crawl returned no results, falling back to adapter...`);
-      const adapter = getAdapter(source.platform, source.site, source.url);
-      rawProducts = await adapter.fetchProducts(source.categories, limit);
+    // Use vivian-crawler for vivian-mall.com
+    if (site === 'vivian-mall.com') {
+      const vivianCategoryId = VIVIAN_CATEGORY_IDS[category];
+      if (!vivianCategoryId) {
+        throw new Error(`Unknown Vivian category for ${category}`);
+      }
+      
+      console.log(`[Orchestrator] Using Vivian crawler for category ${category} (ID: ${vivianCategoryId}), limit: ${limit}`);
+      const result = await crawlVivianCategory(vivianCategoryId, limit);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Vivian crawl failed');
+      }
+      
+      drafts = result.products.map(p => transformVivianToProductDraft(p, subcategory));
+      console.log(`[Orchestrator] Vivian crawl returned ${drafts.length} products`);
+    } else {
+      // Use Puppeteer for other sites
+      let rawProducts: RawProduct[] = [];
+      
+      console.log(`Starting Puppeteer crawl for ${site}...`);
+      const keyword = source.categories[0] || subcategory;
+      rawProducts = await crawlProductsWithPuppeteer(site, keyword, limit, subcategory);
+      
+      if (rawProducts.length === 0) {
+        console.log(`Puppeteer crawl returned no results, falling back to adapter...`);
+        const adapter = getAdapter(source.platform, source.site, source.url);
+        rawProducts = await adapter.fetchProducts(source.categories, limit);
+      }
+      
+      drafts = rawProducts.map(raw => transformToProductDraft(raw, category, subcategory));
     }
-    
-    const drafts = rawProducts.map(raw => transformToProductDraft(raw, category, subcategory));
     
     session.products = drafts;
     session.status = 'completed';
