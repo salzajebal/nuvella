@@ -123,6 +123,7 @@ async function fetchProductDetail(sourceUrl: string): Promise<{
   description: string;
 }> {
   try {
+    console.log(`[Vivian Crawler] Fetching detail page: ${sourceUrl}`);
     const html = await fetchWithRetry(sourceUrl);
     const $ = cheerio.load(html);
     
@@ -130,12 +131,24 @@ async function fetchProductDetail(sourceUrl: string): Promise<{
     const descriptionImages: string[] = [];
     const seenUrls = new Set<string>();
     
-    // Main product images - gallery/slider images
-    $('#sit_pvi img, .product-image img, .sit_pvi_big img, .swiper-slide img, .item-photo img').each((_, el) => {
-      const src = $(el).attr('src') || $(el).attr('data-src');
-      if (src) {
+    // Helper to check if URL is valid image
+    const isValidImageUrl = (url: string): boolean => {
+      if (!url) return false;
+      if (url.includes('icon') || url.includes('logo') || url.includes('button')) return false;
+      if (url.includes('spacer') || url.includes('blank') || url.includes('loading')) return false;
+      // Must have image extension or be from known image CDNs
+      return url.match(/\.(jpg|jpeg|png|gif|webp)/i) !== null || 
+             url.includes('pstatic.net') || 
+             url.includes('proxy-smartstore') ||
+             url.includes('/data/item/');
+    };
+    
+    // Main product images - gallery/slider images in #sit_pvi
+    $('#sit_pvi img, .sit_pvi_big img, .swiper-slide img').each((_, el) => {
+      const src = $(el).attr('src') || $(el).attr('data-src') || $(el).attr('data-original');
+      if (src && isValidImageUrl(src)) {
         const fullUrl = absoluteUrl(src);
-        if (!seenUrls.has(fullUrl) && !fullUrl.includes('icon') && !fullUrl.includes('logo') && fullUrl.includes('/data/')) {
+        if (!seenUrls.has(fullUrl)) {
           seenUrls.add(fullUrl);
           imageUrls.push(fullUrl);
         }
@@ -143,39 +156,58 @@ async function fetchProductDetail(sourceUrl: string): Promise<{
     });
     
     // Thumbnail images
-    $('.sit_pvi_thumb img, .thumbnail img, .thumb-list img').each((_, el) => {
+    $('.sit_pvi_thumb img, .thumbnail-list img, #sit_pvi_slide img').each((_, el) => {
       const src = $(el).attr('src') || $(el).attr('data-src');
-      if (src) {
+      if (src && isValidImageUrl(src)) {
         const fullUrl = absoluteUrl(src);
-        if (!seenUrls.has(fullUrl) && !fullUrl.includes('icon') && !fullUrl.includes('logo') && fullUrl.includes('/data/')) {
+        if (!seenUrls.has(fullUrl)) {
           seenUrls.add(fullUrl);
           imageUrls.push(fullUrl);
         }
       }
     });
     
-    // Description images - inside product detail/info section
-    $('#sit_inf img, #sit_inf_explan img, .product-detail-content img, .detail-info img').each((_, el) => {
+    // Description images - inside #sit_inf_explan (main detail content)
+    // These include .se-inline-image-resource, .se-image-resource, and regular img tags
+    $('#sit_inf_explan img').each((_, el) => {
       const src = $(el).attr('src') || $(el).attr('data-src');
-      if (src) {
+      if (src && isValidImageUrl(src)) {
         const fullUrl = absoluteUrl(src);
-        if (!seenUrls.has(fullUrl) && !fullUrl.includes('icon') && !fullUrl.includes('logo') && !fullUrl.includes('button')) {
+        if (!seenUrls.has(fullUrl)) {
           seenUrls.add(fullUrl);
           descriptionImages.push(fullUrl);
         }
       }
     });
     
-    // Get product description
+    // Also check for images in other detail sections
+    $('#sit_inf img, .product-detail-content img, .item-detail img').each((_, el) => {
+      const src = $(el).attr('src') || $(el).attr('data-src');
+      if (src && isValidImageUrl(src)) {
+        const fullUrl = absoluteUrl(src);
+        if (!seenUrls.has(fullUrl)) {
+          seenUrls.add(fullUrl);
+          descriptionImages.push(fullUrl);
+        }
+      }
+    });
+    
+    // Get product description text
     let description = '';
-    const descText = $('#sit_inf, .product-detail, .sit_inf_explan').text().trim();
+    // Try to get text from product info section
+    const descText = $('#sit_inf_explan').text().trim() || 
+                     $('.product-detail').text().trim() ||
+                     $('#sit_inf').text().trim();
     if (descText) {
-      description = descText.substring(0, 500).replace(/\s+/g, ' ');
+      // Clean up whitespace and limit length
+      description = descText.replace(/\s+/g, ' ').substring(0, 1000).trim();
     }
     
+    console.log(`[Vivian Crawler] Detail: ${imageUrls.length} gallery images, ${descriptionImages.length} description images`);
+    
     return {
-      imageUrls: imageUrls.slice(0, 10),
-      descriptionImages: descriptionImages.slice(0, 20),
+      imageUrls: imageUrls.slice(0, 15),
+      descriptionImages: descriptionImages.slice(0, 30),
       description
     };
   } catch (error) {
