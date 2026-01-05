@@ -4080,9 +4080,9 @@ export default function Admin() {
                 <div>
                   <h3 className="text-xl font-bold flex items-center gap-2">
                     <Zap className="w-6 h-6" />
-                    W Concept 자동 크롤링
+                    에스텔라 상품 자동 등록
                   </h3>
-                  <p className="text-purple-100 mt-1">한 번의 클릭으로 모든 카테고리 상품을 자동으로 가져옵니다.</p>
+                  <p className="text-purple-100 mt-1">한 번의 클릭으로 모든 카테고리 상품을 자동으로 등록합니다.</p>
                 </div>
                 <Button
                   data-testid="button-batch-crawl"
@@ -4092,20 +4092,20 @@ export default function Admin() {
                     try {
                       const res = await fetchWithAuth("/api/admin/crawling/batch-wconcept", {
                         method: "POST",
-                        body: JSON.stringify({ autoImport: true, productsPerKeyword: 15 })
+                        body: JSON.stringify({ autoImport: true, productsPerKeyword: 10 })
                       });
                       const data = await res.json();
                       if (data.success) {
                         toast({ 
-                          title: "자동 크롤링 완료", 
-                          description: `${data.data.totalCrawled}개 상품 발견, ${data.data.totalImported}개 상품 등록됨` 
+                          title: "상품 등록 완료", 
+                          description: `${data.data.totalImported}개 상품이 등록되었습니다.` 
                         });
                         fetchProducts();
                       } else {
                         toast({ title: "오류", description: data.error, variant: "destructive" });
                       }
                     } catch (error) {
-                      toast({ title: "오류", description: "크롤링 중 오류가 발생했습니다.", variant: "destructive" });
+                      toast({ title: "오류", description: "상품 등록 중 오류가 발생했습니다.", variant: "destructive" });
                     } finally {
                       setBatchCrawlLoading(false);
                     }
@@ -4116,23 +4116,23 @@ export default function Admin() {
                   {batchCrawlLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      크롤링 중...
+                      등록 중...
                     </>
                   ) : (
                     <>
                       <Download className="w-5 h-5 mr-2" />
-                      전체 크롤링 시작
+                      전체 상품 등록
                     </>
                   )}
                 </Button>
               </div>
               <div className="mt-4 grid grid-cols-3 md:grid-cols-6 gap-2 text-xs">
-                <span className="bg-white/20 rounded px-2 py-1 text-center">럭셔리/명품</span>
+                <span className="bg-white/20 rounded px-2 py-1 text-center">럭셔리</span>
                 <span className="bg-white/20 rounded px-2 py-1 text-center">뷰티</span>
                 <span className="bg-white/20 rounded px-2 py-1 text-center">홈 인테리어</span>
                 <span className="bg-white/20 rounded px-2 py-1 text-center">생활용품</span>
                 <span className="bg-white/20 rounded px-2 py-1 text-center">가전/디지털</span>
-                <span className="bg-white/20 rounded px-2 py-1 text-center">헬스/건강식품</span>
+                <span className="bg-white/20 rounded px-2 py-1 text-center">헬스/건강</span>
               </div>
             </div>
 

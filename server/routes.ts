@@ -2154,12 +2154,12 @@ export async function registerRoutes(
                 imageUrls,
                 category: result.category,
                 subcategory: result.keyword,
-                description: `W Concept에서 가져온 상품입니다.`,
-                isBest: false,
+                description: `에스텔라 프리미엄 상품입니다.`,
+                isBest: Math.random() > 0.7,
                 isNew: true,
-                isHot: false,
+                isHot: Math.random() > 0.8,
                 useFixedPrice: true,
-                sourceSite: 'display.wconcept.co.kr',
+                sourceSite: 'estella.kr',
                 sourceUrl: product.sourceUrl
               };
               
