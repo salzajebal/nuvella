@@ -45,6 +45,8 @@ const CATEGORY_NAMES: Record<number, string> = {
   70: '유아/완구'
 };
 
+export const VIVIAN_CATEGORIES = CATEGORY_NAMES;
+
 function convertUsdToKrw(usdPrice: number): number {
   const krwPrice = usdPrice * USD_TO_KRW_RATE;
   return Math.round(krwPrice / 100) * 100;

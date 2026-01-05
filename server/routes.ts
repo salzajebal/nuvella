@@ -28,6 +28,58 @@ const ADMIN_PASSWORD = "admin123";
 
 const adminSessions = new Map<string, { expiresAt: Date }>();
 
+// Crawling progress tracking
+interface CrawlProgress {
+  status: 'idle' | 'crawling' | 'importing' | 'completed' | 'error';
+  currentCategory: string;
+  currentCategoryIndex: number;
+  totalCategories: number;
+  productsFound: number;
+  productsImported: number;
+  currentProduct: string;
+  message: string;
+  startedAt?: Date;
+  completedAt?: Date;
+}
+
+let crawlProgress: CrawlProgress = {
+  status: 'idle',
+  currentCategory: '',
+  currentCategoryIndex: 0,
+  totalCategories: 0,
+  productsFound: 0,
+  productsImported: 0,
+  currentProduct: '',
+  message: ''
+};
+
+const progressClients: Response[] = [];
+
+function updateCrawlProgress(update: Partial<CrawlProgress>) {
+  crawlProgress = { ...crawlProgress, ...update };
+  // Send to all connected SSE clients
+  progressClients.forEach((client, index) => {
+    try {
+      client.write(`data: ${JSON.stringify(crawlProgress)}\n\n`);
+    } catch (e) {
+      progressClients.splice(index, 1);
+    }
+  });
+}
+
+function resetCrawlProgress() {
+  crawlProgress = {
+    status: 'idle',
+    currentCategory: '',
+    currentCategoryIndex: 0,
+    totalCategories: 0,
+    productsFound: 0,
+    productsImported: 0,
+    currentProduct: '',
+    message: ''
+  };
+}
+
 function generateSessionToken(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
@@ -2115,6 +2167,38 @@ export async function registerRoutes(
     }
   });
 
+  // SSE endpoint for crawl progress (accepts token via query param for EventSource compatibility)
+  app.get("/api/admin/crawling/progress", (req: Request, res: Response) => {
+    const token = req.query.token as string;
+    if (!token || !isValidSession(token)) {
+      return res.status(401).json({ success: false, error: "인증이 필요합니다." });
+    }
+    
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+    
+    // Send current state immediately
+    res.write(`data: ${JSON.stringify(crawlProgress)}\n\n`);
+    
+    // Add to clients list
+    progressClients.push(res);
+    
+    // Remove on close
+    req.on('close', () => {
+      const index = progressClients.indexOf(res);
+      if (index > -1) {
+        progressClients.splice(index, 1);
+      }
+    });
+  });
+
+  // Get current crawl status (non-SSE)
+  app.get("/api/admin/crawling/status", requireAdminAuth, (req: Request, res: Response) => {
+    res.json({ success: true, data: crawlProgress });
+  });
+
   // Delete all products
   app.delete("/api/admin/products/all", requireAdminAuth, async (req: Request, res: Response) => {
     try {
@@ -2142,20 +2226,63 @@ export async function registerRoutes(
       console.log("Products per category:", productsPerCategory);
       console.log("Auto import:", autoImport);
       
-      const { crawlAllVivianCategories, getVivianCategoryName } = await import('./crawlers/vivian-crawler');
+      const { crawlVivianCategory, getVivianCategoryName, VIVIAN_CATEGORIES } = await import('./crawlers/vivian-crawler');
       
-      const results = await crawlAllVivianCategories(productsPerCategory);
+      const categoryIds = Object.keys(VIVIAN_CATEGORIES).map(Number);
+      const totalCategories = categoryIds.length;
+      
+      // Reset and initialize progress immediately
+      resetCrawlProgress();
+      updateCrawlProgress({
+        status: 'crawling',
+        currentCategory: '준비 중',
+        currentCategoryIndex: 0,
+        totalCategories,
+        productsFound: 0,
+        productsImported: 0,
+        currentProduct: '',
+        message: '크롤링을 시작합니다...',
+        startedAt: new Date()
+      });
       
       let totalCrawled = 0;
       let totalImported = 0;
       const importedProducts: any[] = [];
+      const results: any[] = [];
       
-      for (const result of results) {
+      for (let i = 0; i < categoryIds.length; i++) {
+        const categoryId = categoryIds[i];
+        const categoryName = getVivianCategoryName(categoryId);
+        
+        updateCrawlProgress({
+          status: 'crawling',
+          currentCategory: categoryName,
+          currentCategoryIndex: i + 1,
+          message: `${categoryName} 카테고리 크롤링 중... (${i + 1}/${totalCategories})`
+        });
+        
+        const result = await crawlVivianCategory(categoryId, productsPerCategory);
+        results.push(result);
         totalCrawled += result.products.length;
         
+        updateCrawlProgress({
+          productsFound: totalCrawled,
+          message: `${categoryName}에서 ${result.products.length}개 상품 발견`
+        });
+        
         if (autoImport && result.success && result.products.length > 0) {
+          updateCrawlProgress({
+            status: 'importing',
+            message: `${categoryName} 상품 등록 중...`
+          });
+          
           for (const product of result.products) {
             try {
+              updateCrawlProgress({
+                currentProduct: product.name?.substring(0, 30) || '상품',
+                message: `등록 중: ${product.name?.substring(0, 20) || '상품'}...`
+              });
+              
               const allImages = product.imageUrls && product.imageUrls.length > 0 
                 ? product.imageUrls 
                 : (product.imageUrl ? [product.imageUrl] : []);
@@ -2184,6 +2311,10 @@ export async function registerRoutes(
               const savedProduct = await storage.createProduct(productData);
               importedProducts.push(savedProduct);
               totalImported++;
+              
+              updateCrawlProgress({
+                productsImported: totalImported
+              });
             } catch (e) {
               console.error("Error importing batch product:", e);
             }
@@ -2193,6 +2324,12 @@ export async function registerRoutes(
       
       console.log(`=== BATCH CRAWL COMPLETE ===`);
       console.log(`Total crawled: ${totalCrawled}, Total imported: ${totalImported}`);
+      
+      updateCrawlProgress({
+        status: 'completed',
+        message: `완료! ${totalCrawled}개 크롤링, ${totalImported}개 등록됨`,
+        completedAt: new Date()
+      });
       
       res.json({
         success: true,
@@ -2210,6 +2347,10 @@ export async function registerRoutes(
       });
     } catch (error) {
       console.error("Batch crawl error:", error);
+      updateCrawlProgress({
+        status: 'error',
+        message: '크롤링 중 오류가 발생했습니다.'
+      });
       res.status(500).json({ 
         success: false, 
         error: "배치 크롤링 중 오류가 발생했습니다." 

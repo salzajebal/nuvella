@@ -211,6 +211,18 @@ export default function Admin() {
   const [batchCrawlLoading, setBatchCrawlLoading] = useState(false);
   const [deleteAllLoading, setDeleteAllLoading] = useState(false);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  
+  interface CrawlProgress {
+    status: 'idle' | 'crawling' | 'importing' | 'completed' | 'error';
+    currentCategory: string;
+    currentCategoryIndex: number;
+    totalCategories: number;
+    productsFound: number;
+    productsImported: number;
+    currentProduct: string;
+    message: string;
+  }
+  const [crawlProgress, setCrawlProgress] = useState<CrawlProgress | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -4007,13 +4019,47 @@ export default function Admin() {
                   onClick={async () => {
                     if (batchCrawlLoading) return;
                     setBatchCrawlLoading(true);
+                    setCrawlProgress({ status: 'crawling', currentCategory: '', currentCategoryIndex: 0, totalCategories: 7, productsFound: 0, productsImported: 0, currentProduct: '', message: '크롤링 시작...' });
+                    
+                    // Use polling for progress updates (more reliable than SSE with auth)
+                    let pollInterval: ReturnType<typeof setInterval> | null = null;
+                    let pollStartTime = Date.now();
+                    let hasSeenActive = false; // Track if we've seen non-idle status
+                    
+                    const startPolling = () => {
+                      pollInterval = setInterval(async () => {
+                        try {
+                          const res = await fetchWithAuth("/api/admin/crawling/status");
+                          const data = await res.json();
+                          if (data.success && data.data) {
+                            const status = data.data.status;
+                            // Only update progress if status is active OR we've already seen active status
+                            if (status === 'crawling' || status === 'importing') {
+                              hasSeenActive = true;
+                              setCrawlProgress(data.data);
+                            } else if (hasSeenActive && (status === 'completed' || status === 'error')) {
+                              // Only stop polling if we saw active state and now it's completed/error
+                              setCrawlProgress(data.data);
+                              if (pollInterval) clearInterval(pollInterval);
+                            }
+                            // Ignore idle status until we see crawling/importing
+                          }
+                        } catch (e) {
+                          console.error('Progress poll error:', e);
+                        }
+                      }, 500);
+                    };
+                    startPolling();
+                    
                     try {
                       const res = await fetchWithAuth("/api/admin/crawling/batch-vivian", {
                         method: "POST",
                         body: JSON.stringify({ autoImport: true, productsPerCategory: 20 })
                       });
                       const data = await res.json();
+                      if (pollInterval) clearInterval(pollInterval);
                       if (data.success) {
+                        setCrawlProgress({ status: 'completed', currentCategory: '', currentCategoryIndex: 7, totalCategories: 7, productsFound: data.data.totalCrawled, productsImported: data.data.totalImported, currentProduct: '', message: `완료! ${data.data.totalImported}개 등록됨` });
                         toast({ 
                           title: "상품 등록 완료", 
                           description: `${data.data.totalImported}개 상품이 등록되었습니다.` 
@@ -4023,9 +4069,11 @@ export default function Admin() {
                         toast({ title: "오류", description: data.error, variant: "destructive" });
                       }
                     } catch (error) {
+                      if (pollInterval) clearInterval(pollInterval);
                       toast({ title: "오류", description: "상품 등록 중 오류가 발생했습니다.", variant: "destructive" });
                     } finally {
                       setBatchCrawlLoading(false);
+                      setTimeout(() => setCrawlProgress(null), 5000);
                     }
                   }}
                   disabled={batchCrawlLoading}
@@ -4044,6 +4092,57 @@ export default function Admin() {
                   )}
                 </Button>
               </div>
+              
+              {/* Progress Display */}
+              {crawlProgress && crawlProgress.status !== 'idle' && (
+                <div className="mt-4 bg-white/10 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">
+                      {crawlProgress.status === 'crawling' && '크롤링 중...'}
+                      {crawlProgress.status === 'importing' && '상품 등록 중...'}
+                      {crawlProgress.status === 'completed' && '완료!'}
+                      {crawlProgress.status === 'error' && '오류 발생'}
+                    </span>
+                    <span className="text-xs">
+                      {crawlProgress.currentCategoryIndex}/{crawlProgress.totalCategories} 카테고리
+                    </span>
+                  </div>
+                  
+                  {/* Progress bar */}
+                  <div className="w-full bg-white/20 rounded-full h-2 mb-2">
+                    <div 
+                      className="bg-white h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(crawlProgress.currentCategoryIndex / crawlProgress.totalCategories) * 100}%` }}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="text-purple-200">현재 카테고리:</span>
+                      <span className="ml-2 font-medium">{crawlProgress.currentCategory || '-'}</span>
+                    </div>
+                    <div>
+                      <span className="text-purple-200">발견된 상품:</span>
+                      <span className="ml-2 font-medium">{crawlProgress.productsFound}개</span>
+                    </div>
+                    <div>
+                      <span className="text-purple-200">등록된 상품:</span>
+                      <span className="ml-2 font-medium">{crawlProgress.productsImported}개</span>
+                    </div>
+                    <div>
+                      <span className="text-purple-200">상태:</span>
+                      <span className="ml-2 font-medium">{crawlProgress.message}</span>
+                    </div>
+                  </div>
+                  
+                  {crawlProgress.currentProduct && (
+                    <div className="mt-2 text-xs text-purple-200 truncate">
+                      현재: {crawlProgress.currentProduct}
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <div className="mt-4 grid grid-cols-4 md:grid-cols-7 gap-2 text-xs">
                 <span className="bg-white/20 rounded px-2 py-1 text-center">홈 인테리어</span>
                 <span className="bg-white/20 rounded px-2 py-1 text-center">뷰티</span>
