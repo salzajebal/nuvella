@@ -12,7 +12,7 @@ export default function Cart() {
   const { items, removeItem, clearWishlist } = useWishlist();
   const { toast } = useToast();
 
-  const handleRemove = (id: number, name: string) => {
+  const handleRemove = (id: string, name: string) => {
     removeItem(id);
     toast({
       title: "삭제 완료",
@@ -21,7 +21,8 @@ export default function Cart() {
   };
 
   const totalPrice = items.reduce((sum, item) => {
-    const price = parseInt(item.price.replace(/,/g, ""), 10) || 0;
+    const priceStr = String(item.price || '0');
+    const price = parseInt(priceStr.replace(/,/g, ""), 10) || 0;
     return sum + price;
   }, 0);
 

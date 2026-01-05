@@ -108,9 +108,11 @@ export function ProductGrid({
     fetchProducts();
   }, [activeCategory]);
 
-  const formatPrice = (price: string) => {
-    const numPrice = parseInt(price.replace(/,/g, ''), 10);
-    if (isNaN(numPrice)) return price;
+  const formatPrice = (price: string | number | null | undefined) => {
+    if (price == null) return '0';
+    const priceStr = String(price);
+    const numPrice = parseInt(priceStr.replace(/,/g, ''), 10);
+    if (isNaN(numPrice)) return priceStr;
     return numPrice.toLocaleString();
   };
 

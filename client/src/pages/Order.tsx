@@ -107,7 +107,8 @@ export default function Order() {
 
   const calculateTotal = () => {
     if (!product) return "0";
-    const price = parseInt(product.price.replace(/,/g, ""));
+    const priceStr = String(product.price || '0');
+    const price = parseInt(priceStr.replace(/,/g, ""));
     return (price * quantity).toLocaleString();
   };
 
