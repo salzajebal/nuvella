@@ -189,6 +189,21 @@ export default function Admin() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orderFilter, setOrderFilter] = useState<"all" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled">("all");
   const [orderSearch, setOrderSearch] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(false);
+  const [orderEditData, setOrderEditData] = useState({
+    memberName: "",
+    memberEmail: "",
+    memberPhone: "",
+    shippingName: "",
+    shippingPhone: "",
+    shippingAddress: "",
+    shippingAddressDetail: "",
+    shippingZipcode: "",
+    shippingMemo: "",
+    adminNote: "",
+  });
 
   const [chatConversations, setChatConversations] = useState<ChatConversation[]>([]);
   const [chatNotification, setChatNotification] = useState<{show: boolean; memberName: string; message: string; conversationId: string} | null>(null);
@@ -491,6 +506,46 @@ export default function Admin() {
       if (data.success) {
         toast({ title: "완료", description: "결제 상태가 업데이트되었습니다." });
         fetchOrders();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "처리 중 오류가 발생했습니다.", variant: "destructive" });
+    }
+  };
+
+  const openOrderDetail = (order: Order) => {
+    setSelectedOrder(order);
+    setOrderEditData({
+      memberName: order.memberName || "",
+      memberEmail: order.memberEmail || "",
+      memberPhone: order.memberPhone || "",
+      shippingName: order.shippingName || "",
+      shippingPhone: order.shippingPhone || "",
+      shippingAddress: order.shippingAddress || "",
+      shippingAddressDetail: order.shippingAddressDetail || "",
+      shippingZipcode: order.shippingZipcode || "",
+      shippingMemo: order.shippingMemo || "",
+      adminNote: order.adminNote || "",
+    });
+    setEditingOrder(false);
+    setShowOrderDetailModal(true);
+  };
+
+  const handleSaveOrderEdit = async () => {
+    if (!selectedOrder) return;
+    try {
+      const res = await fetchWithAuth(`/api/admin/orders/${selectedOrder.id}`, {
+        method: "PUT",
+        body: JSON.stringify(orderEditData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: "주문 정보가 수정되었습니다." });
+        fetchOrders();
+        setShowOrderDetailModal(false);
+        setSelectedOrder(null);
+        setEditingOrder(false);
       } else {
         toast({ title: "오류", description: data.error, variant: "destructive" });
       }
@@ -2997,6 +3052,15 @@ export default function Admin() {
                         </p>
                       </div>
                       <div className="flex flex-col gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openOrderDetail(order)}
+                          data-testid={`button-order-detail-${order.id}`}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          상세보기
+                        </Button>
                         <select
                           className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-yellow-500"
                           value={order.status || "pending"}
@@ -3021,6 +3085,179 @@ export default function Admin() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {showOrderDetailModal && selectedOrder && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <div className="p-6 border-b">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-xl">주문 상세 정보</h3>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => { setShowOrderDetailModal(false); setSelectedOrder(null); setEditingOrder(false); }}
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">주문번호: {selectedOrder.orderNumber}</p>
+                  </div>
+                  
+                  <div className="p-6 space-y-6">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-bold mb-3 flex items-center gap-2">
+                        <Package className="w-4 h-4" />
+                        상품 정보
+                      </h4>
+                      <div className="text-sm space-y-1">
+                        <p><strong>상품명:</strong> {selectedOrder.productName}</p>
+                        <p><strong>수량:</strong> {selectedOrder.quantity}개</p>
+                        <p><strong>단가:</strong> {Number(selectedOrder.productPrice).toLocaleString()}원</p>
+                        <p><strong>총액:</strong> <span className="text-lg font-bold text-amber-600">{Number(selectedOrder.totalAmount).toLocaleString()}원</span></p>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <h4 className="font-bold mb-3 flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        주문자 정보
+                      </h4>
+                      {editingOrder ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">이름</label>
+                            <Input
+                              value={orderEditData.memberName}
+                              onChange={(e) => setOrderEditData({ ...orderEditData, memberName: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">이메일</label>
+                            <Input
+                              value={orderEditData.memberEmail}
+                              onChange={(e) => setOrderEditData({ ...orderEditData, memberEmail: e.target.value })}
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">연락처</label>
+                            <Input
+                              value={orderEditData.memberPhone}
+                              onChange={(e) => setOrderEditData({ ...orderEditData, memberPhone: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm space-y-1">
+                          <p><strong>이름:</strong> {selectedOrder.memberName}</p>
+                          <p><strong>이메일:</strong> {selectedOrder.memberEmail}</p>
+                          <p><strong>연락처:</strong> {selectedOrder.memberPhone}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <h4 className="font-bold mb-3 flex items-center gap-2">
+                        <Package className="w-4 h-4" />
+                        배송지 정보
+                      </h4>
+                      {editingOrder ? (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">수령인</label>
+                              <Input
+                                value={orderEditData.shippingName}
+                                onChange={(e) => setOrderEditData({ ...orderEditData, shippingName: e.target.value })}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">연락처</label>
+                              <Input
+                                value={orderEditData.shippingPhone}
+                                onChange={(e) => setOrderEditData({ ...orderEditData, shippingPhone: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">우편번호</label>
+                            <Input
+                              value={orderEditData.shippingZipcode}
+                              onChange={(e) => setOrderEditData({ ...orderEditData, shippingZipcode: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">주소</label>
+                            <Input
+                              value={orderEditData.shippingAddress}
+                              onChange={(e) => setOrderEditData({ ...orderEditData, shippingAddress: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">상세주소</label>
+                            <Input
+                              value={orderEditData.shippingAddressDetail}
+                              onChange={(e) => setOrderEditData({ ...orderEditData, shippingAddressDetail: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">배송 메모</label>
+                            <Input
+                              value={orderEditData.shippingMemo}
+                              onChange={(e) => setOrderEditData({ ...orderEditData, shippingMemo: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm space-y-1">
+                          <p><strong>수령인:</strong> {selectedOrder.shippingName}</p>
+                          <p><strong>연락처:</strong> {selectedOrder.shippingPhone}</p>
+                          <p><strong>우편번호:</strong> {selectedOrder.shippingZipcode || "-"}</p>
+                          <p><strong>주소:</strong> {selectedOrder.shippingAddress}</p>
+                          <p><strong>상세주소:</strong> {selectedOrder.shippingAddressDetail || "-"}</p>
+                          <p><strong>배송 메모:</strong> {selectedOrder.shippingMemo || "-"}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-yellow-50 rounded-lg p-4">
+                      <h4 className="font-bold mb-3">관리자 메모</h4>
+                      {editingOrder ? (
+                        <Textarea
+                          placeholder="관리자 메모 입력"
+                          value={orderEditData.adminNote}
+                          onChange={(e) => setOrderEditData({ ...orderEditData, adminNote: e.target.value })}
+                          rows={3}
+                        />
+                      ) : (
+                        <p className="text-sm">{selectedOrder.adminNote || "메모 없음"}</p>
+                      )}
+                    </div>
+
+                    <div className="text-xs text-gray-400 space-y-1">
+                      <p>주문일시: {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleString("ko-KR") : "-"}</p>
+                      <p>최종수정: {selectedOrder.updatedAt ? new Date(selectedOrder.updatedAt).toLocaleString("ko-KR") : "-"}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-6 border-t flex justify-end gap-2">
+                    {editingOrder ? (
+                      <>
+                        <Button variant="outline" onClick={() => setEditingOrder(false)}>취소</Button>
+                        <Button className="bg-yellow-500 hover:bg-yellow-600" onClick={handleSaveOrderEdit}>저장</Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="outline" onClick={() => { setShowOrderDetailModal(false); setSelectedOrder(null); }}>닫기</Button>
+                        <Button className="bg-blue-500 hover:bg-blue-600" onClick={() => setEditingOrder(true)}>
+                          <Pencil className="w-4 h-4 mr-1" />
+                          수정
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
