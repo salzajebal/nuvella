@@ -188,6 +188,7 @@ export default function Admin() {
   const [adminOrders, setAdminOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orderFilter, setOrderFilter] = useState<"all" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled">("all");
+  const [orderSearch, setOrderSearch] = useState("");
 
   const [chatConversations, setChatConversations] = useState<ChatConversation[]>([]);
   const [chatNotification, setChatNotification] = useState<{show: boolean; memberName: string; message: string; conversationId: string} | null>(null);
@@ -2879,7 +2880,7 @@ export default function Admin() {
 
         {activeTab === "orders" && (
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">주문 관리</h2>
                 <p className="text-gray-500 text-sm">
@@ -2888,7 +2889,17 @@ export default function Admin() {
                     : `${orderFilter} 상태 ${adminOrders.filter(o => o.status === orderFilter).length}건`}
                 </p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="이름 또는 주문번호 검색"
+                    value={orderSearch}
+                    onChange={(e) => setOrderSearch(e.target.value)}
+                    className="pl-9"
+                    data-testid="input-order-search"
+                  />
+                </div>
                 <select
                   className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500"
                   value={orderFilter}
@@ -2916,6 +2927,12 @@ export default function Admin() {
               <div className="space-y-4">
                 {adminOrders
                   .filter(order => orderFilter === "all" || order.status === orderFilter)
+                  .filter(order => {
+                    if (!orderSearch.trim()) return true;
+                    const search = orderSearch.toLowerCase();
+                    return order.customerName?.toLowerCase().includes(search) || 
+                           order.orderNumber?.toLowerCase().includes(search);
+                  })
                   .map((order) => (
                   <div
                     key={order.id}
