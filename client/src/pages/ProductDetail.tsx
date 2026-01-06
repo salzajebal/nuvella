@@ -497,6 +497,20 @@ export default function ProductDetail() {
               상품 상세 정보
             </h2>
             
+            {product.descriptionImageUrls && product.descriptionImageUrls.length > 0 && (
+              <div className="mb-12 space-y-2">
+                {product.descriptionImageUrls.map((imgUrl, index) => (
+                  <img 
+                    key={index}
+                    src={imgUrl}
+                    alt={`${product.name} 상세이미지 ${index + 1}`}
+                    className="w-full max-w-3xl mx-auto"
+                    loading="lazy"
+                  />
+                ))}
+              </div>
+            )}
+            
             <div className="grid md:grid-cols-2 gap-8 mb-12">
               <div>
                 <h3 className="font-bold text-gray-900 mb-4">상품 특징</h3>
