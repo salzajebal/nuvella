@@ -178,10 +178,10 @@ export function Header() {
                 </button>
               </>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link href="/login" className="hover:text-gray-900 whitespace-nowrap" data-testid="link-login">로그인</Link>
-                <span className="text-gray-300">|</span>
-                <Link href="/signup" className="hover:text-gray-900 whitespace-nowrap" data-testid="link-signup">회원가입</Link>
+              <div className="flex flex-row items-center gap-2 flex-nowrap">
+                <Link href="/login" className="hover:text-gray-900 whitespace-nowrap inline-block" data-testid="link-login">로그인</Link>
+                <span className="text-gray-300 flex-shrink-0">|</span>
+                <Link href="/signup" className="hover:text-gray-900 whitespace-nowrap inline-block" data-testid="link-signup">회원가입</Link>
               </div>
             )}
           </div>
@@ -227,10 +227,10 @@ export function Header() {
                           </button>
                         </>
                       ) : (
-                        <div className="flex items-center gap-3">
-                          <Link href="/login" className="text-base font-medium text-gray-600">로그인</Link>
-                          <span className="text-gray-300">|</span>
-                          <Link href="/signup" className="text-base font-medium text-gray-600">회원가입</Link>
+                        <div className="flex flex-row items-center gap-3 flex-nowrap">
+                          <Link href="/login" className="text-base font-medium text-gray-600 whitespace-nowrap inline-block">로그인</Link>
+                          <span className="text-gray-300 flex-shrink-0">|</span>
+                          <Link href="/signup" className="text-base font-medium text-gray-600 whitespace-nowrap inline-block">회원가입</Link>
                         </div>
                       )}
                     </div>
