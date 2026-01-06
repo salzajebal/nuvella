@@ -2116,6 +2116,48 @@ export async function registerRoutes(
       }
       
       const orderNumber = `ORD${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+      const orderTotalAmount = parseInt(totalAmount) || 0;
+      
+      let paymentStatus = "pending";
+      let orderStatus = "pending";
+      
+      // Auto-payment with points for logged-in members
+      if (memberId) {
+        const member = await storage.getMemberById(memberId);
+        if (member) {
+          const currentPoints = member.points || 0;
+          
+          if (currentPoints >= orderTotalAmount) {
+            // Deduct points and complete payment
+            const newBalance = currentPoints - orderTotalAmount;
+            await storage.updateMemberPoints(memberId, newBalance);
+            
+            // Record the point transaction
+            await storage.createPointTransaction({
+              memberId,
+              type: "use",
+              amount: orderTotalAmount,
+              balance: newBalance,
+              description: `주문결제: ${productName}`,
+              orderId: null, // Will be updated after order creation
+            });
+            
+            paymentStatus = "completed";
+            orderStatus = "processing";
+          } else {
+            return res.status(400).json({ 
+              success: false, 
+              error: `포인트가 부족합니다. 현재 포인트: ${currentPoints.toLocaleString()}원, 필요 포인트: ${orderTotalAmount.toLocaleString()}원` 
+            });
+          }
+        }
+      } else {
+        // Non-member orders require point payment - not allowed
+        return res.status(400).json({ 
+          success: false, 
+          error: "로그인 후 주문해주세요. 포인트로만 결제 가능합니다." 
+        });
+      }
       
       const orderData = {
         orderNumber,
@@ -2134,8 +2176,8 @@ export async function registerRoutes(
         productPrice: String(productPrice),
         quantity: parseInt(quantity) || 1,
         totalAmount: String(totalAmount),
-        status: "pending",
-        paymentStatus: "pending",
+        status: orderStatus,
+        paymentStatus: paymentStatus,
       };
       
       const validationResult = insertOrderSchema.safeParse(orderData);

@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useKakaoLink } from "@/hooks/use-kakao-link";
 import { KakaoConfirmDialog } from "@/components/KakaoConfirmDialog";
-import { CheckCircle, Package, User, MapPin, MessageCircle, Search, Clock, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle, Package, User, MapPin, MessageCircle, Search, Clock, Plus, ChevronDown, ChevronUp, Wallet, AlertCircle } from "lucide-react";
 import type { Product } from "@shared/schema";
 
 interface SavedAddress {
@@ -45,6 +45,8 @@ export default function Order() {
   const [recentAddresses, setRecentAddresses] = useState<SavedAddress[]>([]);
   const [showRecentAddresses, setShowRecentAddresses] = useState(false);
   const [addressMode, setAddressMode] = useState<"recent" | "new">("new");
+  const [memberPoints, setMemberPoints] = useState<number>(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   const searchParams = new URLSearchParams(window.location.search);
   const quantityParam = parseInt(searchParams.get("quantity") || "1");
@@ -105,6 +107,7 @@ export default function Order() {
   useEffect(() => {
     const memberName = localStorage.getItem("memberName") || "";
     const memberEmail = localStorage.getItem("memberEmail") || "";
+    const memberToken = localStorage.getItem("memberToken");
     
     setFormData(prev => ({
       ...prev,
@@ -113,28 +116,43 @@ export default function Order() {
       shippingName: memberName,
     }));
     
-    const fetchRecentAddresses = async () => {
-      const memberToken = localStorage.getItem("memberToken");
+    setIsLoggedIn(!!memberToken);
+    
+    const fetchMemberData = async () => {
       if (!memberToken) return;
       
       try {
-        const res = await fetch("/api/members/recent-addresses", {
+        // Fetch member info for points
+        const memberRes = await fetch("/api/members/me", {
           headers: {
             "Authorization": `Bearer ${memberToken}`,
           },
         });
-        if (res.ok) {
-          const data = await res.json();
+        if (memberRes.ok) {
+          const memberData = await memberRes.json();
+          if (memberData.success && memberData.data) {
+            setMemberPoints(memberData.data.points || 0);
+          }
+        }
+        
+        // Fetch recent addresses
+        const addressRes = await fetch("/api/members/recent-addresses", {
+          headers: {
+            "Authorization": `Bearer ${memberToken}`,
+          },
+        });
+        if (addressRes.ok) {
+          const data = await addressRes.json();
           if (data.success && data.data) {
             setRecentAddresses(data.data);
           }
         }
       } catch (error) {
-        console.error("Error fetching recent addresses:", error);
+        console.error("Error fetching member data:", error);
       }
     };
     
-    fetchRecentAddresses();
+    fetchMemberData();
   }, []);
 
   useEffect(() => {
@@ -600,17 +618,63 @@ export default function Order() {
               </div>
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-6">
-              <h3 className="font-bold text-amber-900 mb-2 flex items-center gap-2">
-                <MessageCircle className="w-5 h-5" />
-                결제 안내
-              </h3>
-              <p className="text-amber-800 text-sm">
-                주문서 작성 완료 후, <strong>결제계좌 정보</strong>는 카카오톡 상담을 통해 안내받으실 수 있습니다.
-                <br />
-                주문 완료 페이지에서 카카오톡 링크를 클릭해주세요.
-              </p>
-            </div>
+            {!isLoggedIn && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 sm:p-6">
+                <h3 className="font-bold text-red-900 mb-2 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  로그인 필요
+                </h3>
+                <p className="text-red-800 text-sm">
+                  포인트 결제를 위해 로그인이 필요합니다. 로그인 후 주문해주세요.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 border-red-300 text-red-700 hover:bg-red-100"
+                  onClick={() => setLocation("/auth")}
+                  data-testid="button-go-login"
+                >
+                  로그인하기
+                </Button>
+              </div>
+            )}
+
+            {isLoggedIn && (
+              <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Wallet className="w-5 h-5 text-primary" />
+                  포인트 결제
+                </h3>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-600">보유 포인트</span>
+                    <span className="font-bold text-lg">{memberPoints.toLocaleString()}원</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-600">결제 금액</span>
+                    <span className="font-bold text-lg text-primary">-{calculateTotal()}원</span>
+                  </div>
+                  
+                  <div className="border-t pt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">결제 후 잔액</span>
+                      <span className={`font-bold text-lg ${memberPoints >= parseInt(calculateTotal().replace(/,/g, "")) ? "text-green-600" : "text-red-600"}`}>
+                        {(memberPoints - parseInt(calculateTotal().replace(/,/g, ""))).toLocaleString()}원
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {memberPoints < parseInt(calculateTotal().replace(/,/g, "")) && (
+                    <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>포인트가 부족합니다. 충전 후 결제해주세요.</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
               <div className="flex justify-between items-center text-lg font-bold">
@@ -621,11 +685,11 @@ export default function Order() {
 
             <Button
               type="submit"
-              disabled={submitting}
-              className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90"
+              disabled={submitting || !isLoggedIn || memberPoints < parseInt(calculateTotal().replace(/,/g, ""))}
+              className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="button-submit-order"
             >
-              {submitting ? "주문 처리 중..." : "주문하기"}
+              {submitting ? "결제 처리 중..." : `포인트로 결제하기 (${calculateTotal()}원)`}
             </Button>
           </form>
         </div>
