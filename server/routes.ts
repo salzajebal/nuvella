@@ -151,6 +151,67 @@ export async function registerRoutes(
       res.status(500).json({ success: false, error: "Failed to fetch product" });
     }
   });
+
+  // Get reviews for a specific product
+  app.get("/api/products/:id/reviews", async (req: Request, res: Response) => {
+    try {
+      const reviews = await storage.getReviewsByProduct(req.params.id);
+      // Only return visible reviews
+      const visibleReviews = reviews.filter(r => r.isVisible);
+      res.json({ success: true, data: visibleReviews });
+    } catch (error) {
+      console.error("Error fetching product reviews:", error);
+      res.status(500).json({ success: false, error: "후기를 불러올 수 없습니다." });
+    }
+  });
+
+  // Check if user can write a review for a product (has delivered order without review)
+  app.get("/api/products/:id/can-review", async (req: Request, res: Response) => {
+    try {
+      const token = req.headers.authorization?.replace("Bearer ", "");
+      
+      if (!token) {
+        return res.json({ success: true, data: { canReview: false, orders: [] } });
+      }
+      
+      const session = await getMemberFromToken(token);
+      if (!session) {
+        return res.json({ success: true, data: { canReview: false, orders: [] } });
+      }
+      
+      // Get all orders for this member
+      const orders = await storage.getOrdersByMember(session.memberId);
+      
+      // Filter for delivered orders of this product
+      const deliveredOrders = orders.filter((o: any) => 
+        o.productId === req.params.id && o.status === "delivered"
+      );
+      
+      // Get existing reviews for this product
+      const existingReviews = await storage.getReviewsByProduct(req.params.id);
+      
+      // Filter out orders that already have reviews
+      const reviewableOrders = deliveredOrders.filter((order: any) => 
+        !existingReviews.some((r: any) => r.orderId === order.id)
+      );
+      
+      res.json({ 
+        success: true, 
+        data: { 
+          canReview: reviewableOrders.length > 0, 
+          orders: reviewableOrders.map((o: any) => ({ 
+            id: o.id, 
+            orderNumber: o.orderNumber,
+            productName: o.productName,
+            createdAt: o.createdAt 
+          }))
+        } 
+      });
+    } catch (error) {
+      console.error("Error checking review eligibility:", error);
+      res.status(500).json({ success: false, error: "확인할 수 없습니다." });
+    }
+  });
   
   // Create product (Admin - Protected)
   app.post("/api/products", requireAdminAuth, async (req: Request, res: Response) => {

@@ -3,9 +3,13 @@ import { useParams, Link, useLocation } from "wouter";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Heart, ChevronRight, Truck, Shield, Award, RotateCcw, ShoppingBag } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ShoppingCart, Heart, ChevronRight, Truck, Shield, Award, RotateCcw, ShoppingBag, Star, Edit3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Product } from "@shared/schema";
+import type { Product, Review } from "@shared/schema";
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=800&fit=crop";
 
@@ -131,6 +135,13 @@ const PRODUCT_DETAILS: Record<string, { features: string[]; specs: { label: stri
   }
 };
 
+interface ReviewableOrder {
+  id: string;
+  orderNumber: string;
+  productName: string;
+  createdAt: string;
+}
+
 export default function ProductDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
@@ -139,6 +150,18 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [canReview, setCanReview] = useState(false);
+  const [reviewableOrders, setReviewableOrders] = useState<ReviewableOrder[]>([]);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string>("");
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    title: "",
+    content: ""
+  });
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -159,6 +182,108 @@ export default function ProductDetail() {
       fetchProduct();
     }
   }, [id]);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch(`/api/products/${id}/reviews`);
+        const data = await res.json();
+        if (data.success) {
+          setReviews(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+
+    const checkCanReview = async () => {
+      const token = localStorage.getItem("memberToken");
+      if (!token) return;
+      
+      try {
+        const res = await fetch(`/api/products/${id}/can-review`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          setCanReview(data.data.canReview);
+          setReviewableOrders(data.data.orders);
+          if (data.data.orders.length > 0) {
+            setSelectedOrderId(data.data.orders[0].id);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking review eligibility:", error);
+      }
+    };
+
+    if (id) {
+      fetchReviews();
+      checkCanReview();
+    }
+  }, [id]);
+
+  const handleSubmitReview = async () => {
+    if (!selectedOrderId || !reviewForm.title || !reviewForm.content) {
+      toast({
+        title: "입력 오류",
+        description: "제목과 내용을 모두 입력해주세요.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const token = localStorage.getItem("memberToken");
+      const memberName = localStorage.getItem("memberName") || "회원";
+      
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          orderId: selectedOrderId,
+          productId: id,
+          authorName: memberName,
+          rating: reviewForm.rating,
+          title: reviewForm.title,
+          content: reviewForm.content
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast({
+          title: "후기 작성 완료",
+          description: "소중한 후기를 남겨주셔서 감사합니다."
+        });
+        setShowReviewModal(false);
+        setReviewForm({ rating: 5, title: "", content: "" });
+        
+        const reviewsRes = await fetch(`/api/products/${id}/reviews`);
+        const reviewsData = await reviewsRes.json();
+        if (reviewsData.success) {
+          setReviews(reviewsData.data);
+        }
+        
+        setReviewableOrders(prev => prev.filter(o => o.id !== selectedOrderId));
+        setCanReview(reviewableOrders.length > 1);
+      } else {
+        throw new Error(data.error || "후기 작성에 실패했습니다.");
+      }
+    } catch (error: any) {
+      toast({
+        title: "오류",
+        description: error.message || "후기 작성에 실패했습니다.",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   const handleAddToCart = () => {
     toast({
@@ -411,6 +536,67 @@ export default function ProductDetail() {
               <h3 className="font-bold text-gray-900 mb-2">배송 및 교환/반품 안내</h3>
               <p className="text-gray-600 text-sm">상세페이지 참조</p>
             </div>
+
+            <div className="mt-12 border-t border-gray-200 pt-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  사용후기 ({reviews.length})
+                </h2>
+                {canReview && (
+                  <Button 
+                    onClick={() => setShowReviewModal(true)}
+                    className="gap-2"
+                    data-testid="button-write-review"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    후기 작성
+                  </Button>
+                )}
+              </div>
+
+              {reviews.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <p className="text-gray-500">아직 작성된 후기가 없습니다.</p>
+                  {canReview && (
+                    <p className="text-gray-400 text-sm mt-2">첫 번째 후기를 작성해보세요!</p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="bg-gray-50 rounded-lg p-5" data-testid={`review-item-${review.id}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <span className="font-medium text-gray-900">{review.authorName}</span>
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= (review.rating || 5) 
+                                    ? "text-yellow-400 fill-yellow-400" 
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-sm text-gray-400">
+                          {review.displayDate 
+                            ? new Date(review.displayDate).toLocaleDateString("ko-KR")
+                            : review.createdAt 
+                              ? new Date(review.createdAt).toLocaleDateString("ko-KR")
+                              : ""
+                          }
+                        </span>
+                      </div>
+                      <h4 className="font-medium text-gray-900 mb-2">{review.title}</h4>
+                      <p className="text-gray-600 text-sm leading-relaxed">{review.content}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-40 p-4">
@@ -432,6 +618,96 @@ export default function ProductDetail() {
           </div>
         </div>
       </main>
+
+      <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>사용후기 작성</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {reviewableOrders.length > 1 && (
+              <div>
+                <Label>주문 선택</Label>
+                <select
+                  className="w-full mt-1 p-2 border rounded-md"
+                  value={selectedOrderId}
+                  onChange={(e) => setSelectedOrderId(e.target.value)}
+                >
+                  {reviewableOrders.map((order) => (
+                    <option key={order.id} value={order.id}>
+                      {order.orderNumber} - {new Date(order.createdAt).toLocaleDateString("ko-KR")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
+            <div>
+              <Label>별점</Label>
+              <div className="flex items-center gap-1 mt-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setReviewForm(prev => ({ ...prev, rating: star }))}
+                    className="p-1"
+                  >
+                    <Star
+                      className={`w-8 h-8 ${
+                        star <= reviewForm.rating
+                          ? "text-yellow-400 fill-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="review-title">제목</Label>
+              <Input
+                id="review-title"
+                value={reviewForm.title}
+                onChange={(e) => setReviewForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="후기 제목을 입력하세요"
+                className="mt-1"
+                data-testid="input-review-title"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="review-content">내용</Label>
+              <Textarea
+                id="review-content"
+                value={reviewForm.content}
+                onChange={(e) => setReviewForm(prev => ({ ...prev, content: e.target.value }))}
+                placeholder="상품 사용 후기를 작성해주세요"
+                className="mt-1"
+                rows={4}
+                data-testid="input-review-content"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setShowReviewModal(false)}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleSubmitReview}
+              disabled={submittingReview}
+              data-testid="button-submit-review"
+            >
+              {submittingReview ? "작성 중..." : "후기 등록"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
