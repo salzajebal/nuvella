@@ -30,11 +30,11 @@ export default function Cart() {
     <div className="min-h-screen bg-white font-sans">
       <Header />
 
-      <main className="container-custom py-12">
+      <main className="container-custom py-6 sm:py-12 px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <Heart className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-gray-900" data-testid="text-cart-title">찜 목록</h1>
+          <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+            <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-primary flex-shrink-0" />
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900" data-testid="text-cart-title">찜 목록</h1>
           </div>
 
           {items.length === 0 ? (
@@ -68,15 +68,15 @@ export default function Cart() {
                 </Button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {items.map((item) => (
                   <div 
                     key={item.id} 
-                    className="flex gap-4 p-4 bg-white border rounded-lg hover:shadow-md transition-shadow"
+                    className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-white border rounded-lg hover:shadow-md transition-shadow"
                     data-testid={`cart-item-${item.id}`}
                   >
                     <Link href={`/product/${item.id}`}>
-                      <div className="w-24 h-24 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
                         <img 
                           src={item.imageUrl || DEFAULT_IMAGE} 
                           alt={item.name}
@@ -87,16 +87,16 @@ export default function Cart() {
                     
                     <div className="flex-1 min-w-0">
                       <Link href={`/product/${item.id}`}>
-                        <h3 className="font-bold text-gray-900 hover:text-primary transition-colors line-clamp-2">
+                        <h3 className="font-bold text-sm sm:text-base text-gray-900 hover:text-primary transition-colors line-clamp-2">
                           {item.name}
                         </h3>
                       </Link>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
                         {item.purity} / {item.weight}
                       </div>
-                      <div className="mt-2">
-                        <span className="text-lg font-bold text-primary">{item.price}</span>
-                        <span className="text-sm text-gray-500">원</span>
+                      <div className="mt-1 sm:mt-2">
+                        <span className="text-base sm:text-lg font-bold text-primary">{item.price}</span>
+                        <span className="text-xs sm:text-sm text-gray-500">원</span>
                       </div>
                     </div>
 
@@ -105,10 +105,10 @@ export default function Cart() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleRemove(item.id, item.name)}
-                        className="text-gray-400 hover:text-red-500"
+                        className="text-gray-400 hover:text-red-500 w-8 h-8 sm:w-10 sm:h-10"
                         data-testid={`button-remove-${item.id}`}
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       </Button>
                     </div>
                   </div>

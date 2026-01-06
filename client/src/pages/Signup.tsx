@@ -96,14 +96,14 @@ export default function Signup() {
     <div className="min-h-screen bg-gray-50 font-sans">
       <Header />
       
-      <main className="container-custom py-16">
+      <main className="container-custom py-8 sm:py-16 px-4">
         <div className="max-w-md mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">회원가입</h1>
-            <p className="text-gray-500">Estella 회원이 되어 다양한 혜택을 누리세요</p>
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">회원가입</h1>
+            <p className="text-sm sm:text-base text-gray-500">Estella 회원이 되어 다양한 혜택을 누리세요</p>
           </div>
 
-          <div className="bg-white p-8 shadow-sm border border-gray-100">
+          <div className="bg-white p-4 sm:p-8 shadow-sm border border-gray-100">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">이름 <span className="text-red-500">*</span></label>

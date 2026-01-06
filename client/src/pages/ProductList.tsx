@@ -101,23 +101,23 @@ export default function ProductList() {
       <Header />
       
       <main className="container-custom py-8 sm:py-12">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-            <Link href="/" className="hover:text-gray-700">홈</Link>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4 overflow-x-auto">
+            <Link href="/" className="hover:text-gray-700 whitespace-nowrap">홈</Link>
             <span>/</span>
-            <Link href={`/products/${categoryId}`} className="hover:text-gray-700">{categoryName}</Link>
+            <Link href={`/products/${categoryId}`} className="hover:text-gray-700 whitespace-nowrap">{categoryName}</Link>
             {subcategoryName && (
               <>
                 <span>/</span>
-                <span className="text-gray-900">{subcategoryName}</span>
+                <span className="text-gray-900 whitespace-nowrap truncate max-w-[120px] sm:max-w-none">{subcategoryName}</span>
               </>
             )}
           </div>
           
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2" data-testid="text-category-title">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 break-keep" data-testid="text-category-title">
             {subcategoryName || categoryName}
           </h1>
-          <p className="text-gray-500 text-sm">{categoryDescription}</p>
+          <p className="text-gray-500 text-xs sm:text-sm">{categoryDescription}</p>
         </div>
 
         {categoryData && (
@@ -154,12 +154,12 @@ export default function ProductList() {
           </div>
         )}
         
-        <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
-          <div className="text-sm text-gray-500">
+        <div className="flex justify-between items-center mb-6 sm:mb-8 pb-3 sm:pb-4 border-b border-gray-100">
+          <div className="text-xs sm:text-sm text-gray-500">
             총 <span className="font-bold text-gray-900" data-testid="text-product-count">{products.length}</span>개의 상품
           </div>
-          <div className="flex gap-2 text-sm">
-            <select className="border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-900 rounded">
+          <div className="flex gap-2 text-xs sm:text-sm">
+            <select className="border border-gray-200 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:border-gray-900 rounded">
               <option>신상품순</option>
               <option>낮은가격순</option>
               <option>높은가격순</option>

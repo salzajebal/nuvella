@@ -62,43 +62,43 @@ export default function Support() {
       <div className="min-h-screen bg-white font-sans">
         <Header />
         
-        <main className="container-custom py-12">
-          <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4" data-testid="text-support-title">고객센터</h1>
-          <p className="text-gray-500">Estella에 대해 궁금한 점을 확인하세요</p>
+        <main className="container-custom py-6 sm:py-12 px-4">
+          <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-4" data-testid="text-support-title">고객센터</h1>
+          <p className="text-sm sm:text-base text-gray-500">Estella에 대해 궁금한 점을 확인하세요</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <div className="bg-amber-50 border border-amber-200 p-6 rounded-lg text-center hover:shadow-lg transition-shadow cursor-pointer">
-            <HelpCircle className="w-10 h-10 text-amber-600 mx-auto mb-3" />
-            <h3 className="font-bold text-gray-900 mb-2">자주묻는질문</h3>
-            <p className="text-sm text-gray-500">FAQ에서 빠르게 답변을 찾아보세요</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
+          <div className="bg-amber-50 border border-amber-200 p-3 sm:p-6 rounded-lg text-center hover:shadow-lg transition-shadow cursor-pointer">
+            <HelpCircle className="w-8 h-8 sm:w-10 sm:h-10 text-amber-600 mx-auto mb-2 sm:mb-3" />
+            <h3 className="font-bold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">자주묻는질문</h3>
+            <p className="text-[10px] sm:text-sm text-gray-500 hidden sm:block">FAQ에서 빠르게 답변을 찾아보세요</p>
           </div>
           <button 
             onClick={openKakaoChat}
-            className="bg-yellow-50 border border-yellow-300 p-6 rounded-lg text-center hover:shadow-lg transition-shadow cursor-pointer block w-full"
+            className="bg-yellow-50 border border-yellow-300 p-3 sm:p-6 rounded-lg text-center hover:shadow-lg transition-shadow cursor-pointer block w-full"
             data-testid="button-kakao-support"
           >
-            <MessageCircle className="w-10 h-10 text-yellow-600 mx-auto mb-3" />
-            <h3 className="font-bold text-gray-900 mb-2">카카오톡 문의</h3>
-            <p className="text-sm text-gray-500">카카오톡으로 상담하세요</p>
+            <MessageCircle className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-600 mx-auto mb-2 sm:mb-3" />
+            <h3 className="font-bold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">카카오톡 문의</h3>
+            <p className="text-[10px] sm:text-sm text-gray-500 hidden sm:block">카카오톡으로 상담하세요</p>
           </button>
-          <div className="bg-green-50 border border-green-200 p-6 rounded-lg text-center hover:shadow-lg transition-shadow cursor-pointer">
-            <FileText className="w-10 h-10 text-green-600 mx-auto mb-3" />
-            <h3 className="font-bold text-gray-900 mb-2">공지사항</h3>
-            <p className="text-sm text-gray-500">최신 소식과 이벤트를 확인하세요</p>
+          <div className="bg-green-50 border border-green-200 p-3 sm:p-6 rounded-lg text-center hover:shadow-lg transition-shadow cursor-pointer">
+            <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-green-600 mx-auto mb-2 sm:mb-3" />
+            <h3 className="font-bold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">공지사항</h3>
+            <p className="text-[10px] sm:text-sm text-gray-500 hidden sm:block">최신 소식과 이벤트를 확인하세요</p>
           </div>
-          <div className="bg-purple-50 border border-purple-200 p-6 rounded-lg text-center hover:shadow-lg transition-shadow cursor-pointer">
-            <Bell className="w-10 h-10 text-purple-600 mx-auto mb-3" />
-            <h3 className="font-bold text-gray-900 mb-2">이용안내</h3>
-            <p className="text-sm text-gray-500">거래 및 이용 방법을 안내합니다</p>
+          <div className="bg-purple-50 border border-purple-200 p-3 sm:p-6 rounded-lg text-center hover:shadow-lg transition-shadow cursor-pointer">
+            <Bell className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600 mx-auto mb-2 sm:mb-3" />
+            <h3 className="font-bold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">이용안내</h3>
+            <p className="text-[10px] sm:text-sm text-gray-500 hidden sm:block">거래 및 이용 방법을 안내합니다</p>
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">자주 묻는 질문 (FAQ)</h2>
+        <div className="bg-gray-50 rounded-lg p-4 sm:p-8">
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">자주 묻는 질문 (FAQ)</h2>
           
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-6 sm:mb-8">
             <Button
               variant={activeCategory === "all" ? "default" : "outline"}
               onClick={() => setActiveCategory("all")}

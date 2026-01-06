@@ -340,13 +340,13 @@ export default function ProductDetail() {
       <Header />
       
       <main className="flex-1 pb-28 lg:pb-0">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
-            <Link href="/" className="hover:text-gray-900">홈</Link>
-            <ChevronRight className="w-4 h-4" />
-            <Link href="/products" className="hover:text-gray-900">상품</Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-900">{product.name}</span>
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
+          <nav className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500 mb-4 sm:mb-8 overflow-x-auto">
+            <Link href="/" className="hover:text-gray-900 whitespace-nowrap">홈</Link>
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <Link href="/products" className="hover:text-gray-900 whitespace-nowrap">상품</Link>
+            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="text-gray-900 truncate max-w-[150px] sm:max-w-none">{product.name}</span>
           </nav>
 
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
@@ -362,11 +362,11 @@ export default function ProductDetail() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2">
                 {(product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : [product.imageUrl || DEFAULT_IMAGE]).map((url, index) => (
                   <div 
                     key={index} 
-                    className={`w-16 h-16 bg-gray-100 overflow-hidden cursor-pointer border-2 ${
+                    className={`w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 overflow-hidden cursor-pointer border-2 flex-shrink-0 ${
                       selectedImageIndex === index ? 'border-gray-900' : 'border-transparent'
                     }`}
                     onClick={() => setSelectedImageIndex(index)}
@@ -381,58 +381,58 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-2">
                   {product.isBest && (
-                    <span className="bg-gray-900 text-white text-xs px-2 py-1 font-medium">BEST</span>
+                    <span className="bg-gray-900 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 font-medium">BEST</span>
                   )}
                   {product.isNew && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 font-medium">NEW</span>
+                    <span className="bg-red-500 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 font-medium">NEW</span>
                   )}
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.name}</h1>
-                <p className="text-gray-600">{product.description}</p>
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 break-keep">{product.name}</h1>
+                <p className="text-sm sm:text-base text-gray-600 break-keep">{product.description}</p>
               </div>
 
-              <div className="border-t border-b border-gray-100 py-6">
-                <div className="flex items-center gap-2">
+              <div className="border-t border-b border-gray-100 py-4 sm:py-6">
+                <div className="flex items-center gap-2 flex-wrap">
                   {product.originalPrice && (
-                    <span className="text-lg text-gray-400 line-through">
+                    <span className="text-sm sm:text-lg text-gray-400 line-through">
                       {formatPrice(product.originalPrice)}원
                     </span>
                   )}
                   {product.discountPercent && product.discountPercent > 0 && (
-                    <span className="text-lg text-red-500 font-bold">
+                    <span className="text-sm sm:text-lg text-red-500 font-bold">
                       {product.discountPercent}%
                     </span>
                   )}
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold text-gray-900" data-testid="price-product-detail">
+                  <span className="text-2xl sm:text-3xl font-bold text-gray-900" data-testid="price-product-detail">
                     {formatPrice(product.price)}
                   </span>
-                  <span className="text-lg text-gray-500">원</span>
+                  <span className="text-base sm:text-lg text-gray-500">원</span>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">무료 배송</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">무료 배송</p>
               </div>
 
-              <div className="flex items-center gap-4">
-                <span className="text-gray-500 text-sm">수량</span>
+              <div className="flex items-center gap-3 sm:gap-4">
+                <span className="text-gray-500 text-xs sm:text-sm">수량</span>
                 <div className="flex items-center border border-gray-200">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-3 py-2 text-gray-500 hover:bg-gray-50"
+                    className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-gray-500 hover:bg-gray-50 text-sm"
                     data-testid="button-quantity-minus"
                   >
                     -
                   </button>
-                  <span className="px-4 py-2 border-x border-gray-200 min-w-[50px] text-center" data-testid="text-quantity">
+                  <span className="px-3 sm:px-4 py-1.5 sm:py-2 border-x border-gray-200 min-w-[40px] sm:min-w-[50px] text-center text-sm" data-testid="text-quantity">
                     {quantity}
                   </span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="px-3 py-2 text-gray-500 hover:bg-gray-50"
+                    className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-gray-500 hover:bg-gray-50 text-sm"
                     data-testid="button-quantity-plus"
                   >
                     +
@@ -471,22 +471,22 @@ export default function ProductDetail() {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+              <div className="grid grid-cols-4 gap-2 sm:gap-4 pt-4 border-t border-gray-100">
                 <div className="text-center">
-                  <Truck className="w-6 h-6 mx-auto text-gray-600 mb-1" />
-                  <span className="text-xs text-gray-600">무료배송</span>
+                  <Truck className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-gray-600 mb-0.5 sm:mb-1" />
+                  <span className="text-[10px] sm:text-xs text-gray-600">무료배송</span>
                 </div>
                 <div className="text-center">
-                  <Shield className="w-6 h-6 mx-auto text-gray-600 mb-1" />
-                  <span className="text-xs text-gray-600">정품보증</span>
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-gray-600 mb-0.5 sm:mb-1" />
+                  <span className="text-[10px] sm:text-xs text-gray-600">정품보증</span>
                 </div>
                 <div className="text-center">
-                  <Award className="w-6 h-6 mx-auto text-gray-600 mb-1" />
-                  <span className="text-xs text-gray-600">품질인증</span>
+                  <Award className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-gray-600 mb-0.5 sm:mb-1" />
+                  <span className="text-[10px] sm:text-xs text-gray-600">품질인증</span>
                 </div>
                 <div className="text-center">
-                  <RotateCcw className="w-6 h-6 mx-auto text-gray-600 mb-1" />
-                  <span className="text-xs text-gray-600">교환/반품</span>
+                  <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-gray-600 mb-0.5 sm:mb-1" />
+                  <span className="text-[10px] sm:text-xs text-gray-600">교환/반품</span>
                 </div>
               </div>
             </div>

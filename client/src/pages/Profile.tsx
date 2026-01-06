@@ -467,12 +467,12 @@ export default function Profile() {
                 </div>
 
                 <Tabs defaultValue="info" className="w-full">
-                  <TabsList className="w-full grid grid-cols-5 h-auto">
-                    <TabsTrigger value="info" className="text-xs md:text-sm py-2 px-1 md:px-3">내 정보</TabsTrigger>
-                    <TabsTrigger value="orders" className="text-xs md:text-sm py-2 px-1 md:px-3">주문내역</TabsTrigger>
-                    <TabsTrigger value="menu" className="text-xs md:text-sm py-2 px-1 md:px-3">메뉴</TabsTrigger>
-                    <TabsTrigger value="deposit" className="text-xs md:text-sm py-2 px-1 md:px-3">포인트충전/환급</TabsTrigger>
-                    <TabsTrigger value="points" className="text-xs md:text-sm py-2 px-1 md:px-3">포인트</TabsTrigger>
+                  <TabsList className="w-full grid grid-cols-5 h-auto gap-0">
+                    <TabsTrigger value="info" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">정보</TabsTrigger>
+                    <TabsTrigger value="orders" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">주문</TabsTrigger>
+                    <TabsTrigger value="menu" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">메뉴</TabsTrigger>
+                    <TabsTrigger value="deposit" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">충전</TabsTrigger>
+                    <TabsTrigger value="points" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">적립금</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="info" className="mt-4">
