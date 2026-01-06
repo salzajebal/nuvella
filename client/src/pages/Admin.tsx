@@ -1899,6 +1899,45 @@ export default function Admin() {
         </aside>
         
         <div className="flex-1 flex flex-col min-h-screen">
+          <header className="hidden lg:flex bg-white border-b border-amber-200/30 px-6 py-3 items-center justify-between shadow-sm">
+            <div className="flex items-center gap-4">
+              <h1 className="text-lg font-bold text-gray-800">관리자 대시보드</h1>
+              <span className="text-sm text-gray-400">|</span>
+              <span className="text-sm text-gray-500">Estella 관리자 시스템</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setActiveTab("deposits")}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 rounded-lg font-medium text-sm hover:from-amber-600 hover:to-yellow-600 shadow-sm transition-all"
+              >
+                <Wallet className="w-4 h-4" />
+                충전
+                {depositRequests.filter(d => d.status === "pending").length > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full ml-1">{depositRequests.filter(d => d.status === "pending").length}</span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("withdrawals")}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium text-sm hover:from-green-600 hover:to-emerald-600 shadow-sm transition-all"
+              >
+                <Wallet className="w-4 h-4" />
+                출금
+                {withdrawalRequests.filter(w => w.status === "pending").length > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full ml-1">{withdrawalRequests.filter(w => w.status === "pending").length}</span>
+                )}
+              </button>
+              <span className="text-gray-300">|</span>
+              <a href="/" target="_blank" className="text-sm text-gray-600 hover:text-amber-600 flex items-center gap-1">
+                <Eye className="w-4 h-4" />
+                홈페이지
+              </a>
+              <a href="/shop" target="_blank" className="text-sm text-gray-600 hover:text-amber-600 flex items-center gap-1">
+                <ShoppingCart className="w-4 h-4" />
+                쇼핑몰
+              </a>
+            </div>
+          </header>
+          
           <header className="bg-white border-b border-amber-200/50 px-6 py-4 flex items-center justify-between lg:hidden shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-lg flex items-center justify-center shadow">
