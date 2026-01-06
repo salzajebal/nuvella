@@ -6,6 +6,7 @@ import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { broadcastToAdmins } from "./chatSocket";
 
 // Use memory storage to persist images in database (not ephemeral filesystem)
 const reviewImageUpload = multer({
@@ -838,6 +839,11 @@ export async function registerRoutes(
         status: "pending"
       });
       
+      broadcastToAdmins({
+        type: "new_deposit",
+        data: request
+      });
+      
       res.status(201).json({ success: true, data: request, message: "입금신청이 접수되었습니다." });
     } catch (error) {
       console.error("Error creating deposit request:", error);
@@ -923,6 +929,11 @@ export async function registerRoutes(
         accountHolder: rawAccountHolder,
         birthdate: rawBirthdate,
         status: "pending"
+      });
+      
+      broadcastToAdmins({
+        type: "new_withdrawal",
+        data: request
       });
       
       res.status(201).json({ success: true, data: request, message: "출금신청이 접수되었습니다." });
