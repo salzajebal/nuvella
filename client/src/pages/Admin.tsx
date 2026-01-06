@@ -8,7 +8,7 @@ import {
   Plus, Pencil, Trash2, Check, X, RefreshCw, Database, 
   LogOut, Users, Package, BarChart3, Eye, EyeOff,
   Lock, User, Mail, Phone, CheckCircle, XCircle,
-  Star, FileText, Bell, Calendar,
+  Star, FileText, Bell, Calendar, Search,
   Wallet, Clock, Snowflake, Unlock, Settings, Link2, Upload,
   MessageCircle, Send, Circle, Volume2, Zap, Download, Loader2
 } from "lucide-react";
@@ -102,6 +102,7 @@ export default function Admin() {
   
   const [products, setProducts] = useState<Product[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [memberSearch, setMemberSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -2389,12 +2390,22 @@ export default function Admin() {
 
         {activeTab === "members" && (
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">회원 관리</h2>
                 <p className="text-gray-500 text-sm">총 {members.length}명의 회원</p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="이름 또는 아이디 검색"
+                    value={memberSearch}
+                    onChange={(e) => setMemberSearch(e.target.value)}
+                    className="pl-9"
+                    data-testid="input-member-search"
+                  />
+                </div>
                 <Button variant="outline" onClick={fetchMembers}>
                   <RefreshCw className="w-4 h-4 mr-2" />
                   새로고침
@@ -2631,7 +2642,14 @@ export default function Admin() {
               </div>
             ) : (
               <div className="space-y-4">
-                {members.map((member) => (
+                {members
+                  .filter((member) => {
+                    if (!memberSearch.trim()) return true;
+                    const search = memberSearch.toLowerCase();
+                    return member.name.toLowerCase().includes(search) || 
+                           member.username.toLowerCase().includes(search);
+                  })
+                  .map((member) => (
                   <div key={member.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="flex-1 min-w-[200px]">
