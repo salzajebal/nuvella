@@ -19,13 +19,10 @@ export type User = typeof users.$inferSelect;
 
 export const members = pgTable("members", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: text("email").notNull().unique(),
+  username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
   phone: text("phone"),
-  address: text("address"),
-  bank: text("bank"),
-  accountNumber: text("account_number"),
   isActive: boolean("is_active").default(true),
   isAdmin: boolean("is_admin").default(false),
   isFrozen: boolean("is_frozen").default(false),
@@ -49,7 +46,7 @@ export type Member = typeof members.$inferSelect;
 export const memberSessions = pgTable("member_sessions", {
   token: varchar("token").primaryKey(),
   memberId: varchar("member_id").notNull(),
-  email: text("email").notNull(),
+  username: text("username").notNull(),
   name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   expiresAt: timestamp("expires_at"),

@@ -4,30 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { User, Mail, Lock, Phone, Check, MapPin, Building2, CreditCard } from "lucide-react";
+import { User, Lock, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const BANKS = [
-  "국민은행",
-  "신한은행",
-  "우리은행",
-  "하나은행",
-  "농협은행",
-  "기업은행",
-  "SC제일은행",
-  "케이뱅크",
-  "카카오뱅크",
-  "토스뱅크",
-  "새마을금고",
-  "우체국",
-  "수협은행",
-  "대구은행",
-  "부산은행",
-  "경남은행",
-  "광주은행",
-  "전북은행",
-  "제주은행",
-];
 
 export default function Signup() {
   const [, setLocation] = useLocation();
@@ -35,13 +13,10 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    username: "",
     password: "",
     passwordConfirm: "",
     phone: "",
-    address: "",
-    bank: "",
-    accountNumber: "",
     agreeTerms: false,
     agreePrivacy: false,
     agreeMarketing: false,
@@ -85,12 +60,9 @@ export default function Signup() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
-          email: formData.email,
+          username: formData.username,
           password: formData.password,
           phone: formData.phone,
-          address: formData.address,
-          bank: formData.bank || null,
-          accountNumber: formData.accountNumber || null,
         }),
       });
 
@@ -150,19 +122,20 @@ export default function Signup() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">이메일(아이디) <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">아이디 <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
-                    type="email"
-                    placeholder="이메일 주소를 입력해주세요"
+                    type="text"
+                    placeholder="아이디를 입력해주세요"
                     className="pl-10 h-12 rounded-none"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    data-testid="input-email"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    data-testid="input-username"
                     required
                   />
                 </div>
+                <p className="text-xs text-gray-400 mt-1">영문, 숫자 조합 4자 이상</p>
               </div>
 
               <div>
@@ -178,61 +151,6 @@ export default function Signup() {
                     data-testid="input-phone"
                     required
                   />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">주소 <span className="text-red-500">*</span></label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type="text"
-                    placeholder="주소를 입력해주세요"
-                    className="pl-10 h-12 rounded-none"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    data-testid="input-address"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-gray-100 pt-5">
-                <p className="text-sm text-gray-500 mb-4">환급 계좌 정보 (선택사항)</p>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">은행 선택</label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <select
-                        className="w-full pl-10 h-12 border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={formData.bank}
-                        onChange={(e) => setFormData({ ...formData, bank: e.target.value })}
-                        data-testid="select-bank"
-                      >
-                        <option value="">은행을 선택해주세요</option>
-                        {BANKS.map((bank) => (
-                          <option key={bank} value={bank}>{bank}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">계좌번호</label>
-                    <div className="relative">
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <Input
-                        type="text"
-                        placeholder="계좌번호를 입력해주세요 (- 없이)"
-                        className="pl-10 h-12 rounded-none"
-                        value={formData.accountNumber}
-                        onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
-                        data-testid="input-account-number"
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -317,41 +235,19 @@ export default function Signup() {
               <Button 
                 type="submit"
                 className="w-full h-14 bg-primary hover:bg-primary/90 text-white rounded-none text-base font-bold"
-                data-testid="button-submit-signup"
                 disabled={loading}
+                data-testid="button-signup"
               >
-                {loading ? "처리 중..." : "회원가입"}
+                {loading ? "가입 중..." : "회원가입"}
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-gray-500">
-              이미 회원이신가요?{" "}
+            <div className="mt-6 text-center">
+              <span className="text-gray-500">이미 회원이신가요?</span>{" "}
               <Link href="/login" className="text-primary hover:underline font-medium">
                 로그인
               </Link>
             </div>
-          </div>
-
-          <div className="mt-8 bg-white p-6 shadow-sm border border-gray-100">
-            <h3 className="font-bold text-gray-900 mb-4">회원 혜택 안내</h3>
-            <ul className="space-y-3 text-sm text-gray-600">
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>신상품 및 할인 알림 서비스</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>회원 전용 특별 할인가 적용</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>적립금 및 포인트 혜택</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>1:1 전담 상담원 배정</span>
-              </li>
-            </ul>
           </div>
         </div>
       </main>

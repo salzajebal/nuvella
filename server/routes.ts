@@ -679,10 +679,10 @@ export async function registerRoutes(
     try {
       const validatedData = insertMemberSchema.parse(req.body);
       
-      // Check if email already exists
-      const existing = await storage.getMemberByEmail(validatedData.email);
+      // Check if username already exists
+      const existing = await storage.getMemberByUsername(validatedData.username);
       if (existing) {
-        return res.status(400).json({ success: false, error: "이미 등록된 이메일입니다." });
+        return res.status(400).json({ success: false, error: "이미 사용중인 아이디입니다." });
       }
       
       const member = await storage.createMember(validatedData);
@@ -699,15 +699,15 @@ export async function registerRoutes(
   // Member login - uses database-based sessions for persistence
   app.post("/api/members/login", async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body;
+      const { username, password } = req.body;
       
-      if (!email || !password) {
-        return res.status(400).json({ success: false, error: "이메일과 비밀번호를 입력해주세요." });
+      if (!username || !password) {
+        return res.status(400).json({ success: false, error: "아이디와 비밀번호를 입력해주세요." });
       }
       
-      const member = await storage.getMemberByEmail(email);
+      const member = await storage.getMemberByUsername(username);
       if (!member) {
-        return res.status(401).json({ success: false, error: "등록되지 않은 이메일입니다." });
+        return res.status(401).json({ success: false, error: "등록되지 않은 아이디입니다." });
       }
       
       if (member.password !== password) {
@@ -718,7 +718,7 @@ export async function registerRoutes(
       await storage.createMemberSession({
         token,
         memberId: member.id,
-        email: member.email,
+        username: member.username,
         name: member.name
       });
       
@@ -728,7 +728,7 @@ export async function registerRoutes(
         member: {
           id: member.id,
           name: member.name,
-          email: member.email,
+          username: member.username,
           phone: member.phone,
           pointBalance: member.pointBalance || 0,
           isFrozen: member.isFrozen || false
@@ -741,11 +741,11 @@ export async function registerRoutes(
   });
   
   // Helper function to get member from session token
-  async function getMemberFromToken(token: string | undefined): Promise<{ memberId: string; email: string; name: string } | null> {
+  async function getMemberFromToken(token: string | undefined): Promise<{ memberId: string; username: string; name: string } | null> {
     if (!token) return null;
     const session = await storage.getMemberSession(token);
     if (!session) return null;
-    return { memberId: session.memberId, email: session.email, name: session.name };
+    return { memberId: session.memberId, username: session.username, name: session.name };
   }
 
   // Get member info (for logged-in member)
@@ -767,11 +767,8 @@ export async function registerRoutes(
         data: {
           id: member.id,
           name: member.name,
-          email: member.email,
+          username: member.username,
           phone: member.phone,
-          address: member.address || null,
-          bank: member.bank || null,
-          accountNumber: member.accountNumber || null,
           pointBalance: member.pointBalance || 0,
           isFrozen: member.isFrozen || false,
           createdAt: member.createdAt
@@ -816,7 +813,7 @@ export async function registerRoutes(
       const request = await storage.createDepositRequest({
         memberId: member.id,
         memberName: member.name,
-        memberEmail: member.email,
+        memberEmail: member.username,
         amount: parseInt(amount),
         bankName,
         accountNumber: accountNumber || "",
@@ -880,7 +877,7 @@ export async function registerRoutes(
       const request = await storage.createWithdrawalRequest({
         memberId: member.id,
         memberName: member.name,
-        memberEmail: member.email,
+        memberEmail: member.username,
         amount: parseInt(amount),
         status: "pending"
       });

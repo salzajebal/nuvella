@@ -44,7 +44,7 @@ export interface IStorage {
   // Members
   getAllMembers(): Promise<Member[]>;
   getMember(id: string): Promise<Member | undefined>;
-  getMemberByEmail(email: string): Promise<Member | undefined>;
+  getMemberByUsername(username: string): Promise<Member | undefined>;
   createMember(member: InsertMember): Promise<Member>;
   updateMember(id: string, member: Partial<InsertMember>): Promise<Member | undefined>;
   deleteMember(id: string): Promise<boolean>;
@@ -236,8 +236,8 @@ export class DatabaseStorage implements IStorage {
     return member;
   }
 
-  async getMemberByEmail(email: string): Promise<Member | undefined> {
-    const [member] = await db.select().from(members).where(eq(members.email, email));
+  async getMemberByUsername(username: string): Promise<Member | undefined> {
+    const [member] = await db.select().from(members).where(eq(members.username, username));
     return member;
   }
 
