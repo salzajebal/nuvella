@@ -556,24 +556,30 @@ export default function ProductDetail() {
                 <h2 className="text-xl font-bold text-gray-900">
                   사용후기 ({reviews.length})
                 </h2>
-                {canReview && (
-                  <Button 
-                    onClick={() => setShowReviewModal(true)}
-                    className="gap-2"
-                    data-testid="button-write-review"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    후기 작성
-                  </Button>
-                )}
+                <Button 
+                  onClick={() => {
+                    if (canReview) {
+                      setShowReviewModal(true);
+                    } else {
+                      toast({
+                        title: "구매자만 후기 작성 가능",
+                        description: "해당 상품을 구매하신 분만 후기를 작성할 수 있습니다.",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                  className="gap-2"
+                  data-testid="button-write-review"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  후기 작성
+                </Button>
               </div>
 
               {reviews.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg">
                   <p className="text-gray-500">아직 작성된 후기가 없습니다.</p>
-                  {canReview && (
-                    <p className="text-gray-400 text-sm mt-2">첫 번째 후기를 작성해보세요!</p>
-                  )}
+                  <p className="text-gray-400 text-sm mt-2">첫 번째 후기를 작성해보세요!</p>
                 </div>
               ) : (
                 <div className="space-y-4">

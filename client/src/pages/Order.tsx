@@ -228,19 +228,18 @@ export default function Order() {
               </h1>
               
               <p className="text-gray-600 mb-8">
-                카카오톡으로 결제 안내를 받으세요.
+                소중한 후기를 남겨주세요!
               </p>
 
-              <a
-                href={kakaoLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto bg-[#FEE500] hover:bg-[#FDD835] text-[#3C1E1E] font-bold py-4 px-8 rounded-lg text-lg transition-colors mb-8"
-                data-testid="link-kakao-payment"
-              >
-                <KakaoIcon className="w-6 h-6" />
-                카카오톡 상담하기
-              </a>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
+                <Button
+                  onClick={() => setLocation(`/products/${product.id}`)}
+                  className="sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-8 text-lg"
+                  data-testid="link-write-review"
+                >
+                  리뷰 후기 쓰러가기
+                </Button>
+              </div>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button
