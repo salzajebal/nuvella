@@ -863,14 +863,27 @@ export async function registerRoutes(
         return res.status(403).json({ success: false, error: "계정이 동결되어 출금신청을 할 수 없습니다." });
       }
       
-      const { amount, bankName, accountNumber, accountHolder } = req.body;
+      const rawAmount = req.body.amount;
+      const rawBankName = typeof req.body.bankName === 'string' ? req.body.bankName.trim() : '';
+      const rawAccountNumber = typeof req.body.accountNumber === 'string' ? req.body.accountNumber.trim().replace(/[^0-9]/g, '') : '';
+      const rawAccountHolder = typeof req.body.accountHolder === 'string' ? req.body.accountHolder.trim() : '';
       
-      if (!amount || amount <= 0) {
+      const amount = typeof rawAmount === 'number' ? rawAmount : parseInt(String(rawAmount));
+      
+      if (isNaN(amount) || amount <= 0) {
         return res.status(400).json({ success: false, error: "유효한 금액을 입력해주세요." });
       }
       
-      if (!bankName || !accountNumber || !accountHolder) {
-        return res.status(400).json({ success: false, error: "은행명, 계좌번호, 예금주를 모두 입력해주세요." });
+      if (!rawBankName || rawBankName.length < 2) {
+        return res.status(400).json({ success: false, error: "올바른 은행명을 입력해주세요." });
+      }
+      
+      if (!rawAccountNumber || rawAccountNumber.length < 8) {
+        return res.status(400).json({ success: false, error: "올바른 계좌번호를 입력해주세요 (숫자만)." });
+      }
+      
+      if (!rawAccountHolder || rawAccountHolder.length < 2) {
+        return res.status(400).json({ success: false, error: "올바른 예금주명을 입력해주세요." });
       }
       
       const currentBalance = member.pointBalance || 0;
@@ -882,10 +895,10 @@ export async function registerRoutes(
         memberId: member.id,
         memberName: member.name,
         memberEmail: member.username,
-        amount: parseInt(amount),
-        bankName,
-        accountNumber,
-        accountHolder,
+        amount,
+        bankName: rawBankName,
+        accountNumber: rawAccountNumber,
+        accountHolder: rawAccountHolder,
         status: "pending"
       });
       
