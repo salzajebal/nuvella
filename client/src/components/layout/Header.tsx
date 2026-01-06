@@ -178,11 +178,11 @@ export function Header() {
                 </button>
               </>
             ) : (
-              <>
-                <Link href="/login" className="hover:text-gray-900" data-testid="link-login">로그인</Link>
+              <div className="flex items-center gap-2">
+                <Link href="/login" className="hover:text-gray-900 whitespace-nowrap" data-testid="link-login">로그인</Link>
                 <span className="text-gray-300">|</span>
-                <Link href="/signup" className="hover:text-gray-900" data-testid="link-signup">회원가입</Link>
-              </>
+                <Link href="/signup" className="hover:text-gray-900 whitespace-nowrap" data-testid="link-signup">회원가입</Link>
+              </div>
             )}
           </div>
 
