@@ -1668,7 +1668,7 @@ export default function Admin() {
             className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "deposits" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
           >
             <Wallet className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">입금관리</span>
+            <span className="hidden md:inline">충전관리</span>
             {depositRequests.filter(d => d.status === "pending").length > 0 && (
               <span className="ml-1 md:ml-2 bg-red-500 text-white text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 rounded-full">
                 {depositRequests.filter(d => d.status === "pending").length}
@@ -1682,7 +1682,7 @@ export default function Admin() {
             className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "withdrawals" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
           >
             <Wallet className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">출금관리</span>
+            <span className="hidden md:inline">환급관리</span>
             {withdrawalRequests.filter(w => w.status === "pending").length > 0 && (
               <span className="ml-1 md:ml-2 bg-red-500 text-white text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 rounded-full">
                 {withdrawalRequests.filter(w => w.status === "pending").length}
@@ -2853,7 +2853,7 @@ export default function Admin() {
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">입금 신청 관리</h2>
+                <h2 className="text-xl font-bold text-gray-900">포인트충전 신청 관리</h2>
                 <p className="text-gray-500 text-sm">
                   {depositFilter === "pending" 
                     ? `대기 중인 신청 ${depositRequests.length}건` 
@@ -2878,7 +2878,7 @@ export default function Admin() {
 
             {depositRequests.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
-                {depositFilter === "pending" ? "대기 중인 입금 신청이 없습니다." : "입금 신청 내역이 없습니다."}
+                {depositFilter === "pending" ? "대기 중인 충전 신청이 없습니다." : "충전 신청 내역이 없습니다."}
               </div>
             ) : (
               <div className="space-y-4">
@@ -2984,7 +2984,7 @@ export default function Admin() {
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">출금 신청 관리</h2>
+                <h2 className="text-xl font-bold text-gray-900">포인트환급 신청 관리</h2>
                 <p className="text-gray-500 text-sm">
                   {withdrawalFilter === "pending" 
                     ? `대기 중인 신청 ${withdrawalRequests.length}건` 
@@ -3009,7 +3009,7 @@ export default function Admin() {
 
             {withdrawalRequests.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
-                {withdrawalFilter === "pending" ? "대기 중인 출금 신청이 없습니다." : "출금 신청 내역이 없습니다."}
+                {withdrawalFilter === "pending" ? "대기 중인 환급 신청이 없습니다." : "환급 신청 내역이 없습니다."}
               </div>
             ) : (
               <div className="space-y-4">

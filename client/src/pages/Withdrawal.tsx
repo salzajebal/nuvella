@@ -34,7 +34,7 @@ export default function Withdrawal() {
     if (!memberToken) {
       toast({
         title: "로그인 필요",
-        description: "출금신청을 하려면 먼저 로그인해주세요.",
+        description: "포인트환급을 하려면 먼저 로그인해주세요.",
         variant: "destructive",
       });
       setLocation("/login");
@@ -185,7 +185,7 @@ export default function Withdrawal() {
       
       <main className="flex-1 py-6 md:py-12 px-4">
         <div className="container-custom max-w-4xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-gray-900">출금신청</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-gray-900">포인트환급</h1>
 
           <div className="mb-6 md:mb-8">
             <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-2xl p-6 shadow-lg text-center">
@@ -196,7 +196,7 @@ export default function Withdrawal() {
               <div className="text-4xl md:text-5xl font-bold text-white" data-testid="withdrawal-page-point-balance">
                 {pointBalance.toLocaleString()}P
               </div>
-              <p className="text-amber-100 text-sm mt-2">출금 가능한 포인트입니다</p>
+              <p className="text-amber-100 text-sm mt-2">환급 가능한 포인트입니다</p>
             </div>
           </div>
 
@@ -205,10 +205,10 @@ export default function Withdrawal() {
               <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2">
                   <Banknote className="w-5 h-5" />
-                  출금 안내
+                  환급 안내
                 </CardTitle>
                 <CardDescription className="text-blue-100">
-                  출금 신청 전 확인사항
+                  환급 신청 전 확인사항
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
@@ -216,20 +216,20 @@ export default function Withdrawal() {
                   <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
                     <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
                       <AlertCircle className="w-4 h-4" />
-                      출금 유의사항
+                      환급 유의사항
                     </h4>
                     <ul className="text-sm text-blue-700 space-y-2 list-disc list-inside">
-                      <li>최소 출금 금액은 <span className="font-bold">10,000원</span>입니다.</li>
-                      <li>출금 신청 후 관리자 승인이 필요합니다.</li>
+                      <li>최소 환급 금액은 <span className="font-bold">10,000원</span>입니다.</li>
+                      <li>환급 신청 후 관리자 승인이 필요합니다.</li>
                       <li>승인 후 처리됩니다.</li>
                     </ul>
                   </div>
                   
                   <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                    <h4 className="font-medium text-amber-800 mb-2">출금 처리 안내</h4>
+                    <h4 className="font-medium text-amber-800 mb-2">환급 처리 안내</h4>
                     <p className="text-sm text-amber-700">
-                      출금 신청 후 관리자 승인이 완료되면 처리됩니다.
-                      승인 여부는 아래 '출금신청 내역'에서 확인하실 수 있습니다.
+                      환급 신청 후 관리자 승인이 완료되면 처리됩니다.
+                      승인 여부는 아래 '환급 신청 내역'에서 확인하실 수 있습니다.
                     </p>
                   </div>
                 </div>
@@ -240,16 +240,16 @@ export default function Withdrawal() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Banknote className="w-5 h-5" />
-                  출금신청서 작성
+                  포인트환급 신청서
                 </CardTitle>
                 <CardDescription>
-                  출금할 금액을 입력해주세요
+                  환급할 금액을 입력해주세요
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="amount" className="text-gray-700 font-medium">출금 금액</Label>
+                    <Label htmlFor="amount" className="text-gray-700 font-medium">환급 금액</Label>
                     <Input
                       id="amount"
                       type="number"
@@ -276,10 +276,10 @@ export default function Withdrawal() {
                   <div className="p-4 bg-blue-50 rounded-lg text-sm text-blue-700">
                     <p className="font-medium mb-2 flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-blue-500" />
-                      출금 안내
+                      환급 안내
                     </p>
                     <ul className="list-disc list-inside space-y-1">
-                      <li>출금 신청 후 관리자 승인 후 처리됩니다.</li>
+                      <li>환급 신청 후 관리자 승인 후 처리됩니다.</li>
                       <li>승인 여부는 아래 내역에서 확인하실 수 있습니다.</li>
                     </ul>
                   </div>
@@ -290,7 +290,7 @@ export default function Withdrawal() {
                     disabled={loading || pointBalance < 10000}
                     data-testid="button-submit-withdrawal"
                   >
-                    {loading ? "신청 중..." : pointBalance < 10000 ? "잔액 부족" : "출금신청 하기"}
+                    {loading ? "신청 중..." : pointBalance < 10000 ? "잔액 부족" : "환급신청 하기"}
                   </Button>
                 </form>
               </CardContent>
@@ -299,12 +299,12 @@ export default function Withdrawal() {
 
           <Card className="mt-8 shadow-lg">
             <CardHeader>
-              <CardTitle>나의 출금신청 내역</CardTitle>
+              <CardTitle>나의 환급 신청 내역</CardTitle>
             </CardHeader>
             <CardContent>
               {myRequests.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
-                  출금신청 내역이 없습니다.
+                  환급 신청 내역이 없습니다.
                 </div>
               ) : (
                 <div className="space-y-4">

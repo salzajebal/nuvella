@@ -38,7 +38,7 @@ export default function Deposit() {
     if (!memberToken) {
       toast({
         title: "로그인 필요",
-        description: "입금신청을 하려면 먼저 로그인해주세요.",
+        description: "포인트충전을 하려면 먼저 로그인해주세요.",
         variant: "destructive",
       });
       setLocation("/login");
@@ -197,7 +197,7 @@ export default function Deposit() {
       
       <main className="flex-1 py-6 md:py-12 px-4">
         <div className="container-custom max-w-4xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-gray-900">입금신청</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8 text-gray-900">포인트충전</h1>
 
           <div className="mb-6 md:mb-8">
             <div className="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-2xl p-6 shadow-lg text-center">
@@ -208,7 +208,7 @@ export default function Deposit() {
               <div className="text-4xl md:text-5xl font-bold text-white" data-testid="deposit-page-point-balance">
                 {pointBalance.toLocaleString()}P
               </div>
-              <p className="text-amber-100 text-sm mt-2">입금신청 후 승인되면 포인트가 충전됩니다</p>
+              <p className="text-amber-100 text-sm mt-2">충전 신청 후 승인되면 포인트가 충전됩니다</p>
             </div>
           </div>
 
@@ -267,7 +267,7 @@ export default function Deposit() {
 
             <Card className="shadow-lg border-gray-200">
               <CardHeader>
-                <CardTitle>입금신청서 작성</CardTitle>
+                <CardTitle>포인트충전 신청서</CardTitle>
                 <CardDescription>
                   카카오톡 상담 후 아래 양식을 작성해주세요
                 </CardDescription>

@@ -322,7 +322,7 @@ export default function Profile() {
                     <TabsTrigger value="info" className="text-xs md:text-sm py-2 px-1 md:px-3">내 정보</TabsTrigger>
                     <TabsTrigger value="orders" className="text-xs md:text-sm py-2 px-1 md:px-3">주문내역</TabsTrigger>
                     <TabsTrigger value="menu" className="text-xs md:text-sm py-2 px-1 md:px-3">메뉴</TabsTrigger>
-                    <TabsTrigger value="deposit" className="text-xs md:text-sm py-2 px-1 md:px-3">입금신청</TabsTrigger>
+                    <TabsTrigger value="deposit" className="text-xs md:text-sm py-2 px-1 md:px-3">포인트충전</TabsTrigger>
                     <TabsTrigger value="points" className="text-xs md:text-sm py-2 px-1 md:px-3">포인트</TabsTrigger>
                   </TabsList>
 
