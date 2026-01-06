@@ -97,7 +97,7 @@ export default function Admin() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "reviews" | "notices" | "chat" | "settings" | "crawling">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "reviews" | "notices" | "chat" | "settings">("dashboard");
   const [stats, setStats] = useState<AdminStats | null>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -214,86 +214,6 @@ export default function Admin() {
 
   const [flashDeposit, setFlashDeposit] = useState(false);
   const [flashWithdrawal, setFlashWithdrawal] = useState(false);
-
-  const [crawlCategory, setCrawlCategory] = useState<string>("");
-  const [crawlSubcategory, setCrawlSubcategory] = useState<string>("all");
-  const [crawlLimit, setCrawlLimit] = useState<number>(20);
-  const [crawlLoading, setCrawlLoading] = useState(false);
-  const [batchCrawlLoading, setBatchCrawlLoading] = useState(false);
-  const [deleteAllLoading, setDeleteAllLoading] = useState(false);
-  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
-  
-  // Subcategory mapping for each Vivian category
-  const SUBCATEGORY_OPTIONS: Record<string, { id: string; name: string; estellaCategory: string }[]> = {
-    "10": [ // 홈 인테리어
-      { id: "all", name: "전체 (자동분류)", estellaCategory: "home_interior" },
-      { id: "furniture", name: "가구", estellaCategory: "home_interior" },
-      { id: "lighting", name: "조명", estellaCategory: "home_interior" },
-      { id: "decor", name: "인테리어소품", estellaCategory: "home_interior" },
-      { id: "fabric", name: "패브릭", estellaCategory: "home_interior" },
-      { id: "wall_decor", name: "벽장식", estellaCategory: "home_interior" },
-    ],
-    "20": [ // 뷰티
-      { id: "all", name: "전체 (자동분류)", estellaCategory: "beauty" },
-      { id: "skincare", name: "스킨케어", estellaCategory: "beauty" },
-      { id: "makeup", name: "메이크업", estellaCategory: "beauty" },
-      { id: "fragrance", name: "향수/캔들", estellaCategory: "beauty" },
-      { id: "bodycare", name: "바디케어", estellaCategory: "beauty" },
-      { id: "haircare", name: "헤어케어", estellaCategory: "beauty" },
-    ],
-    "30": [ // 가전/디지털
-      { id: "all", name: "전체 (자동분류)", estellaCategory: "electronics" },
-      { id: "home_appliance", name: "생활가전", estellaCategory: "electronics" },
-      { id: "kitchen_appliance", name: "주방가전", estellaCategory: "electronics" },
-      { id: "audio", name: "오디오", estellaCategory: "electronics" },
-    ],
-    "40": [ // 생활용품
-      { id: "all", name: "전체 (자동분류)", estellaCategory: "living" },
-      { id: "kitchen", name: "주방용품", estellaCategory: "living" },
-      { id: "bathroom", name: "욕실용품", estellaCategory: "living" },
-      { id: "storage", name: "수납/정리", estellaCategory: "living" },
-      { id: "cleaning", name: "청소용품", estellaCategory: "living" },
-    ],
-    "50": [ // 헬스/건강식품
-      { id: "all", name: "전체 (자동분류)", estellaCategory: "health" },
-      { id: "supplements", name: "건강보조제", estellaCategory: "health" },
-      { id: "drinks", name: "건강음료", estellaCategory: "health" },
-      { id: "fitness", name: "운동용품", estellaCategory: "health" },
-      { id: "diet", name: "다이어트", estellaCategory: "health" },
-    ],
-    "60": [ // 럭셔리/명품
-      { id: "all", name: "전체 (자동분류)", estellaCategory: "luxury" },
-      { id: "accessories", name: "명품악세서리", estellaCategory: "luxury" },
-      { id: "premium_furniture", name: "프리미엄가구", estellaCategory: "luxury" },
-      { id: "luxury_items", name: "명품소품", estellaCategory: "luxury" },
-    ],
-    "70": [ // 유아/완구
-      { id: "all", name: "전체 (자동분류)", estellaCategory: "kids" },
-      { id: "toys", name: "완구", estellaCategory: "kids" },
-      { id: "baby", name: "유아용품", estellaCategory: "kids" },
-      { id: "education", name: "교육/학습", estellaCategory: "kids" },
-    ],
-  };
-  
-  const getEstellaCategoryForVivian = (vivianCatId: string): string => {
-    const mapping: Record<string, string> = {
-      "10": "home_interior", "20": "beauty", "30": "electronics",
-      "40": "living", "50": "health", "60": "luxury", "70": "kids"
-    };
-    return mapping[vivianCatId] || "home_interior";
-  };
-  
-  interface CrawlProgress {
-    status: 'idle' | 'crawling' | 'importing' | 'completed' | 'error';
-    currentCategory: string;
-    currentCategoryIndex: number;
-    totalCategories: number;
-    productsFound: number;
-    productsImported: number;
-    currentProduct: string;
-    message: string;
-  }
-  const [crawlProgress, setCrawlProgress] = useState<CrawlProgress | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -1187,7 +1107,7 @@ export default function Admin() {
   const startEditMember = (member: Member) => {
     setEditingMemberId(member.id);
     setMemberFormData({
-      email: member.email,
+      email: member.username,
       password: "",
       name: member.name,
       phone: member.phone || "",
@@ -1735,18 +1655,6 @@ export default function Admin() {
               <Package className="w-5 h-5" />
               상품 관리
             </button>
-            <button
-              data-testid="tab-crawling"
-              onClick={() => setActiveTab("crawling")}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                activeTab === "crawling" 
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
-                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
-              }`}
-            >
-              <Database className="w-5 h-5" />
-              상품 크롤링
-            </button>
             
             <p className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2 mt-4">고객</p>
             <button
@@ -1924,7 +1832,6 @@ export default function Admin() {
                 { id: "notices", icon: Bell, label: "공지" },
                 { id: "chat", icon: MessageCircle, label: "채팅" },
                 { id: "settings", icon: Settings, label: "설정" },
-                { id: "crawling", icon: Database, label: "크롤링" },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -2755,8 +2662,8 @@ export default function Admin() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm">
                           <div>
-                            <span className="text-gray-500">이메일:</span>
-                            <span className="ml-2 text-gray-900">{member.email}</span>
+                            <span className="text-gray-500">아이디:</span>
+                            <span className="ml-2 text-gray-900">{member.username}</span>
                           </div>
                           <div>
                             <span className="text-gray-500">전화번호:</span>
@@ -4327,385 +4234,6 @@ export default function Admin() {
           </div>
         )}
 
-        {activeTab === "crawling" && (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold flex items-center gap-2">
-                    <Trash2 className="w-6 h-6" />
-                    기존 상품 전체 삭제
-                  </h3>
-                  <p className="text-red-100 mt-1">모든 등록된 상품을 삭제합니다. 이 작업은 되돌릴 수 없습니다.</p>
-                </div>
-                {!showDeleteAllConfirm ? (
-                  <Button
-                    data-testid="button-delete-all-products"
-                    onClick={() => setShowDeleteAllConfirm(true)}
-                    disabled={deleteAllLoading}
-                    className="bg-white text-red-600 hover:bg-red-50 font-bold px-6 py-3"
-                  >
-                    <Trash2 className="w-5 h-5 mr-2" />
-                    전체 상품 삭제
-                  </Button>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <span className="text-white font-medium">정말 삭제하시겠습니까?</span>
-                    <Button
-                      data-testid="button-confirm-delete-all"
-                      onClick={async () => {
-                        setDeleteAllLoading(true);
-                        try {
-                          const res = await fetchWithAuth("/api/admin/products/all", {
-                            method: "DELETE"
-                          });
-                          const data = await res.json();
-                          if (data.success) {
-                            toast({ 
-                              title: "삭제 완료", 
-                              description: data.message 
-                            });
-                            fetchProducts();
-                          } else {
-                            toast({ title: "오류", description: data.error, variant: "destructive" });
-                          }
-                        } catch (error) {
-                          toast({ title: "오류", description: "상품 삭제 중 오류가 발생했습니다.", variant: "destructive" });
-                        } finally {
-                          setDeleteAllLoading(false);
-                          setShowDeleteAllConfirm(false);
-                        }
-                      }}
-                      disabled={deleteAllLoading}
-                      className="bg-white text-red-600 hover:bg-red-50 font-bold"
-                    >
-                      {deleteAllLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          삭제 중...
-                        </>
-                      ) : (
-                        "확인"
-                      )}
-                    </Button>
-                    <Button
-                      data-testid="button-cancel-delete-all"
-                      onClick={() => setShowDeleteAllConfirm(false)}
-                      disabled={deleteAllLoading}
-                      variant="outline"
-                      className="border-white text-white hover:bg-white/10"
-                    >
-                      취소
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-lg p-6 text-white">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold flex items-center gap-2">
-                    <Zap className="w-6 h-6" />
-                    Vivian Mall 상품 자동 등록
-                  </h3>
-                  <p className="text-purple-100 mt-1">vivian-mall.com에서 모든 카테고리 상품을 자동으로 가져옵니다.</p>
-                </div>
-                <Button
-                  data-testid="button-batch-crawl"
-                  onClick={async () => {
-                    if (batchCrawlLoading) return;
-                    setBatchCrawlLoading(true);
-                    setCrawlProgress({ status: 'crawling', currentCategory: '', currentCategoryIndex: 0, totalCategories: 7, productsFound: 0, productsImported: 0, currentProduct: '', message: '크롤링 시작...' });
-                    
-                    // Use polling for progress updates (more reliable than SSE with auth)
-                    let pollInterval: ReturnType<typeof setInterval> | null = null;
-                    let pollStartTime = Date.now();
-                    let hasSeenActive = false; // Track if we've seen non-idle status
-                    
-                    const startPolling = () => {
-                      pollInterval = setInterval(async () => {
-                        try {
-                          const res = await fetchWithAuth("/api/admin/crawling/status");
-                          const data = await res.json();
-                          if (data.success && data.data) {
-                            const status = data.data.status;
-                            // Only update progress if status is active OR we've already seen active status
-                            if (status === 'crawling' || status === 'importing') {
-                              hasSeenActive = true;
-                              setCrawlProgress(data.data);
-                            } else if (hasSeenActive && (status === 'completed' || status === 'error')) {
-                              // Only stop polling if we saw active state and now it's completed/error
-                              setCrawlProgress(data.data);
-                              if (pollInterval) clearInterval(pollInterval);
-                            }
-                            // Ignore idle status until we see crawling/importing
-                          }
-                        } catch (e) {
-                          console.error('Progress poll error:', e);
-                        }
-                      }, 500);
-                    };
-                    startPolling();
-                    
-                    try {
-                      const res = await fetchWithAuth("/api/admin/crawling/batch-vivian", {
-                        method: "POST",
-                        body: JSON.stringify({ autoImport: true, productsPerCategory: 20 })
-                      });
-                      const data = await res.json();
-                      if (pollInterval) clearInterval(pollInterval);
-                      if (data.success) {
-                        setCrawlProgress({ status: 'completed', currentCategory: '', currentCategoryIndex: 7, totalCategories: 7, productsFound: data.data.totalCrawled, productsImported: data.data.totalImported, currentProduct: '', message: `완료! ${data.data.totalImported}개 등록됨` });
-                        toast({ 
-                          title: "상품 등록 완료", 
-                          description: `${data.data.totalImported}개 상품이 등록되었습니다.` 
-                        });
-                        fetchProducts();
-                      } else {
-                        toast({ title: "오류", description: data.error, variant: "destructive" });
-                      }
-                    } catch (error) {
-                      if (pollInterval) clearInterval(pollInterval);
-                      toast({ title: "오류", description: "상품 등록 중 오류가 발생했습니다.", variant: "destructive" });
-                    } finally {
-                      setBatchCrawlLoading(false);
-                      setTimeout(() => setCrawlProgress(null), 5000);
-                    }
-                  }}
-                  disabled={batchCrawlLoading}
-                  className="bg-white text-purple-600 hover:bg-purple-50 font-bold px-6 py-3"
-                >
-                  {batchCrawlLoading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      등록 중...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-5 h-5 mr-2" />
-                      전체 상품 등록
-                    </>
-                  )}
-                </Button>
-              </div>
-              
-              {/* Progress Display */}
-              {crawlProgress && crawlProgress.status !== 'idle' && (
-                <div className="mt-4 bg-white/10 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">
-                      {crawlProgress.status === 'crawling' && '크롤링 중...'}
-                      {crawlProgress.status === 'importing' && '상품 등록 중...'}
-                      {crawlProgress.status === 'completed' && '완료!'}
-                      {crawlProgress.status === 'error' && '오류 발생'}
-                    </span>
-                    <span className="text-xs">
-                      {crawlProgress.currentCategoryIndex}/{crawlProgress.totalCategories} 카테고리
-                    </span>
-                  </div>
-                  
-                  {/* Progress bar */}
-                  <div className="w-full bg-white/20 rounded-full h-2 mb-2">
-                    <div 
-                      className="bg-white h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(crawlProgress.currentCategoryIndex / crawlProgress.totalCategories) * 100}%` }}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                      <span className="text-purple-200">현재 카테고리:</span>
-                      <span className="ml-2 font-medium">{crawlProgress.currentCategory || '-'}</span>
-                    </div>
-                    <div>
-                      <span className="text-purple-200">발견된 상품:</span>
-                      <span className="ml-2 font-medium">{crawlProgress.productsFound}개</span>
-                    </div>
-                    <div>
-                      <span className="text-purple-200">등록된 상품:</span>
-                      <span className="ml-2 font-medium">{crawlProgress.productsImported}개</span>
-                    </div>
-                    <div>
-                      <span className="text-purple-200">상태:</span>
-                      <span className="ml-2 font-medium">{crawlProgress.message}</span>
-                    </div>
-                  </div>
-                  
-                  {crawlProgress.currentProduct && (
-                    <div className="mt-2 text-xs text-purple-200 truncate">
-                      현재: {crawlProgress.currentProduct}
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <div className="mt-4 grid grid-cols-4 md:grid-cols-7 gap-2 text-xs">
-                <span className="bg-white/20 rounded px-2 py-1 text-center">홈 인테리어</span>
-                <span className="bg-white/20 rounded px-2 py-1 text-center">뷰티</span>
-                <span className="bg-white/20 rounded px-2 py-1 text-center">가전/디지털</span>
-                <span className="bg-white/20 rounded px-2 py-1 text-center">생활용품</span>
-                <span className="bg-white/20 rounded px-2 py-1 text-center">헬스/건강식품</span>
-                <span className="bg-white/20 rounded px-2 py-1 text-center">럭셔리/명품</span>
-                <span className="bg-white/20 rounded px-2 py-1 text-center">유아/완구</span>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-6 border-b border-gray-100">
-                <h3 className="text-lg font-bold flex items-center gap-2">
-                  <Database className="w-5 h-5 text-purple-600" />
-                  카테고리별 상품 크롤링
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">vivian-mall.com에서 특정 카테고리의 상품을 가져옵니다.</p>
-              </div>
-              
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">대분류 (Vivian 카테고리)</label>
-                    <select
-                      data-testid="select-crawl-category"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      value={crawlCategory}
-                      onChange={(e) => {
-                        setCrawlCategory(e.target.value);
-                        setCrawlSubcategory("all"); // Reset subcategory when category changes
-                      }}
-                    >
-                      <option value="">카테고리 선택</option>
-                      <option value="10">홈 인테리어</option>
-                      <option value="20">뷰티</option>
-                      <option value="30">가전/디지털</option>
-                      <option value="40">생활용품</option>
-                      <option value="50">헬스/건강식품</option>
-                      <option value="60">럭셔리/명품</option>
-                      <option value="70">유아/완구</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">소분류 (저장될 카테고리)</label>
-                    <select
-                      data-testid="select-crawl-subcategory"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      value={crawlSubcategory}
-                      onChange={(e) => setCrawlSubcategory(e.target.value)}
-                      disabled={!crawlCategory}
-                    >
-                      {crawlCategory && SUBCATEGORY_OPTIONS[crawlCategory]?.map(sub => (
-                        <option key={sub.id} value={sub.id}>{sub.name}</option>
-                      ))}
-                      {!crawlCategory && <option value="all">대분류를 먼저 선택하세요</option>}
-                    </select>
-                    {crawlSubcategory !== "all" && crawlCategory && (
-                      <p className="text-xs text-purple-600 mt-1">
-                        모든 상품이 "{SUBCATEGORY_OPTIONS[crawlCategory]?.find(s => s.id === crawlSubcategory)?.name}" 소분류로 저장됩니다.
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">가져올 개수</label>
-                    <select
-                      data-testid="select-crawl-limit"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      value={crawlLimit}
-                      onChange={(e) => setCrawlLimit(parseInt(e.target.value))}
-                    >
-                      <option value={10}>10개</option>
-                      <option value={20}>20개</option>
-                      <option value={30}>30개</option>
-                      <option value={50}>50개</option>
-                      <option value={100}>100개</option>
-                      <option value={0}>전체 (무제한)</option>
-                    </select>
-                  </div>
-                  
-                  <div className="flex items-end">
-                    <Button
-                      data-testid="button-start-crawl"
-                      onClick={async () => {
-                        if (crawlLoading || !crawlCategory) return;
-                        setCrawlLoading(true);
-                        try {
-                          const targetCategory = getEstellaCategoryForVivian(crawlCategory);
-                          const res = await fetchWithAuth("/api/admin/crawling/vivian-category", {
-                            method: "POST",
-                            body: JSON.stringify({ 
-                              categoryId: parseInt(crawlCategory), 
-                              limit: crawlLimit,
-                              autoImport: true,
-                              subcategory: crawlSubcategory !== "all" ? crawlSubcategory : undefined,
-                              targetCategory: targetCategory
-                            })
-                          });
-                          const data = await res.json();
-                          if (data.success) {
-                            const subcatName = crawlSubcategory !== "all" 
-                              ? SUBCATEGORY_OPTIONS[crawlCategory]?.find(s => s.id === crawlSubcategory)?.name 
-                              : "자동분류";
-                            toast({ 
-                              title: "크롤링 완료", 
-                              description: `${data.data.categoryName} → ${subcatName}: ${data.data.importedCount}개 상품이 등록되었습니다.` 
-                            });
-                            fetchProducts();
-                          } else {
-                            toast({ title: "오류", description: data.error, variant: "destructive" });
-                          }
-                        } catch (error) {
-                          toast({ title: "오류", description: "크롤링 중 오류가 발생했습니다.", variant: "destructive" });
-                        } finally {
-                          setCrawlLoading(false);
-                        }
-                      }}
-                      disabled={crawlLoading || !crawlCategory}
-                      className="w-full bg-purple-500 hover:bg-purple-600 text-white"
-                    >
-                      {crawlLoading ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                          크롤링 중...
-                        </>
-                      ) : (
-                        <>
-                          <Database className="w-4 h-4 mr-2" />
-                          크롤링 시작
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h5 className="font-medium text-blue-800 mb-2">카테고리 설정 안내</h5>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    <li>• <strong>대분류</strong>: vivian-mall에서 가져올 카테고리를 선택합니다.</li>
-                    <li>• <strong>소분류</strong>: 상품이 저장될 에스텔라 소분류를 지정합니다. "전체"를 선택하면 상품명을 기반으로 자동 분류됩니다.</li>
-                    <li>• <strong>전체 (무제한)</strong>: 해당 카테고리의 모든 상품을 가져옵니다 (시간이 오래 걸릴 수 있습니다).</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
-              <h4 className="font-bold text-purple-900 mb-3">Vivian Mall 크롤링 안내</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="font-medium text-purple-800">크롤링 소스</p>
-                  <p className="text-purple-600">vivian-mall.com</p>
-                </div>
-                <div>
-                  <p className="font-medium text-purple-800">지원 카테고리</p>
-                  <p className="text-purple-600">홈 인테리어, 뷰티, 가전/디지털, 생활용품, 헬스/건강식품, 럭셔리/명품, 유아/완구</p>
-                </div>
-              </div>
-              <p className="text-xs text-purple-500 mt-4">
-                ※ 전체 상품 등록 버튼을 클릭하면 모든 카테고리에서 상품을 자동으로 가져와 등록합니다.
-              </p>
-            </div>
-          </div>
-        )}
         </main>
         </div>
       </div>
