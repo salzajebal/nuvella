@@ -65,10 +65,15 @@ interface Order {
   productName: string;
   quantity: number;
   totalAmount: string;
-  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
-  paymentStatus: "pending" | "paid" | "refunded";
+  status: "pending" | "processing" | "confirmed" | "shipped" | "delivered" | "cancelled";
+  paymentStatus: "pending" | "completed" | "paid" | "refunded";
   createdAt: string;
   hasReview?: boolean;
+  shippingName?: string;
+  shippingPhone?: string;
+  shippingZipcode?: string;
+  shippingAddress?: string;
+  shippingAddressDetail?: string;
 }
 
 export default function Profile() {
@@ -576,26 +581,47 @@ export default function Profile() {
                                   <p className="font-bold text-primary">{Number(order.totalAmount || 0).toLocaleString()}원</p>
                                 </div>
                               </div>
+                              
+                              {order.shippingAddress && (
+                                <div className="mt-3 p-3 bg-gray-50 rounded-lg text-sm">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <MapPin className="w-4 h-4 text-gray-400" />
+                                    <span className="font-medium text-gray-700">배송지 정보</span>
+                                  </div>
+                                  <div className="space-y-1 text-gray-600 pl-6">
+                                    <p><span className="font-medium">{order.shippingName}</span> {order.shippingPhone && `(${order.shippingPhone})`}</p>
+                                    <p>
+                                      {order.shippingZipcode && `[${order.shippingZipcode}] `}
+                                      {order.shippingAddress}
+                                      {order.shippingAddressDetail && ` ${order.shippingAddressDetail}`}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              
                               <div className="flex flex-wrap gap-2 mt-3 items-center">
                                 <span className={`text-xs px-2 py-1 rounded-full ${
                                   order.status === "delivered" ? "bg-green-100 text-green-700" :
                                   order.status === "shipped" ? "bg-blue-100 text-blue-700" :
                                   order.status === "confirmed" ? "bg-yellow-100 text-yellow-700" :
                                   order.status === "cancelled" ? "bg-red-100 text-red-700" :
+                                  order.status === "processing" ? "bg-blue-100 text-blue-700" :
                                   "bg-gray-100 text-gray-700"
                                 }`}>
                                   {order.status === "pending" && "대기중"}
+                                  {order.status === "processing" && "처리중"}
                                   {order.status === "confirmed" && "확인됨"}
                                   {order.status === "shipped" && "배송중"}
                                   {order.status === "delivered" && "배송완료"}
                                   {order.status === "cancelled" && "취소됨"}
                                 </span>
                                 <span className={`text-xs px-2 py-1 rounded-full ${
-                                  order.paymentStatus === "paid" ? "bg-green-100 text-green-700" :
+                                  order.paymentStatus === "paid" || order.paymentStatus === "completed" ? "bg-green-100 text-green-700" :
                                   order.paymentStatus === "refunded" ? "bg-red-100 text-red-700" :
                                   "bg-amber-100 text-amber-700"
                                 }`}>
                                   {order.paymentStatus === "pending" && "결제 대기"}
+                                  {order.paymentStatus === "completed" && "결제 완료"}
                                   {order.paymentStatus === "paid" && "결제 완료"}
                                   {order.paymentStatus === "refunded" && "환불됨"}
                                 </span>
@@ -722,13 +748,17 @@ export default function Profile() {
                         </div>
                       </Link>
                       
-                      <div className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
+                      <button
+                        onClick={() => setActiveTab("orders")}
+                        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors text-left"
+                        data-testid="link-orders"
+                      >
                         <div className="flex items-center gap-3">
                           <Package className="w-5 h-5 text-gray-400" />
                           <span className="text-gray-700">주문/배송 조회</span>
                         </div>
                         <ChevronRight className="w-5 h-5 text-gray-400" />
-                      </div>
+                      </button>
 
                       <button
                         onClick={handleLogout}
