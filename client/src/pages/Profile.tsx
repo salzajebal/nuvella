@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Heart, LogOut, ChevronRight, Package, Wallet, Clock, CheckCircle, XCircle, AlertTriangle, Plus, Mail, Phone, MapPin, Building2, CreditCard, Info } from "lucide-react";
+import { User, Heart, LogOut, ChevronRight, Package, Wallet, Clock, CheckCircle, XCircle, AlertTriangle, Plus, Mail, Phone, MapPin, Building2, CreditCard, Info, Star, Pencil } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -47,21 +49,30 @@ interface PointTransaction {
 interface Order {
   id: string;
   orderNumber: string;
+  productId: number;
   productName: string;
   quantity: number;
   totalAmount: string;
   status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
   paymentStatus: "pending" | "paid" | "refunded";
   createdAt: string;
+  hasReview?: boolean;
 }
 
 export default function Profile() {
   const { count } = useWishlist();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [showDepositForm, setShowDepositForm] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [bankName, setBankName] = useState("");
   const [depositorName, setDepositorName] = useState("");
+  
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewContent, setReviewContent] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
   
   const memberToken = localStorage.getItem("memberToken");
   const isLoggedIn = memberToken !== null;
@@ -184,6 +195,51 @@ export default function Profile() {
     }
     
     depositMutation.mutate({ amount, bankName, depositorName });
+  };
+
+  const handleOpenReviewDialog = (order: Order) => {
+    setSelectedOrder(order);
+    setReviewRating(5);
+    setReviewContent("");
+    setShowReviewDialog(true);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!selectedOrder || !reviewContent.trim()) {
+      toast({ title: "오류", description: "후기 내용을 입력해주세요.", variant: "destructive" });
+      return;
+    }
+    
+    setReviewSubmitting(true);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${memberToken}`,
+        },
+        body: JSON.stringify({
+          productId: selectedOrder.productId,
+          orderId: selectedOrder.id,
+          rating: reviewRating,
+          content: reviewContent,
+          authorName: memberInfo?.name || "회원",
+        }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "성공", description: "사용후기가 등록되었습니다." });
+        setShowReviewDialog(false);
+        queryClient.invalidateQueries({ queryKey: ["member-orders"] });
+      } else {
+        toast({ title: "오류", description: data.error || "후기 등록에 실패했습니다.", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "후기 등록 중 오류가 발생했습니다.", variant: "destructive" });
+    } finally {
+      setReviewSubmitting(false);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -423,7 +479,7 @@ export default function Profile() {
                                   <p className="font-bold text-primary">{Number(order.totalAmount || 0).toLocaleString()}원</p>
                                 </div>
                               </div>
-                              <div className="flex gap-2 mt-3">
+                              <div className="flex flex-wrap gap-2 mt-3 items-center">
                                 <span className={`text-xs px-2 py-1 rounded-full ${
                                   order.status === "delivered" ? "bg-green-100 text-green-700" :
                                   order.status === "shipped" ? "bg-blue-100 text-blue-700" :
@@ -446,6 +502,25 @@ export default function Profile() {
                                   {order.paymentStatus === "paid" && "결제 완료"}
                                   {order.paymentStatus === "refunded" && "환불됨"}
                                 </span>
+                                
+                                {order.status === "delivered" && !order.hasReview && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="ml-auto text-xs h-7 border-amber-400 text-amber-600 hover:bg-amber-50"
+                                    onClick={() => handleOpenReviewDialog(order)}
+                                    data-testid={`button-write-review-${order.id}`}
+                                  >
+                                    <Pencil className="w-3 h-3 mr-1" />
+                                    사용후기 작성
+                                  </Button>
+                                )}
+                                {order.hasReview && (
+                                  <span className="ml-auto text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                                    <Star className="w-3 h-3 inline mr-1" />
+                                    후기 작성완료
+                                  </span>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -651,6 +726,68 @@ export default function Profile() {
           </div>
         </div>
       </main>
+
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Star className="w-5 h-5 text-amber-500" />
+              사용후기 작성
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            {selectedOrder && (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="font-medium text-gray-900">{selectedOrder.productName}</p>
+                <p className="text-xs text-gray-500">주문번호: {selectedOrder.orderNumber}</p>
+              </div>
+            )}
+            
+            <div>
+              <Label className="text-sm font-medium mb-2 block">별점</Label>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setReviewRating(star)}
+                    className="p-1 hover:scale-110 transition-transform"
+                  >
+                    <Star
+                      className={`w-8 h-8 ${
+                        star <= reviewRating
+                          ? "text-amber-400 fill-amber-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="review-content" className="text-sm font-medium mb-2 block">
+                후기 내용
+              </Label>
+              <Textarea
+                id="review-content"
+                placeholder="상품 사용 후기를 자유롭게 작성해주세요."
+                value={reviewContent}
+                onChange={(e) => setReviewContent(e.target.value)}
+                className="min-h-[120px]"
+              />
+            </div>
+            
+            <Button
+              onClick={handleSubmitReview}
+              disabled={reviewSubmitting || !reviewContent.trim()}
+              className="w-full bg-amber-500 hover:bg-amber-600"
+            >
+              {reviewSubmitting ? "등록 중..." : "후기 등록하기"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

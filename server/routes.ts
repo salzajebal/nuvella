@@ -1500,10 +1500,42 @@ export async function registerRoutes(
     }
   });
 
-  // Create review (admin only - for manipulation)
-  app.post("/api/reviews", requireAdminAuth, async (req: Request, res: Response) => {
+  // Create review (member can create for their orders)
+  app.post("/api/reviews", async (req: Request, res: Response) => {
     try {
-      const validatedData = insertReviewSchema.parse(req.body);
+      const token = req.headers.authorization?.replace("Bearer ", "");
+      const { orderId, ...reviewData } = req.body;
+      
+      // If orderId is provided, verify the order belongs to the member
+      if (orderId && token) {
+        const session = await getMemberFromToken(token);
+        if (session) {
+          // Get the order to verify ownership
+          const orders = await storage.getOrdersByMember(session.memberId);
+          const order = orders.find((o: any) => o.id === orderId);
+          
+          if (!order) {
+            return res.status(403).json({ success: false, error: "해당 주문을 찾을 수 없습니다." });
+          }
+          
+          if (order.status !== "delivered") {
+            return res.status(400).json({ success: false, error: "배송완료된 상품만 후기를 작성할 수 있습니다." });
+          }
+          
+          // Check if review already exists for this order
+          const existingReviews = await storage.getReviewsByProduct(reviewData.productId);
+          const hasReview = existingReviews.some((r: any) => r.orderId === orderId);
+          if (hasReview) {
+            return res.status(400).json({ success: false, error: "이미 후기를 작성하셨습니다." });
+          }
+          
+          // Add orderId and productName to the review data
+          reviewData.orderId = orderId;
+          reviewData.productName = order.productName;
+        }
+      }
+      
+      const validatedData = insertReviewSchema.parse(reviewData);
       const review = await storage.createReview(validatedData);
       res.status(201).json({ success: true, data: review });
     } catch (error) {
@@ -1970,7 +2002,17 @@ export async function registerRoutes(
     
     try {
       const orders = await storage.getOrdersByMember(memberId);
-      res.json({ success: true, data: orders });
+      
+      // Check if each order has a review
+      const ordersWithReviewStatus = await Promise.all(
+        orders.map(async (order: any) => {
+          const reviews = await storage.getReviewsByProduct(order.productId);
+          const hasReview = reviews.some((r: any) => r.orderId === order.id);
+          return { ...order, hasReview };
+        })
+      );
+      
+      res.json({ success: true, data: ordersWithReviewStatus });
     } catch (error) {
       console.error("Error fetching member orders:", error);
       res.status(500).json({ success: false, error: "주문 목록을 불러올 수 없습니다." });

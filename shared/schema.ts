@@ -238,6 +238,7 @@ export const reviews = pgTable("reviews", {
   authorName: text("author_name").notNull(),
   productId: varchar("product_id"),
   productName: text("product_name"),
+  orderId: varchar("order_id"),
   rating: integer("rating").default(5),
   title: text("title").notNull(),
   content: text("content").notNull(),

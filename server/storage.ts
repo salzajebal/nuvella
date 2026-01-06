@@ -83,6 +83,7 @@ export interface IStorage {
   getAllReviews(): Promise<Review[]>;
   getVisibleReviews(): Promise<Review[]>;
   getReview(id: string): Promise<Review | undefined>;
+  getReviewsByProduct(productId: string): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
   updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined>;
   deleteReview(id: string): Promise<boolean>;
@@ -426,6 +427,10 @@ export class DatabaseStorage implements IStorage {
   async getReview(id: string): Promise<Review | undefined> {
     const [review] = await db.select().from(reviews).where(eq(reviews.id, id));
     return review;
+  }
+
+  async getReviewsByProduct(productId: string): Promise<Review[]> {
+    return db.select().from(reviews).where(eq(reviews.productId, productId));
   }
 
   async createReview(insertReview: InsertReview): Promise<Review> {
