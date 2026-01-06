@@ -884,6 +884,7 @@ export async function registerRoutes(
       const rawBankName = typeof req.body.bankName === 'string' ? req.body.bankName.trim() : '';
       const rawAccountNumber = typeof req.body.accountNumber === 'string' ? req.body.accountNumber.trim().replace(/[^0-9]/g, '') : '';
       const rawAccountHolder = typeof req.body.accountHolder === 'string' ? req.body.accountHolder.trim() : '';
+      const rawBirthdate = typeof req.body.birthdate === 'string' ? req.body.birthdate.trim().replace(/[^0-9]/g, '') : '';
       
       const amount = typeof rawAmount === 'number' ? rawAmount : parseInt(String(rawAmount));
       
@@ -903,6 +904,10 @@ export async function registerRoutes(
         return res.status(400).json({ success: false, error: "올바른 예금주명을 입력해주세요." });
       }
       
+      if (!rawBirthdate || rawBirthdate.length < 6) {
+        return res.status(400).json({ success: false, error: "올바른 생년월일을 입력해주세요 (예: 19901231)." });
+      }
+      
       const currentBalance = member.pointBalance || 0;
       if (amount > currentBalance) {
         return res.status(400).json({ success: false, error: "보유 포인트가 부족합니다." });
@@ -916,6 +921,7 @@ export async function registerRoutes(
         bankName: rawBankName,
         accountNumber: rawAccountNumber,
         accountHolder: rawAccountHolder,
+        birthdate: rawBirthdate,
         status: "pending"
       });
       

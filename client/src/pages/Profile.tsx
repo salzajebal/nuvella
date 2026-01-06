@@ -85,6 +85,7 @@ export default function Profile() {
   const [withdrawalBankName, setWithdrawalBankName] = useState("");
   const [withdrawalAccountNumber, setWithdrawalAccountNumber] = useState("");
   const [withdrawalAccountHolder, setWithdrawalAccountHolder] = useState("");
+  const [withdrawalBirthdate, setWithdrawalBirthdate] = useState("");
   
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -203,7 +204,7 @@ export default function Profile() {
   });
 
   const withdrawalMutation = useMutation({
-    mutationFn: async (request: { amount: number; bankName: string; accountNumber: string; accountHolder: string }) => {
+    mutationFn: async (request: { amount: number; bankName: string; accountNumber: string; accountHolder: string; birthdate: string }) => {
       const res = await fetch("/api/members/withdrawal-requests", {
         method: "POST",
         headers: {
@@ -224,6 +225,7 @@ export default function Profile() {
       setWithdrawalBankName("");
       setWithdrawalAccountNumber("");
       setWithdrawalAccountHolder("");
+      setWithdrawalBirthdate("");
       alert("환급신청이 접수되었습니다. 관리자 승인 후 처리됩니다.");
     },
     onError: (error: Error) => {
@@ -265,7 +267,7 @@ export default function Profile() {
       return;
     }
     
-    if (!withdrawalAmount || !withdrawalBankName || !withdrawalAccountNumber || !withdrawalAccountHolder) {
+    if (!withdrawalAmount || !withdrawalBankName || !withdrawalAccountNumber || !withdrawalAccountHolder || !withdrawalBirthdate) {
       alert("모든 필드를 입력해주세요.");
       return;
     }
@@ -286,7 +288,8 @@ export default function Profile() {
       amount, 
       bankName: withdrawalBankName, 
       accountNumber: withdrawalAccountNumber, 
-      accountHolder: withdrawalAccountHolder 
+      accountHolder: withdrawalAccountHolder,
+      birthdate: withdrawalBirthdate
     });
   };
 
@@ -822,6 +825,16 @@ export default function Profile() {
                                   value={withdrawalAccountHolder}
                                   onChange={(e) => setWithdrawalAccountHolder(e.target.value)}
                                   data-testid="input-withdrawal-holder"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="withdrawalBirthdate">생년월일</Label>
+                                <Input
+                                  id="withdrawalBirthdate"
+                                  placeholder="예: 19901231"
+                                  value={withdrawalBirthdate}
+                                  onChange={(e) => setWithdrawalBirthdate(e.target.value)}
+                                  data-testid="input-withdrawal-birthdate"
                                 />
                               </div>
                               <Button

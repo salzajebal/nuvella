@@ -81,6 +81,7 @@ interface AdminWithdrawalRequest {
   bankName: string;
   accountNumber: string;
   accountHolder: string;
+  birthdate?: string;
   status: "pending" | "approved" | "rejected";
   adminNote?: string;
   requestedAt: string;
@@ -3233,6 +3234,12 @@ export default function Admin() {
                         <div className="text-sm text-gray-600 space-y-1">
                           <p>
                             <span className="font-medium">회원:</span> {request.memberName} ({request.memberEmail})
+                          </p>
+                          <p>
+                            <span className="font-medium">계좌정보:</span> {request.bankName || "-"} {request.accountNumber || "-"} ({request.accountHolder || "-"})
+                          </p>
+                          <p>
+                            <span className="font-medium">생년월일:</span> {request.birthdate || "-"}
                           </p>
                           <p>
                             <span className="font-medium">신청일:</span>{" "}

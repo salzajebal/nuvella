@@ -92,6 +92,7 @@ export const withdrawalRequests = pgTable("withdrawal_requests", {
   bankName: text("bank_name"),
   accountNumber: text("account_number"),
   accountHolder: text("account_holder"),
+  birthdate: text("birthdate"),
   status: text("status").default("pending"),
   adminNote: text("admin_note"),
   requestedAt: timestamp("requested_at").defaultNow(),
