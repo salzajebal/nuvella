@@ -232,7 +232,7 @@ export default function Admin() {
   const [depositAccountLoading, setDepositAccountLoading] = useState(false);
 
   const [reviewSettings, setReviewSettings] = useState({
-    showOnHomepage: true,
+    showOnHomepage: false,
     instantApproval: false,
   });
   const [reviewSettingsLoading, setReviewSettingsLoading] = useState(false);
