@@ -3258,6 +3258,7 @@ export default function Admin() {
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">작성자</th>
                     <th className="px-4 py-3 text-left font-medium">제목</th>
+                    <th className="px-4 py-3 text-left font-medium">내용</th>
                     <th className="px-4 py-3 text-left font-medium">별점</th>
                     <th className="px-4 py-3 text-left font-medium">작성일</th>
                     <th className="px-4 py-3 text-left font-medium">공개</th>
@@ -3281,6 +3282,14 @@ export default function Admin() {
                               value={reviewFormData.title}
                               onChange={(e) => setReviewFormData({ ...reviewFormData, title: e.target.value })}
                               className="h-8"
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <Textarea
+                              value={reviewFormData.content}
+                              onChange={(e) => setReviewFormData({ ...reviewFormData, content: e.target.value })}
+                              className="min-h-[60px] text-sm"
+                              rows={2}
                             />
                           </td>
                           <td className="px-4 py-3">
@@ -3336,6 +3345,9 @@ export default function Admin() {
                         <>
                           <td className="px-4 py-3 font-medium">{review.authorName}</td>
                           <td className="px-4 py-3">{review.title}</td>
+                          <td className="px-4 py-3 max-w-[200px]">
+                            <p className="text-sm text-gray-600 line-clamp-2">{review.content}</p>
+                          </td>
                           <td className="px-4 py-3">
                             <div className="flex text-yellow-400">
                               {[...Array(review.rating || 5)].map((_, i) => (
