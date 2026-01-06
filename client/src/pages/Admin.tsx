@@ -212,6 +212,9 @@ export default function Admin() {
   });
   const [reviewSettingsLoading, setReviewSettingsLoading] = useState(false);
 
+  const [flashDeposit, setFlashDeposit] = useState(false);
+  const [flashWithdrawal, setFlashWithdrawal] = useState(false);
+
   const [crawlCategory, setCrawlCategory] = useState<string>("");
   const [crawlSubcategory, setCrawlSubcategory] = useState<string>("all");
   const [crawlLimit, setCrawlLimit] = useState<number>(20);
@@ -911,6 +914,18 @@ export default function Admin() {
           }
           break;
         case "read":
+          break;
+        case "new_deposit":
+          playNotificationSound();
+          setFlashDeposit(true);
+          fetchDepositRequests();
+          setTimeout(() => setFlashDeposit(false), 5000);
+          break;
+        case "new_withdrawal":
+          playNotificationSound();
+          setFlashWithdrawal(true);
+          fetchWithdrawalRequests();
+          setTimeout(() => setFlashWithdrawal(false), 5000);
           break;
       }
     };
@@ -1788,11 +1803,13 @@ export default function Admin() {
             <p className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2 mt-4">금융</p>
             <button
               data-testid="tab-deposits"
-              onClick={() => setActiveTab("deposits")}
+              onClick={() => { setActiveTab("deposits"); setFlashDeposit(false); }}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
                 activeTab === "deposits" 
                   ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
-                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                  : flashDeposit 
+                    ? "bg-orange-500 text-white animate-pulse shadow-lg shadow-orange-500/50" 
+                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -1807,11 +1824,13 @@ export default function Admin() {
             </button>
             <button
               data-testid="tab-withdrawals"
-              onClick={() => setActiveTab("withdrawals")}
+              onClick={() => { setActiveTab("withdrawals"); setFlashWithdrawal(false); }}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
                 activeTab === "withdrawals" 
                   ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
-                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                  : flashWithdrawal 
+                    ? "bg-green-500 text-white animate-pulse shadow-lg shadow-green-500/50" 
+                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
               }`}
             >
               <div className="flex items-center gap-3">
