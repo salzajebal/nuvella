@@ -426,6 +426,10 @@ export default function Admin() {
   };
 
   const handleApproveWithdrawal = async (id: string) => {
+    if (!confirm("정말로 이 환급 신청을 승인하시겠습니까? 승인 후에는 취소할 수 없습니다.")) {
+      return;
+    }
+    
     try {
       const res = await fetchWithAuth(`/api/admin/withdrawal-requests/${id}/approve`, {
         method: "POST",
