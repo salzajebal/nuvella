@@ -1595,182 +1595,283 @@ export default function Admin() {
         </div>
       )}
       
-      <div className="bg-gray-900 text-white">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-rose-300 to-rose-400 rounded-lg flex items-center justify-center">
-              <span className="font-bold text-white text-xl italic">E</span>
-            </div>
-            <div>
-              <h1 className="font-bold italic">Estella</h1>
-              <p className="text-xs text-gray-400">관리자 패널</p>
+      <div className="flex min-h-screen bg-slate-100">
+        <aside className="w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex-shrink-0 hidden lg:block">
+          <div className="p-6 border-b border-slate-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                <span className="font-bold text-white text-xl italic">E</span>
+              </div>
+              <div>
+                <h1 className="font-bold text-lg">Estella</h1>
+                <p className="text-xs text-slate-400">Admin Panel</p>
+              </div>
             </div>
           </div>
-          <Button 
-            data-testid="button-logout"
-            variant="ghost" 
-            onClick={handleLogout}
-            className="text-gray-300 hover:text-white hover:bg-gray-800"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            로그아웃
-          </Button>
-        </div>
-      </div>
-      
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-          <Button
-            data-testid="tab-dashboard"
-            variant={activeTab === "dashboard" ? "default" : "outline"}
-            onClick={() => setActiveTab("dashboard")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "dashboard" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
-          >
-            <BarChart3 className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">대시보드</span>
-          </Button>
-          <Button
-            data-testid="tab-products"
-            variant={activeTab === "products" ? "default" : "outline"}
-            onClick={() => setActiveTab("products")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "products" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
-          >
-            <Package className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">상품 관리</span>
-          </Button>
-          <Button
-            data-testid="tab-members"
-            variant={activeTab === "members" ? "default" : "outline"}
-            onClick={() => setActiveTab("members")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "members" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
-          >
-            <Users className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">회원 관리</span>
-          </Button>
-          <Button
-            data-testid="tab-orders"
-            variant={activeTab === "orders" ? "default" : "outline"}
-            onClick={() => setActiveTab("orders")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "orders" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
-          >
-            <ShoppingCart className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">주문 관리</span>
-            {adminOrders.filter(o => o.status === "pending").length > 0 && (
-              <span className="ml-1 md:ml-2 bg-red-500 text-white text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 rounded-full">
-                {adminOrders.filter(o => o.status === "pending").length}
-              </span>
-            )}
-          </Button>
-          <Button
-            data-testid="tab-deposits"
-            variant={activeTab === "deposits" ? "default" : "outline"}
-            onClick={() => setActiveTab("deposits")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "deposits" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
-          >
-            <Wallet className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">충전관리</span>
-            {depositRequests.filter(d => d.status === "pending").length > 0 && (
-              <span className="ml-1 md:ml-2 bg-red-500 text-white text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 rounded-full">
-                {depositRequests.filter(d => d.status === "pending").length}
-              </span>
-            )}
-          </Button>
-          <Button
-            data-testid="tab-withdrawals"
-            variant={activeTab === "withdrawals" ? "default" : "outline"}
-            onClick={() => setActiveTab("withdrawals")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "withdrawals" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
-          >
-            <Wallet className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">환급관리</span>
-            {withdrawalRequests.filter(w => w.status === "pending").length > 0 && (
-              <span className="ml-1 md:ml-2 bg-red-500 text-white text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 rounded-full">
-                {withdrawalRequests.filter(w => w.status === "pending").length}
-              </span>
-            )}
-          </Button>
-          <Button
-            data-testid="tab-reviews"
-            variant={activeTab === "reviews" ? "default" : "outline"}
-            onClick={() => setActiveTab("reviews")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "reviews" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
-          >
-            <Star className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">후기 관리</span>
-          </Button>
-          <Button
-            data-testid="tab-notices"
-            variant={activeTab === "notices" ? "default" : "outline"}
-            onClick={() => setActiveTab("notices")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "notices" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
-          >
-            <Bell className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">공지 관리</span>
-          </Button>
-          <Button
-            data-testid="tab-chat"
-            variant={activeTab === "chat" ? "default" : "outline"}
-            onClick={() => setActiveTab("chat")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "chat" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
-          >
-            <MessageCircle className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">실시간 채팅</span>
-            {chatConversations.filter(c => c.status === "open").length > 0 && (
-              <span className="ml-1 md:ml-2 bg-green-500 text-white text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 rounded-full">
-                {chatConversations.filter(c => c.status === "open").length}
-              </span>
-            )}
-          </Button>
-          <Button
-            data-testid="tab-settings"
-            variant={activeTab === "settings" ? "default" : "outline"}
-            onClick={() => setActiveTab("settings")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "settings" ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
-          >
-            <Settings className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">설정</span>
-          </Button>
-          <Button
-            data-testid="tab-crawling"
-            variant={activeTab === "crawling" ? "default" : "outline"}
-            onClick={() => setActiveTab("crawling")}
-            className={`flex-shrink-0 text-xs md:text-sm ${activeTab === "crawling" ? "bg-purple-500 hover:bg-purple-600" : ""}`}
-          >
-            <Database className="w-4 h-4 md:mr-2" />
-            <span className="hidden md:inline">상품 크롤링</span>
-          </Button>
-        </div>
+          
+          <nav className="p-4 space-y-1">
+            <p className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2">메인</p>
+            <button
+              data-testid="tab-dashboard"
+              onClick={() => setActiveTab("dashboard")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "dashboard" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <BarChart3 className="w-5 h-5" />
+              대시보드
+            </button>
+            
+            <p className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2 mt-4">상품</p>
+            <button
+              data-testid="tab-products"
+              onClick={() => setActiveTab("products")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "products" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <Package className="w-5 h-5" />
+              상품 관리
+            </button>
+            <button
+              data-testid="tab-crawling"
+              onClick={() => setActiveTab("crawling")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "crawling" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <Database className="w-5 h-5" />
+              상품 크롤링
+            </button>
+            
+            <p className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2 mt-4">고객</p>
+            <button
+              data-testid="tab-members"
+              onClick={() => setActiveTab("members")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "members" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              회원 관리
+            </button>
+            <button
+              data-testid="tab-orders"
+              onClick={() => setActiveTab("orders")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "orders" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="w-5 h-5" />
+                주문 관리
+              </div>
+              {adminOrders.filter(o => o.status === "pending").length > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {adminOrders.filter(o => o.status === "pending").length}
+                </span>
+              )}
+            </button>
+            <button
+              data-testid="tab-chat"
+              onClick={() => setActiveTab("chat")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "chat" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <MessageCircle className="w-5 h-5" />
+                실시간 채팅
+              </div>
+              {chatConversations.filter(c => c.status === "open").length > 0 && (
+                <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {chatConversations.filter(c => c.status === "open").length}
+                </span>
+              )}
+            </button>
+            
+            <p className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2 mt-4">금융</p>
+            <button
+              data-testid="tab-deposits"
+              onClick={() => setActiveTab("deposits")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "deposits" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Wallet className="w-5 h-5" />
+                포인트충전
+              </div>
+              {depositRequests.filter(d => d.status === "pending").length > 0 && (
+                <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {depositRequests.filter(d => d.status === "pending").length}
+                </span>
+              )}
+            </button>
+            <button
+              data-testid="tab-withdrawals"
+              onClick={() => setActiveTab("withdrawals")}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "withdrawals" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Wallet className="w-5 h-5" />
+                포인트환급
+              </div>
+              {withdrawalRequests.filter(w => w.status === "pending").length > 0 && (
+                <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {withdrawalRequests.filter(w => w.status === "pending").length}
+                </span>
+              )}
+            </button>
+            
+            <p className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2 mt-4">컨텐츠</p>
+            <button
+              data-testid="tab-reviews"
+              onClick={() => setActiveTab("reviews")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "reviews" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <Star className="w-5 h-5" />
+              후기 관리
+            </button>
+            <button
+              data-testid="tab-notices"
+              onClick={() => setActiveTab("notices")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "notices" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <Bell className="w-5 h-5" />
+              공지 관리
+            </button>
+            
+            <p className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2 mt-4">시스템</p>
+            <button
+              data-testid="tab-settings"
+              onClick={() => setActiveTab("settings")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "settings" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <Settings className="w-5 h-5" />
+              설정
+            </button>
+          </nav>
+          
+          <div className="absolute bottom-0 left-0 w-64 p-4 border-t border-slate-700">
+            <Button 
+              data-testid="button-logout"
+              variant="ghost" 
+              onClick={handleLogout}
+              className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-700/50"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              로그아웃
+            </Button>
+          </div>
+        </aside>
+        
+        <div className="flex-1 flex flex-col min-h-screen">
+          <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between lg:hidden">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <span className="font-bold text-white text-sm italic">E</span>
+              </div>
+              <span className="font-bold text-slate-800">Estella Admin</span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </header>
+          
+          <div className="lg:hidden overflow-x-auto bg-white border-b border-slate-200 px-4 py-2">
+            <div className="flex gap-2">
+              {[
+                { id: "dashboard", icon: BarChart3, label: "대시보드" },
+                { id: "products", icon: Package, label: "상품" },
+                { id: "members", icon: Users, label: "회원" },
+                { id: "orders", icon: ShoppingCart, label: "주문" },
+                { id: "deposits", icon: Wallet, label: "충전" },
+                { id: "withdrawals", icon: Wallet, label: "환급" },
+                { id: "reviews", icon: Star, label: "후기" },
+                { id: "notices", icon: Bell, label: "공지" },
+                { id: "chat", icon: MessageCircle, label: "채팅" },
+                { id: "settings", icon: Settings, label: "설정" },
+                { id: "crawling", icon: Database, label: "크롤링" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-all ${
+                    activeTab === tab.id
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  <tab.icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <main className="flex-1 p-6 overflow-auto">
 
         {activeTab === "dashboard" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm">전체 상품</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.totalProducts || 0}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <Package className="w-6 h-6 text-yellow-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-500 text-sm">전체 회원</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.totalMembers || 0}</p>
+                    <p className="text-slate-500 text-sm">전체 상품</p>
+                    <p className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalProducts || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Users className="w-6 h-6 text-blue-600" />
+                    <Package className="w-6 h-6 text-blue-600" />
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm">카테고리</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-1">{stats?.totalCategories || 0}</p>
+                    <p className="text-slate-500 text-sm">전체 회원</p>
+                    <p className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalMembers || 0}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-6 h-6 text-indigo-600" />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-slate-500 text-sm">카테고리</p>
+                    <p className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalCategories || 0}</p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <BarChart3 className="w-6 h-6 text-green-600" />
@@ -4382,6 +4483,8 @@ export default function Admin() {
             </div>
           </div>
         )}
+        </main>
+        </div>
       </div>
     </div>
   );
