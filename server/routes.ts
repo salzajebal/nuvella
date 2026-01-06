@@ -2123,9 +2123,9 @@ export async function registerRoutes(
       
       // Auto-payment with points for logged-in members
       if (memberId) {
-        const member = await storage.getMemberById(memberId);
+        const member = await storage.getMember(memberId);
         if (member) {
-          const currentPoints = member.points || 0;
+          const currentPoints = member.pointBalance || 0;
           
           if (currentPoints >= orderTotalAmount) {
             // Deduct points and complete payment
@@ -2137,9 +2137,8 @@ export async function registerRoutes(
               memberId,
               type: "use",
               amount: orderTotalAmount,
-              balance: newBalance,
+              balanceAfter: newBalance,
               description: `주문결제: ${productName}`,
-              orderId: null, // Will be updated after order creation
             });
             
             paymentStatus = "completed";
