@@ -1945,69 +1945,245 @@ export default function Admin() {
 
         {activeTab === "dashboard" && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-slate-500 text-sm">전체 상품</p>
-                    <p className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalProducts || 0}</p>
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+              <button
+                onClick={() => setActiveTab("orders")}
+                className="bg-white rounded-xl shadow-sm p-5 border border-amber-100 hover:border-amber-300 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-lg flex items-center justify-center">
+                    <ShoppingCart className="w-5 h-5 text-amber-600" />
                   </div>
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Package className="w-6 h-6 text-blue-600" />
+                  <div className="text-left">
+                    <p className="text-xs text-gray-500">주문</p>
+                    <p className="text-xs text-amber-600 font-medium">▶ 입금</p>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-amber-600 group-hover:text-amber-700">{adminOrders.filter(o => o.status === "pending").length}</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "pending").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab("orders")}
+                className="bg-white rounded-xl shadow-sm p-5 border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
+                    <Package className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-gray-500">입금</p>
+                    <p className="text-xs text-blue-600 font-medium">▶ 준비</p>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-blue-600 group-hover:text-blue-700">{adminOrders.filter(o => o.status === "paid").length}</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "paid").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab("orders")}
+                className="bg-white rounded-xl shadow-sm p-5 border border-green-100 hover:border-green-300 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center">
+                    <RefreshCw className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-gray-500">준비</p>
+                    <p className="text-xs text-green-600 font-medium">▶ 배송</p>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-green-600 group-hover:text-green-700">{adminOrders.filter(o => o.status === "processing").length}</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "processing").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab("orders")}
+                className="bg-white rounded-xl shadow-sm p-5 border border-purple-100 hover:border-purple-300 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-violet-100 rounded-lg flex items-center justify-center">
+                    <Package className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-gray-500">배송</p>
+                    <p className="text-xs text-purple-600 font-medium">▶ 완료</p>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-purple-600 group-hover:text-purple-700">{adminOrders.filter(o => o.status === "shipped").length}</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "shipped").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab("orders")}
+                className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-slate-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-gray-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-gray-500">배송</p>
+                    <p className="text-xs text-gray-600 font-medium">▶ 완료</p>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-gray-600 group-hover:text-gray-700">{adminOrders.filter(o => o.status === "completed").length}</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "completed").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-amber-100">
+                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-amber-500" />
+                  사이트 통계
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">전체상품</span>
+                    <span className="font-bold text-amber-600">{stats?.totalProducts || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">전체회원수</span>
+                    <span className="font-bold text-amber-600">{stats?.totalMembers || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">카테고리</span>
+                    <span className="font-bold text-amber-600">{stats?.totalCategories || 0}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">총 주문수</span>
+                    <span className="font-bold text-amber-600">{adminOrders.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm text-gray-600">대기중 문의</span>
+                    <span className="font-bold text-green-600">{chatConversations.filter(c => c.status === "open").length}</span>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-slate-500 text-sm">전체 회원</p>
-                    <p className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalMembers || 0}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                    <Users className="w-6 h-6 text-indigo-600" />
-                  </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-amber-100">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5 text-amber-500" />
+                    1:1문의
+                  </h3>
+                  <button onClick={() => setActiveTab("chat")} className="text-xs text-amber-600 hover:text-amber-700 font-medium">
+                    ▶ 전체보기
+                  </button>
+                </div>
+                <div className="space-y-3 max-h-[220px] overflow-y-auto">
+                  {chatConversations.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-4">문의가 없습니다.</p>
+                  ) : (
+                    chatConversations.slice(0, 5).map((chat) => (
+                      <button
+                        key={chat.id}
+                        onClick={() => { setActiveTab("chat"); }}
+                        className="w-full flex items-start gap-3 p-3 bg-gray-50 hover:bg-amber-50 rounded-lg transition-colors text-left"
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm text-gray-800">{chat.memberName || "회원"}</span>
+                            {chat.status === "open" && (
+                              <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full">대기</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">{chat.subject || "문의"}</p>
+                        </div>
+                        <span className="text-xs text-gray-400">{new Date(chat.createdAt || "").toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}</span>
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-slate-500 text-sm">카테고리</p>
-                    <p className="text-3xl font-bold text-slate-900 mt-1">{stats?.totalCategories || 0}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <BarChart3 className="w-6 h-6 text-green-600" />
-                  </div>
+
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-amber-100">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                    <Star className="w-5 h-5 text-amber-500" />
+                    사용후기
+                  </h3>
+                  <button onClick={() => setActiveTab("reviews")} className="text-xs text-amber-600 hover:text-amber-700 font-medium">
+                    ▶ 전체보기
+                  </button>
+                </div>
+                <div className="space-y-3 max-h-[220px] overflow-y-auto">
+                  {reviews.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-4">후기가 없습니다.</p>
+                  ) : (
+                    reviews.slice(0, 5).map((review) => (
+                      <div
+                        key={review.id}
+                        className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Star className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm text-gray-800 truncate">{review.title || review.productName}</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">{review.authorName}</p>
+                        </div>
+                        <span className="text-xs text-gray-400">{new Date(review.displayDate || review.createdAt || "").toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h3 className="font-bold text-lg mb-4">카테고리별 상품 현황</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {stats?.productsByCategory.map((cat) => (
-                  <div key={cat.id} className="bg-gray-50 rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-yellow-600">{cat.count}</p>
-                    <p className="text-sm text-gray-600 mt-1">{cat.name}</p>
-                  </div>
-                ))}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-amber-100">
+                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Package className="w-5 h-5 text-amber-500" />
+                  카테고리별 상품 현황
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {stats?.productsByCategory.map((cat) => (
+                    <div key={cat.id} className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg p-4 text-center border border-amber-100">
+                      <p className="text-2xl font-bold text-amber-600">{cat.count}</p>
+                      <p className="text-xs text-gray-600 mt-1">{cat.name}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h3 className="font-bold text-lg mb-4">빠른 작업</h3>
-              <div className="flex flex-wrap gap-3">
-                <Button onClick={() => setActiveTab("products")} variant="outline">
-                  <Plus className="w-4 h-4 mr-2" />
-                  상품 추가
-                </Button>
-                <Button onClick={() => setActiveTab("members")} variant="outline">
-                  <Users className="w-4 h-4 mr-2" />
-                  회원 관리
-                </Button>
-                <Button onClick={handleSeedData} variant="outline">
-                  <Database className="w-4 h-4 mr-2" />
-                  샘플 데이터 생성
-                </Button>
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-amber-100">
+                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-amber-500" />
+                  빠른 작업
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button onClick={() => setActiveTab("products")} variant="outline" className="h-auto py-4 border-amber-200 hover:bg-amber-50 hover:border-amber-300">
+                    <div className="flex flex-col items-center gap-2">
+                      <Package className="w-6 h-6 text-amber-600" />
+                      <span className="text-sm">상품 관리</span>
+                    </div>
+                  </Button>
+                  <Button onClick={() => setActiveTab("members")} variant="outline" className="h-auto py-4 border-amber-200 hover:bg-amber-50 hover:border-amber-300">
+                    <div className="flex flex-col items-center gap-2">
+                      <Users className="w-6 h-6 text-amber-600" />
+                      <span className="text-sm">회원 관리</span>
+                    </div>
+                  </Button>
+                  <Button onClick={() => setActiveTab("orders")} variant="outline" className="h-auto py-4 border-amber-200 hover:bg-amber-50 hover:border-amber-300">
+                    <div className="flex flex-col items-center gap-2">
+                      <ShoppingCart className="w-6 h-6 text-amber-600" />
+                      <span className="text-sm">주문 관리</span>
+                    </div>
+                  </Button>
+                  <Button onClick={handleSeedData} variant="outline" className="h-auto py-4 border-amber-200 hover:bg-amber-50 hover:border-amber-300">
+                    <div className="flex flex-col items-center gap-2">
+                      <Database className="w-6 h-6 text-amber-600" />
+                      <span className="text-sm">샘플 데이터</span>
+                    </div>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
