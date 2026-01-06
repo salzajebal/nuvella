@@ -1908,9 +1908,9 @@ export default function Admin() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setActiveTab("deposits")}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 rounded-lg font-medium text-sm hover:from-amber-600 hover:to-yellow-600 shadow-sm transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 rounded-lg font-bold text-sm hover:from-amber-600 hover:to-yellow-600 shadow-md transition-all"
               >
-                <Wallet className="w-4 h-4" />
+                <Wallet className="w-5 h-5" />
                 충전
                 {depositRequests.filter(d => d.status === "pending").length > 0 && (
                   <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full ml-1">{depositRequests.filter(d => d.status === "pending").length}</span>
@@ -1918,9 +1918,9 @@ export default function Admin() {
               </button>
               <button
                 onClick={() => setActiveTab("withdrawals")}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium text-sm hover:from-green-600 hover:to-emerald-600 shadow-sm transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-bold text-sm hover:from-green-600 hover:to-emerald-600 shadow-md transition-all border border-green-400"
               >
-                <Wallet className="w-4 h-4" />
+                <Wallet className="w-5 h-5" />
                 출금
                 {withdrawalRequests.filter(w => w.status === "pending").length > 0 && (
                   <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full ml-1">{withdrawalRequests.filter(w => w.status === "pending").length}</span>
