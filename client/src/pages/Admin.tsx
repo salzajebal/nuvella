@@ -205,6 +205,12 @@ export default function Admin() {
   });
   const [depositAccountLoading, setDepositAccountLoading] = useState(false);
 
+  const [reviewSettings, setReviewSettings] = useState({
+    showOnHomepage: true,
+    instantApproval: false,
+  });
+  const [reviewSettingsLoading, setReviewSettingsLoading] = useState(false);
+
   const [crawlCategory, setCrawlCategory] = useState<string>("");
   const [crawlSubcategory, setCrawlSubcategory] = useState<string>("all");
   const [crawlLimit, setCrawlLimit] = useState<number>(20);
@@ -692,6 +698,8 @@ export default function Admin() {
     } catch (error) {
       console.log("Deposit account settings not found");
     }
+    
+    await fetchReviewSettings();
   };
 
   const saveSiteSettings = async () => {
@@ -739,6 +747,57 @@ export default function Admin() {
     }
   };
 
+  const fetchReviewSettings = async () => {
+    try {
+      const showRes = await fetch("/api/settings/review_show_on_homepage");
+      const showData = await showRes.json();
+      if (showData.success && showData.data) {
+        setReviewSettings(prev => ({ ...prev, showOnHomepage: showData.data.value === "true" }));
+      }
+    } catch (error) {
+      console.log("Review show setting not found, using default");
+    }
+    
+    try {
+      const approvalRes = await fetch("/api/settings/review_instant_approval");
+      const approvalData = await approvalRes.json();
+      if (approvalData.success && approvalData.data) {
+        setReviewSettings(prev => ({ ...prev, instantApproval: approvalData.data.value === "true" }));
+      }
+    } catch (error) {
+      console.log("Review approval setting not found, using default");
+    }
+  };
+
+  const saveReviewSettings = async () => {
+    setReviewSettingsLoading(true);
+    try {
+      await fetchWithAuth("/api/admin/settings/review_show_on_homepage", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          value: reviewSettings.showOnHomepage ? "true" : "false",
+          description: "홈페이지 상품후기 표시 여부"
+        }),
+      });
+      
+      await fetchWithAuth("/api/admin/settings/review_instant_approval", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          value: reviewSettings.instantApproval ? "true" : "false",
+          description: "상품후기 즉시승인 여부"
+        }),
+      });
+      
+      toast({ title: "성공", description: "후기 설정이 저장되었습니다." });
+    } catch (error) {
+      toast({ title: "오류", description: "설정 저장에 실패했습니다.", variant: "destructive" });
+    } finally {
+      setReviewSettingsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated && activeTab === "deposits") {
       fetchDepositRequests();
@@ -778,6 +837,12 @@ export default function Admin() {
       fetchChatConversations();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab === "settings") {
+      fetchSiteSettings();
+    }
+  }, [activeTab, isAuthenticated]);
 
   useEffect(() => {
     if (chatMessagesEndRef.current) {
@@ -1363,6 +1428,23 @@ export default function Admin() {
     } catch (error) {
       console.error("Review delete error:", error);
       toast({ title: "오류", description: "후기 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleApproveReview = async (id: string) => {
+    try {
+      const res = await fetchWithAuth(`/api/admin/reviews/${id}/approve`, { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "성공", description: "후기가 승인되었습니다." });
+        fetchReviews();
+      } else {
+        console.error("Review approve error:", data.error);
+        toast({ title: "오류", description: formatErrorMessage(data.error) || "후기 승인에 실패했습니다.", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Review approve error:", error);
+      toast({ title: "오류", description: "후기 승인에 실패했습니다.", variant: "destructive" });
     }
   };
 
@@ -3363,6 +3445,7 @@ export default function Admin() {
                     <th className="px-4 py-3 text-left font-medium">별점</th>
                     <th className="px-4 py-3 text-left font-medium">작성일</th>
                     <th className="px-4 py-3 text-left font-medium">공개</th>
+                    <th className="px-4 py-3 text-left font-medium">승인</th>
                     <th className="px-4 py-3 text-right font-medium">관리</th>
                   </tr>
                 </thead>
@@ -3422,6 +3505,11 @@ export default function Admin() {
                               className="w-4 h-4"
                             />
                           </td>
+                          <td className="px-4 py-3">
+                            <span className={`text-sm ${review.isApproved ? 'text-green-600' : 'text-gray-400'}`}>
+                              {review.isApproved ? '승인됨' : '대기중'}
+                            </span>
+                          </td>
                           <td className="px-4 py-3 text-right flex gap-2 justify-end">
                             <Button 
                               onClick={() => handleUpdateReview(review.id)} 
@@ -3464,6 +3552,20 @@ export default function Admin() {
                               <span className="text-green-600 text-sm">공개</span>
                             ) : (
                               <span className="text-gray-400 text-sm">비공개</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            {review.isApproved ? (
+                              <span className="text-green-600 text-sm font-medium">승인됨</span>
+                            ) : (
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleApproveReview(review.id)} 
+                                className="h-7 bg-blue-500 hover:bg-blue-600 text-white text-xs"
+                                data-testid={`button-approve-review-${review.id}`}
+                              >
+                                승인
+                              </Button>
                             )}
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -4096,6 +4198,89 @@ export default function Admin() {
                     <li className="flex items-start gap-2">
                       <span className="text-amber-500 mt-1">•</span>
                       <span>계좌정보 변경 시 즉시 반영됩니다.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="p-6 border-b border-gray-100">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <Star className="w-5 h-5 text-purple-600" />
+                  상품후기 설정
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">홈페이지 상품후기 표시 및 승인 방식을 설정합니다.</p>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-gray-900">홈페이지 후기 표시</h4>
+                        <p className="text-sm text-gray-600">홈페이지에서 상품후기 섹션을 표시합니다.</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={reviewSettings.showOnHomepage}
+                          onChange={(e) => {
+                            setReviewSettings(prev => ({ ...prev, showOnHomepage: e.target.checked }));
+                          }}
+                          className="sr-only peer"
+                          data-testid="toggle-review-show-homepage"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                      </label>
+                    </div>
+
+                    <div className="border-t border-purple-200 pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold text-gray-900">즉시승인 모드</h4>
+                          <p className="text-sm text-gray-600">OFF: 관리자 승인 후 표시 / ON: 작성 즉시 표시</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={reviewSettings.instantApproval}
+                            onChange={(e) => {
+                              setReviewSettings(prev => ({ ...prev, instantApproval: e.target.checked }));
+                            }}
+                            className="sr-only peer"
+                            data-testid="toggle-review-instant-approval"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    <Button
+                      data-testid="button-save-review-settings"
+                      onClick={saveReviewSettings}
+                      disabled={reviewSettingsLoading}
+                      className="bg-purple-500 hover:bg-purple-600 text-white mt-4"
+                    >
+                      {reviewSettingsLoading ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : null}
+                      저장
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <ul className="text-sm text-gray-600 space-y-2">
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-500 mt-1">•</span>
+                      <span><strong>홈페이지 후기 표시:</strong> OFF 시 홈페이지에서 후기가 완전히 숨겨집니다.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-500 mt-1">•</span>
+                      <span><strong>즉시승인 모드:</strong> OFF 시 관리자가 '승인' 버튼을 눌러야만 후기가 표시됩니다.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-purple-500 mt-1">•</span>
+                      <span>후기 관리 탭에서 개별 후기를 승인/숨김 처리할 수 있습니다.</span>
                     </li>
                   </ul>
                 </div>

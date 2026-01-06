@@ -241,6 +241,7 @@ export const reviews = pgTable("reviews", {
   content: text("content").notNull(),
   imageUrl: text("image_url"),
   isVisible: boolean("is_visible").default(true),
+  isApproved: boolean("is_approved").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   displayDate: timestamp("display_date").defaultNow(),
 });

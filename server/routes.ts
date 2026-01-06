@@ -155,10 +155,27 @@ export async function registerRoutes(
   // Get reviews for a specific product
   app.get("/api/products/:id/reviews", async (req: Request, res: Response) => {
     try {
+      // Check if homepage reviews are enabled
+      const showOnHomepage = await storage.getSiteSetting("review_show_on_homepage");
+      if (showOnHomepage && showOnHomepage.value === "false") {
+        return res.json({ success: true, data: [] });
+      }
+      
       const reviews = await storage.getReviewsByProduct(req.params.id);
-      // Only return visible reviews
-      const visibleReviews = reviews.filter(r => r.isVisible);
-      res.json({ success: true, data: visibleReviews });
+      
+      // Check if instant approval is enabled
+      const instantApproval = await storage.getSiteSetting("review_instant_approval");
+      
+      let filteredReviews;
+      if (instantApproval && instantApproval.value === "true") {
+        // Show all visible reviews (no approval needed)
+        filteredReviews = reviews.filter(r => r.isVisible);
+      } else {
+        // Show only approved and visible reviews
+        filteredReviews = reviews.filter(r => r.isVisible && r.isApproved);
+      }
+      
+      res.json({ success: true, data: filteredReviews });
     } catch (error) {
       console.error("Error fetching product reviews:", error);
       res.status(500).json({ success: false, error: "후기를 불러올 수 없습니다." });
@@ -1542,10 +1559,27 @@ export async function registerRoutes(
 
   // ==================== REVIEWS API ====================
   
-  // Get all reviews (public - visible only)
+  // Get all reviews (public - visible only, respects approval settings)
   app.get("/api/reviews", async (req: Request, res: Response) => {
     try {
-      const reviews = await storage.getVisibleReviews();
+      // Check if homepage reviews are enabled
+      const showOnHomepage = await storage.getSiteSetting("review_show_on_homepage");
+      if (showOnHomepage && showOnHomepage.value === "false") {
+        return res.json({ success: true, data: [] });
+      }
+      
+      // Check if instant approval is enabled
+      const instantApproval = await storage.getSiteSetting("review_instant_approval");
+      
+      let reviews;
+      if (instantApproval && instantApproval.value === "true") {
+        // Show all visible reviews (no approval needed)
+        reviews = await storage.getVisibleReviews();
+      } else {
+        // Show only approved reviews
+        reviews = await storage.getApprovedReviews();
+      }
+      
       res.json({ success: true, data: reviews });
     } catch (error) {
       console.error("Error fetching reviews:", error);
@@ -1649,6 +1683,7 @@ export async function registerRoutes(
       if (req.body.content !== undefined) updateData.content = req.body.content;
       if (req.body.imageUrl !== undefined) updateData.imageUrl = req.body.imageUrl;
       if (req.body.isVisible !== undefined) updateData.isVisible = Boolean(req.body.isVisible);
+      if (req.body.isApproved !== undefined) updateData.isApproved = Boolean(req.body.isApproved);
       if (req.body.displayDate !== undefined) {
         const parsedDate = new Date(req.body.displayDate);
         if (!isNaN(parsedDate.getTime())) {
@@ -1674,6 +1709,20 @@ export async function registerRoutes(
       console.error("=== REVIEW UPDATE ERROR ===");
       console.error("Error updating review:", error);
       res.status(500).json({ success: false, error: "후기 수정에 실패했습니다." });
+    }
+  });
+
+  // Approve review (admin only)
+  app.post("/api/admin/reviews/:id/approve", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const review = await storage.approveReview(req.params.id);
+      if (!review) {
+        return res.status(404).json({ success: false, error: "후기를 찾을 수 없습니다." });
+      }
+      res.json({ success: true, data: review, message: "후기가 승인되었습니다." });
+    } catch (error) {
+      console.error("Error approving review:", error);
+      res.status(500).json({ success: false, error: "후기 승인에 실패했습니다." });
     }
   });
 

@@ -82,11 +82,13 @@ export interface IStorage {
   // Reviews
   getAllReviews(): Promise<Review[]>;
   getVisibleReviews(): Promise<Review[]>;
+  getApprovedReviews(): Promise<Review[]>;
   getReview(id: string): Promise<Review | undefined>;
   getReviewsByProduct(productId: string): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
-  updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined>;
+  updateReview(id: string, review: Partial<InsertReview & { isApproved?: boolean }>): Promise<Review | undefined>;
   deleteReview(id: string): Promise<boolean>;
+  approveReview(id: string): Promise<Review | undefined>;
   
   // Review Images
   getReviewImage(id: string): Promise<ReviewImage | undefined>;
@@ -424,6 +426,12 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(reviews.displayDate));
   }
 
+  async getApprovedReviews(): Promise<Review[]> {
+    return db.select().from(reviews)
+      .where(and(eq(reviews.isVisible, true), eq(reviews.isApproved, true)))
+      .orderBy(desc(reviews.displayDate));
+  }
+
   async getReview(id: string): Promise<Review | undefined> {
     const [review] = await db.select().from(reviews).where(eq(reviews.id, id));
     return review;
@@ -438,9 +446,17 @@ export class DatabaseStorage implements IStorage {
     return review;
   }
 
-  async updateReview(id: string, updateData: Partial<InsertReview>): Promise<Review | undefined> {
+  async updateReview(id: string, updateData: Partial<InsertReview & { isApproved?: boolean }>): Promise<Review | undefined> {
     const [review] = await db.update(reviews)
       .set(updateData)
+      .where(eq(reviews.id, id))
+      .returning();
+    return review;
+  }
+
+  async approveReview(id: string): Promise<Review | undefined> {
+    const [review] = await db.update(reviews)
+      .set({ isApproved: true })
       .where(eq(reviews.id, id))
       .returning();
     return review;
