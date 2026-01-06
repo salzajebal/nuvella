@@ -339,7 +339,7 @@ export default function Order() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <Label htmlFor="memberEmail">이메일 *</Label>
+                  <Label htmlFor="memberEmail">이메일 (선택)</Label>
                   <Input
                     id="memberEmail"
                     name="memberEmail"
@@ -347,7 +347,6 @@ export default function Order() {
                     value={formData.memberEmail}
                     onChange={handleInputChange}
                     placeholder="example@email.com"
-                    required
                     data-testid="input-member-email"
                   />
                 </div>
