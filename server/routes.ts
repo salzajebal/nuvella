@@ -1096,6 +1096,28 @@ export async function registerRoutes(
     }
   });
 
+  // Adjust points via point management page (admin)
+  app.post("/api/admin/points/adjust", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { memberId, amount, action, reason } = req.body;
+      
+      if (!memberId || typeof amount !== "number" || amount <= 0) {
+        return res.status(400).json({ success: false, error: "회원과 유효한 금액을 입력해주세요." });
+      }
+      
+      const adjustedAmount = action === "subtract" ? -amount : amount;
+      const member = await storage.updateMemberPoints(memberId, adjustedAmount);
+      if (!member) {
+        return res.status(404).json({ success: false, error: "회원을 찾을 수 없습니다." });
+      }
+      
+      res.json({ success: true, data: member, message: `포인트가 ${action === "add" ? "지급" : "차감"}되었습니다.` });
+    } catch (error) {
+      console.error("Error adjusting member points:", error);
+      res.status(500).json({ success: false, error: "포인트 조정 처리 중 오류가 발생했습니다." });
+    }
+  });
+
   // Freeze member account (admin)
   app.post("/api/admin/members/:id/freeze", requireAdminAuth, async (req: Request, res: Response) => {
     try {

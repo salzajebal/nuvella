@@ -97,7 +97,7 @@ export default function Admin() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "reviews" | "notices" | "chat" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings">("dashboard");
   const [stats, setStats] = useState<AdminStats | null>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -177,6 +177,11 @@ export default function Admin() {
   const [withdrawalRequests, setWithdrawalRequests] = useState<AdminWithdrawalRequest[]>([]);
   const [withdrawalFilter, setWithdrawalFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [withdrawalAdminNote, setWithdrawalAdminNote] = useState("");
+  
+  const [pointMemberId, setPointMemberId] = useState("");
+  const [pointAmount, setPointAmount] = useState("");
+  const [pointReason, setPointReason] = useState("");
+  const [pointAction, setPointAction] = useState<"add" | "subtract">("add");
   const [adjustAmount, setAdjustAmount] = useState("");
   const [freezeReason, setFreezeReason] = useState("");
 
@@ -1754,6 +1759,18 @@ export default function Admin() {
                 </span>
               )}
             </button>
+            <button
+              data-testid="tab-points"
+              onClick={() => setActiveTab("points")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeTab === "points" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                  : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              }`}
+            >
+              <Zap className="w-5 h-5" />
+              포인트관리
+            </button>
             
             <p className="text-xs text-slate-500 uppercase tracking-wider px-3 py-2 mt-4">컨텐츠</p>
             <button
@@ -3263,6 +3280,139 @@ export default function Admin() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === "points" && (
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900">포인트 관리</h2>
+              <p className="text-gray-500 text-sm">회원 포인트를 직접 추가하거나 차감할 수 있습니다</p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 mb-6">
+              <h3 className="font-bold text-lg mb-4">포인트 지급/차감</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">회원 선택 *</label>
+                  <select
+                    className="w-full h-10 border border-gray-200 rounded-md px-3 bg-white"
+                    value={pointMemberId}
+                    onChange={(e) => setPointMemberId(e.target.value)}
+                    data-testid="select-point-member"
+                  >
+                    <option value="">회원을 선택하세요</option>
+                    {members.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name} ({member.username}) - 현재: {(member.pointBalance || 0).toLocaleString()}P
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">작업 유형 *</label>
+                  <select
+                    className="w-full h-10 border border-gray-200 rounded-md px-3 bg-white"
+                    value={pointAction}
+                    onChange={(e) => setPointAction(e.target.value as "add" | "subtract")}
+                    data-testid="select-point-action"
+                  >
+                    <option value="add">포인트 지급 (+)</option>
+                    <option value="subtract">포인트 차감 (-)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">금액 (원) *</label>
+                  <Input
+                    type="number"
+                    placeholder="금액 입력"
+                    value={pointAmount}
+                    onChange={(e) => setPointAmount(e.target.value)}
+                    data-testid="input-point-amount"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">사유</label>
+                  <Input
+                    placeholder="예: 이벤트 지급, 오류 보정 등"
+                    value={pointReason}
+                    onChange={(e) => setPointReason(e.target.value)}
+                    data-testid="input-point-reason"
+                  />
+                </div>
+              </div>
+              <Button
+                className={pointAction === "add" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}
+                onClick={async () => {
+                  if (!pointMemberId || !pointAmount) {
+                    toast({ title: "오류", description: "회원과 금액을 입력해주세요.", variant: "destructive" });
+                    return;
+                  }
+                  try {
+                    const res = await fetchWithAuth("/api/admin/points/adjust", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        memberId: pointMemberId,
+                        amount: parseInt(pointAmount),
+                        action: pointAction,
+                        reason: pointReason || (pointAction === "add" ? "관리자 지급" : "관리자 차감"),
+                      }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      toast({ 
+                        title: "성공", 
+                        description: `${pointAction === "add" ? "포인트가 지급" : "포인트가 차감"}되었습니다.` 
+                      });
+                      setPointMemberId("");
+                      setPointAmount("");
+                      setPointReason("");
+                      fetchMembers();
+                    } else {
+                      toast({ title: "오류", description: data.error || "포인트 처리에 실패했습니다.", variant: "destructive" });
+                    }
+                  } catch (error) {
+                    toast({ title: "오류", description: "포인트 처리에 실패했습니다.", variant: "destructive" });
+                  }
+                }}
+                data-testid="button-adjust-point"
+              >
+                {pointAction === "add" ? (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    포인트 지급
+                  </>
+                ) : (
+                  <>
+                    <X className="w-4 h-4 mr-2" />
+                    포인트 차감
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-lg mb-4">회원별 포인트 현황</h3>
+              <div className="space-y-2">
+                {members.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-yellow-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{member.name}</p>
+                        <p className="text-sm text-gray-500">{member.username}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-lg text-amber-600">{(member.pointBalance || 0).toLocaleString()}P</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
