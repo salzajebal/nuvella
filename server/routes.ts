@@ -863,10 +863,14 @@ export async function registerRoutes(
         return res.status(403).json({ success: false, error: "계정이 동결되어 출금신청을 할 수 없습니다." });
       }
       
-      const { amount } = req.body;
+      const { amount, bankName, accountNumber, accountHolder } = req.body;
       
       if (!amount || amount <= 0) {
         return res.status(400).json({ success: false, error: "유효한 금액을 입력해주세요." });
+      }
+      
+      if (!bankName || !accountNumber || !accountHolder) {
+        return res.status(400).json({ success: false, error: "은행명, 계좌번호, 예금주를 모두 입력해주세요." });
       }
       
       const currentBalance = member.pointBalance || 0;
@@ -879,6 +883,9 @@ export async function registerRoutes(
         memberName: member.name,
         memberEmail: member.username,
         amount: parseInt(amount),
+        bankName,
+        accountNumber,
+        accountHolder,
         status: "pending"
       });
       

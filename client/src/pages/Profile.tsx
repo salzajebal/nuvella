@@ -37,6 +37,18 @@ interface DepositRequest {
   processedAt?: string;
 }
 
+interface WithdrawalRequest {
+  id: string;
+  amount: number;
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+  status: "pending" | "approved" | "rejected";
+  adminNote?: string;
+  requestedAt: string;
+  processedAt?: string;
+}
+
 interface PointTransaction {
   id: string;
   type: string;
@@ -68,6 +80,12 @@ export default function Profile() {
   const [bankName, setBankName] = useState("");
   const [depositorName, setDepositorName] = useState("");
   
+  const [showWithdrawalForm, setShowWithdrawalForm] = useState(false);
+  const [withdrawalAmount, setWithdrawalAmount] = useState("");
+  const [withdrawalBankName, setWithdrawalBankName] = useState("");
+  const [withdrawalAccountNumber, setWithdrawalAccountNumber] = useState("");
+  const [withdrawalAccountHolder, setWithdrawalAccountHolder] = useState("");
+  
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [reviewRating, setReviewRating] = useState(5);
@@ -96,6 +114,21 @@ export default function Profile() {
     queryKey: ["deposit-requests"],
     queryFn: async () => {
       const res = await fetch("/api/members/deposit-requests", {
+        headers: {
+          Authorization: `Bearer ${memberToken}`,
+        },
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      return data.data;
+    },
+    enabled: isLoggedIn,
+  });
+
+  const { data: withdrawalRequests } = useQuery<WithdrawalRequest[]>({
+    queryKey: ["withdrawal-requests"],
+    queryFn: async () => {
+      const res = await fetch("/api/members/withdrawal-requests", {
         headers: {
           Authorization: `Bearer ${memberToken}`,
         },
@@ -169,6 +202,35 @@ export default function Profile() {
     },
   });
 
+  const withdrawalMutation = useMutation({
+    mutationFn: async (request: { amount: number; bankName: string; accountNumber: string; accountHolder: string }) => {
+      const res = await fetch("/api/members/withdrawal-requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${memberToken}`,
+        },
+        body: JSON.stringify(request),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["withdrawal-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["member-info"] });
+      setShowWithdrawalForm(false);
+      setWithdrawalAmount("");
+      setWithdrawalBankName("");
+      setWithdrawalAccountNumber("");
+      setWithdrawalAccountHolder("");
+      alert("환급신청이 접수되었습니다. 관리자 승인 후 처리됩니다.");
+    },
+    onError: (error: Error) => {
+      alert(error.message);
+    },
+  });
+
   const handleLogout = () => {
     localStorage.removeItem("memberToken");
     localStorage.removeItem("memberName");
@@ -195,6 +257,37 @@ export default function Profile() {
     }
     
     depositMutation.mutate({ amount, bankName, depositorName });
+  };
+
+  const handleWithdrawalSubmit = () => {
+    if (memberInfo?.isFrozen) {
+      alert("계정이 동결되어 환급신청을 할 수 없습니다.");
+      return;
+    }
+    
+    if (!withdrawalAmount || !withdrawalBankName || !withdrawalAccountNumber || !withdrawalAccountHolder) {
+      alert("모든 필드를 입력해주세요.");
+      return;
+    }
+    
+    const amount = parseInt(withdrawalAmount.replace(/,/g, ""));
+    if (isNaN(amount) || amount <= 0) {
+      alert("유효한 금액을 입력해주세요.");
+      return;
+    }
+    
+    const currentBalance = memberInfo?.pointBalance || 0;
+    if (amount > currentBalance) {
+      alert("보유 포인트가 부족합니다.");
+      return;
+    }
+    
+    withdrawalMutation.mutate({ 
+      amount, 
+      bankName: withdrawalBankName, 
+      accountNumber: withdrawalAccountNumber, 
+      accountHolder: withdrawalAccountHolder 
+    });
   };
 
   const handleOpenReviewDialog = (order: Order) => {
@@ -378,7 +471,7 @@ export default function Profile() {
                     <TabsTrigger value="info" className="text-xs md:text-sm py-2 px-1 md:px-3">내 정보</TabsTrigger>
                     <TabsTrigger value="orders" className="text-xs md:text-sm py-2 px-1 md:px-3">주문내역</TabsTrigger>
                     <TabsTrigger value="menu" className="text-xs md:text-sm py-2 px-1 md:px-3">메뉴</TabsTrigger>
-                    <TabsTrigger value="deposit" className="text-xs md:text-sm py-2 px-1 md:px-3">포인트충전</TabsTrigger>
+                    <TabsTrigger value="deposit" className="text-xs md:text-sm py-2 px-1 md:px-3">포인트충전/환급</TabsTrigger>
                     <TabsTrigger value="points" className="text-xs md:text-sm py-2 px-1 md:px-3">포인트</TabsTrigger>
                   </TabsList>
 
@@ -661,6 +754,121 @@ export default function Profile() {
                             </div>
                           ))
                         )}
+                      </div>
+
+                      <div className="border-t pt-6 mt-6">
+                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+                          <h3 className="font-bold text-green-800 mb-2">환급 안내</h3>
+                          <div className="text-sm text-green-700">
+                            <p>보유 포인트를 현금으로 환급받으실 수 있습니다.</p>
+                            <p className="mt-1">현재 보유 포인트: <strong>{(memberInfo?.pointBalance || 0).toLocaleString()}P</strong></p>
+                          </div>
+                        </div>
+
+                        <Dialog open={showWithdrawalForm} onOpenChange={setShowWithdrawalForm}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              className="w-full bg-green-600 hover:bg-green-700"
+                              disabled={memberInfo?.isFrozen || (memberInfo?.pointBalance || 0) <= 0}
+                            >
+                              <Wallet className="w-4 h-4 mr-2" />
+                              환급 신청하기
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>환급 신청</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 pt-4">
+                              <div className="p-3 bg-gray-50 rounded-lg text-sm">
+                                <p>현재 보유 포인트: <strong className="text-green-600">{(memberInfo?.pointBalance || 0).toLocaleString()}P</strong></p>
+                              </div>
+                              <div>
+                                <Label htmlFor="withdrawalAmount">환급 금액 (원)</Label>
+                                <Input
+                                  id="withdrawalAmount"
+                                  type="text"
+                                  placeholder="예: 100,000"
+                                  value={withdrawalAmount}
+                                  onChange={(e) => setWithdrawalAmount(e.target.value)}
+                                  data-testid="input-withdrawal-amount"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="withdrawalBankName">은행명</Label>
+                                <Input
+                                  id="withdrawalBankName"
+                                  placeholder="예: 국민은행"
+                                  value={withdrawalBankName}
+                                  onChange={(e) => setWithdrawalBankName(e.target.value)}
+                                  data-testid="input-withdrawal-bank"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="withdrawalAccountNumber">계좌번호</Label>
+                                <Input
+                                  id="withdrawalAccountNumber"
+                                  placeholder="- 없이 입력"
+                                  value={withdrawalAccountNumber}
+                                  onChange={(e) => setWithdrawalAccountNumber(e.target.value)}
+                                  data-testid="input-withdrawal-account"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="withdrawalAccountHolder">예금주</Label>
+                                <Input
+                                  id="withdrawalAccountHolder"
+                                  placeholder="실명을 입력해주세요"
+                                  value={withdrawalAccountHolder}
+                                  onChange={(e) => setWithdrawalAccountHolder(e.target.value)}
+                                  data-testid="input-withdrawal-holder"
+                                />
+                              </div>
+                              <Button
+                                className="w-full bg-green-600 hover:bg-green-700"
+                                onClick={handleWithdrawalSubmit}
+                                disabled={withdrawalMutation.isPending}
+                                data-testid="button-withdrawal-submit"
+                              >
+                                {withdrawalMutation.isPending ? "처리중..." : "환급 신청하기"}
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+
+                        <div className="space-y-3 mt-4">
+                          <h3 className="font-bold text-gray-900">환급 신청 내역</h3>
+                          {!withdrawalRequests?.length ? (
+                            <p className="text-sm text-gray-500 text-center py-8">
+                              환급 신청 내역이 없습니다.
+                            </p>
+                          ) : (
+                            withdrawalRequests.map((request) => (
+                              <div
+                                key={request.id}
+                                className="p-4 border rounded-lg bg-white"
+                                data-testid={`withdrawal-request-${request.id}`}
+                              >
+                                <div className="flex justify-between items-start mb-2">
+                                  <div className="font-bold text-lg">
+                                    {request.amount.toLocaleString()}원
+                                  </div>
+                                  {getStatusBadge(request.status)}
+                                </div>
+                                <div className="text-sm text-gray-500 space-y-1">
+                                  <p>계좌: {request.bankName} {request.accountNumber} ({request.accountHolder})</p>
+                                  <p>신청일: {formatDate(request.requestedAt)}</p>
+                                  {request.processedAt && (
+                                    <p>처리일: {formatDate(request.processedAt)}</p>
+                                  )}
+                                  {request.adminNote && (
+                                    <p className="text-amber-600">메모: {request.adminNote}</p>
+                                  )}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
