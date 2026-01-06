@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
+import { useDaumPostcodePopup } from "react-daum-postcode";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useKakaoLink } from "@/hooks/use-kakao-link";
 import { KakaoConfirmDialog } from "@/components/KakaoConfirmDialog";
-import { CheckCircle, Package, User, MapPin, MessageCircle } from "lucide-react";
+import { CheckCircle, Package, User, MapPin, MessageCircle, Search, Clock, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import type { Product } from "@shared/schema";
+
+interface SavedAddress {
+  id: string;
+  name: string;
+  phone: string;
+  zipcode: string;
+  address: string;
+  addressDetail: string;
+}
 
 function KakaoIcon({ className }: { className?: string }) {
   return (
@@ -25,12 +35,16 @@ export default function Order() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { kakaoLink, openKakaoChat, showConfirmDialog, confirmAndOpenKakao, closeConfirmDialog } = useKakaoLink();
+  const openPostcode = useDaumPostcodePopup();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [recentAddresses, setRecentAddresses] = useState<SavedAddress[]>([]);
+  const [showRecentAddresses, setShowRecentAddresses] = useState(false);
+  const [addressMode, setAddressMode] = useState<"recent" | "new">("new");
   
   const searchParams = new URLSearchParams(window.location.search);
   const quantityParam = parseInt(searchParams.get("quantity") || "1");
@@ -49,6 +63,45 @@ export default function Order() {
     sameAsOrderer: true,
   });
 
+  const handleAddressSearch = () => {
+    openPostcode({
+      onComplete: (data) => {
+        let fullAddress = data.address;
+        let extraAddress = "";
+        
+        if (data.addressType === "R") {
+          if (data.bname !== "") {
+            extraAddress += data.bname;
+          }
+          if (data.buildingName !== "") {
+            extraAddress += extraAddress !== "" ? `, ${data.buildingName}` : data.buildingName;
+          }
+          fullAddress += extraAddress !== "" ? ` (${extraAddress})` : "";
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          shippingZipcode: data.zonecode,
+          shippingAddress: fullAddress,
+        }));
+      },
+    });
+  };
+
+  const handleSelectRecentAddress = (address: SavedAddress) => {
+    setFormData(prev => ({
+      ...prev,
+      shippingName: address.name,
+      shippingPhone: address.phone,
+      shippingZipcode: address.zipcode,
+      shippingAddress: address.address,
+      shippingAddressDetail: address.addressDetail,
+      sameAsOrderer: false,
+    }));
+    setShowRecentAddresses(false);
+    setAddressMode("recent");
+  };
+
   useEffect(() => {
     const memberName = localStorage.getItem("memberName") || "";
     const memberEmail = localStorage.getItem("memberEmail") || "";
@@ -59,6 +112,29 @@ export default function Order() {
       memberEmail,
       shippingName: memberName,
     }));
+    
+    const fetchRecentAddresses = async () => {
+      const memberToken = localStorage.getItem("memberToken");
+      if (!memberToken) return;
+      
+      try {
+        const res = await fetch("/api/members/recent-addresses", {
+          headers: {
+            "Authorization": `Bearer ${memberToken}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data) {
+            setRecentAddresses(data.data);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching recent addresses:", error);
+      }
+    };
+    
+    fetchRecentAddresses();
   }, []);
 
   useEffect(() => {
@@ -368,6 +444,71 @@ export default function Order() {
                   <span>주문자 정보와 동일</span>
                 </label>
               </div>
+
+              {recentAddresses.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex gap-2 mb-3">
+                    <Button
+                      type="button"
+                      variant={showRecentAddresses ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setShowRecentAddresses(!showRecentAddresses)}
+                      className="flex items-center gap-2"
+                      data-testid="button-toggle-recent-addresses"
+                    >
+                      <Clock className="w-4 h-4" />
+                      최근 배송지
+                      {showRecentAddresses ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={addressMode === "new" && !showRecentAddresses ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setShowRecentAddresses(false);
+                        setAddressMode("new");
+                        setFormData(prev => ({
+                          ...prev,
+                          shippingZipcode: "",
+                          shippingAddress: "",
+                          shippingAddressDetail: "",
+                        }));
+                      }}
+                      className="flex items-center gap-2"
+                      data-testid="button-new-address"
+                    >
+                      <Plus className="w-4 h-4" />
+                      신규 배송지
+                    </Button>
+                  </div>
+
+                  {showRecentAddresses && (
+                    <div className="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+                      <p className="text-sm font-medium text-gray-700 mb-2">최근 배송지 선택</p>
+                      {recentAddresses.map((addr) => (
+                        <button
+                          key={addr.id}
+                          type="button"
+                          onClick={() => handleSelectRecentAddress(addr)}
+                          className="w-full text-left p-3 bg-white rounded-lg border border-gray-200 hover:border-primary hover:bg-amber-50 transition-colors"
+                          data-testid={`button-select-address-${addr.id}`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="font-medium text-gray-900">{addr.name}</div>
+                              <div className="text-sm text-gray-600">{addr.phone}</div>
+                              <div className="text-sm text-gray-500 mt-1">
+                                [{addr.zipcode}] {addr.address} {addr.addressDetail}
+                              </div>
+                            </div>
+                            <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -394,26 +535,42 @@ export default function Order() {
                     data-testid="input-shipping-phone"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="shippingZipcode">우편번호</Label>
-                  <Input
-                    id="shippingZipcode"
-                    name="shippingZipcode"
-                    value={formData.shippingZipcode}
-                    onChange={handleInputChange}
-                    placeholder="12345"
-                    data-testid="input-shipping-zipcode"
-                  />
+                <div className="sm:col-span-2">
+                  <Label htmlFor="shippingZipcode">우편번호 *</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="shippingZipcode"
+                      name="shippingZipcode"
+                      value={formData.shippingZipcode}
+                      onChange={handleInputChange}
+                      placeholder="우편번호"
+                      readOnly
+                      className="flex-1 bg-gray-50"
+                      data-testid="input-shipping-zipcode"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleAddressSearch}
+                      className="flex items-center gap-2 whitespace-nowrap"
+                      data-testid="button-address-search"
+                    >
+                      <Search className="w-4 h-4" />
+                      주소 검색
+                    </Button>
+                  </div>
                 </div>
-                <div>
+                <div className="sm:col-span-2">
                   <Label htmlFor="shippingAddress">주소 *</Label>
                   <Input
                     id="shippingAddress"
                     name="shippingAddress"
                     value={formData.shippingAddress}
                     onChange={handleInputChange}
-                    placeholder="서울시 강남구 테헤란로 123"
+                    placeholder="주소 검색 버튼을 클릭하세요"
                     required
+                    readOnly
+                    className="bg-gray-50"
                     data-testid="input-shipping-address"
                   />
                 </div>
@@ -424,7 +581,7 @@ export default function Order() {
                     name="shippingAddressDetail"
                     value={formData.shippingAddressDetail}
                     onChange={handleInputChange}
-                    placeholder="101동 1001호"
+                    placeholder="동/호수, 건물명 등 상세주소 입력"
                     data-testid="input-shipping-address-detail"
                   />
                 </div>

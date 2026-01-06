@@ -977,6 +977,49 @@ export async function registerRoutes(
     }
   });
 
+  // Get my recent shipping addresses
+  app.get("/api/members/recent-addresses", async (req: Request, res: Response) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    const session = await getMemberFromToken(token);
+    if (!session) {
+      return res.status(401).json({ success: false, error: "인증이 필요합니다. 다시 로그인해주세요." });
+    }
+    
+    try {
+      const orders = await storage.getOrdersByMember(session.memberId);
+      
+      const addressMap = new Map<string, {
+        id: string;
+        name: string;
+        phone: string;
+        zipcode: string;
+        address: string;
+        addressDetail: string;
+      }>();
+      
+      for (const order of orders) {
+        const key = `${order.shippingAddress}-${order.shippingAddressDetail || ""}`;
+        if (!addressMap.has(key) && order.shippingAddress) {
+          addressMap.set(key, {
+            id: order.id,
+            name: order.shippingName || "",
+            phone: order.shippingPhone || "",
+            zipcode: order.shippingZipcode || "",
+            address: order.shippingAddress,
+            addressDetail: order.shippingAddressDetail || "",
+          });
+        }
+      }
+      
+      const recentAddresses = Array.from(addressMap.values()).slice(0, 5);
+      
+      res.json({ success: true, data: recentAddresses });
+    } catch (error) {
+      console.error("Error fetching recent addresses:", error);
+      res.status(500).json({ success: false, error: "최근 배송지 목록을 불러올 수 없습니다." });
+    }
+  });
+
   // ==================== ADMIN DEPOSIT & POINT MANAGEMENT ====================
   
   // Get all deposit requests (admin)
