@@ -31,6 +31,7 @@ export const members = pgTable("members", {
   lastLoginAt: timestamp("last_login_at"),
   frozenAt: timestamp("frozen_at"),
   frozenReason: text("frozen_reason"),
+  memo: text("memo"),
 });
 
 export const insertMemberSchema = createInsertSchema(members).omit({

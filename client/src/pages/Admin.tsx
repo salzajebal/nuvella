@@ -134,6 +134,7 @@ export default function Admin() {
     address: "",
     bank: "",
     accountNumber: "",
+    memo: "",
     isActive: true,
     isAdmin: false,
   });
@@ -1115,6 +1116,7 @@ export default function Admin() {
       address: (member as any).address || "",
       bank: (member as any).bank || "",
       accountNumber: (member as any).accountNumber || "",
+      memo: member.memo || "",
       isActive: member.isActive ?? true,
       isAdmin: member.isAdmin ?? false,
     });
@@ -2625,6 +2627,15 @@ export default function Admin() {
                         <span className="text-sm">관리자 권한</span>
                       </label>
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">메모 (담당자 등록)</label>
+                      <Textarea
+                        placeholder="담당자명 또는 메모 입력"
+                        value={memberFormData.memo}
+                        onChange={(e) => setMemberFormData({ ...memberFormData, memo: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
                   </div>
                   <div className="flex gap-2 mt-6">
                     <Button onClick={() => handleUpdateMember(editingMemberId)} className="bg-yellow-500 hover:bg-yellow-600">저장</Button>
@@ -2702,6 +2713,10 @@ export default function Admin() {
                           <div>
                             <span className="text-gray-500">계좌번호:</span>
                             <span className="ml-2 text-gray-900">{(member as any).accountNumber || "-"}</span>
+                          </div>
+                          <div className="sm:col-span-2 lg:col-span-3">
+                            <span className="text-gray-500">메모:</span>
+                            <span className="ml-2 text-gray-900">{member.memo || "-"}</span>
                           </div>
                         </div>
                       </div>
