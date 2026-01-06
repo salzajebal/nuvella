@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { User, Lock, Phone } from "lucide-react";
+import { User, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Signup() {
@@ -16,7 +16,6 @@ export default function Signup() {
     username: "",
     password: "",
     passwordConfirm: "",
-    phone: "",
     agreeTerms: false,
     agreePrivacy: false,
     agreeMarketing: false,
@@ -62,7 +61,6 @@ export default function Signup() {
           name: formData.name,
           username: formData.username,
           password: formData.password,
-          phone: formData.phone,
         }),
       });
 
@@ -136,22 +134,6 @@ export default function Signup() {
                   />
                 </div>
                 <p className="text-xs text-gray-400 mt-1">영문, 숫자 조합 4자 이상</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">휴대폰 번호 <span className="text-red-500">*</span></label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type="tel"
-                    placeholder="휴대폰 번호를 입력해주세요 (예: 010-1234-5678)"
-                    className="pl-10 h-12 rounded-none"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    data-testid="input-phone"
-                    required
-                  />
-                </div>
               </div>
 
               <div className="border-t border-gray-100 pt-5">
