@@ -2015,8 +2015,8 @@ export default function Admin() {
                     <p className="text-xs text-blue-600 font-medium">▶ 준비</p>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-blue-600 group-hover:text-blue-700">{adminOrders.filter(o => o.status === "paid").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "paid").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+                <p className="text-3xl font-bold text-blue-600 group-hover:text-blue-700">{adminOrders.filter(o => o.status === "confirmed").length}</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "confirmed").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
@@ -2032,8 +2032,8 @@ export default function Admin() {
                     <p className="text-xs text-green-600 font-medium">▶ 배송</p>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-green-600 group-hover:text-green-700">{adminOrders.filter(o => o.status === "processing").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "processing").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+                <p className="text-3xl font-bold text-green-600 group-hover:text-green-700">{adminOrders.filter(o => o.status === "shipped").length}</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "shipped").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
@@ -2045,29 +2045,29 @@ export default function Admin() {
                     <Package className="w-5 h-5 text-purple-600" />
                   </div>
                   <div className="text-left">
-                    <p className="text-xs text-gray-500">배송</p>
+                    <p className="text-xs text-gray-500">배송중</p>
                     <p className="text-xs text-purple-600 font-medium">▶ 완료</p>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-purple-600 group-hover:text-purple-700">{adminOrders.filter(o => o.status === "shipped").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "shipped").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+                <p className="text-3xl font-bold text-purple-600 group-hover:text-purple-700">{adminOrders.filter(o => o.status === "delivered").length}</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "delivered").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
                 onClick={() => setActiveTab("orders")}
-                className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all group"
+                className="bg-white rounded-xl shadow-sm p-5 border border-red-100 hover:border-red-300 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-slate-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-gray-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-100 to-rose-100 rounded-lg flex items-center justify-center">
+                    <XCircle className="w-5 h-5 text-red-600" />
                   </div>
                   <div className="text-left">
-                    <p className="text-xs text-gray-500">배송</p>
-                    <p className="text-xs text-gray-600 font-medium">▶ 완료</p>
+                    <p className="text-xs text-gray-500">취소</p>
+                    <p className="text-xs text-red-600 font-medium">주문</p>
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-gray-600 group-hover:text-gray-700">{adminOrders.filter(o => o.status === "completed").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "completed").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+                <p className="text-3xl font-bold text-red-600 group-hover:text-red-700">{adminOrders.filter(o => o.status === "cancelled").length}</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "cancelled").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
               </button>
             </div>
 
