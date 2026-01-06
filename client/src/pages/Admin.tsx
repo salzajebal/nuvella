@@ -169,11 +169,11 @@ export default function Admin() {
   const [showAddNoticeForm, setShowAddNoticeForm] = useState(false);
 
   const [depositRequests, setDepositRequests] = useState<AdminDepositRequest[]>([]);
-  const [depositFilter, setDepositFilter] = useState<"all" | "pending">("pending");
+  const [depositFilter, setDepositFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [adminNote, setAdminNote] = useState("");
 
   const [withdrawalRequests, setWithdrawalRequests] = useState<AdminWithdrawalRequest[]>([]);
-  const [withdrawalFilter, setWithdrawalFilter] = useState<"all" | "pending">("pending");
+  const [withdrawalFilter, setWithdrawalFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [withdrawalAdminNote, setWithdrawalAdminNote] = useState("");
   const [adjustAmount, setAdjustAmount] = useState("");
   const [freezeReason, setFreezeReason] = useState("");
@@ -416,9 +416,9 @@ export default function Admin() {
 
   const fetchDepositRequests = async () => {
     try {
-      const url = depositFilter === "pending" 
-        ? "/api/admin/deposit-requests?status=pending" 
-        : "/api/admin/deposit-requests";
+      const url = depositFilter === "all" 
+        ? "/api/admin/deposit-requests" 
+        : `/api/admin/deposit-requests?status=${depositFilter}`;
       const res = await fetchWithAuth(url);
       const data = await res.json();
       if (data.success) {
@@ -469,9 +469,9 @@ export default function Admin() {
 
   const fetchWithdrawalRequests = async () => {
     try {
-      const url = withdrawalFilter === "pending" 
-        ? "/api/admin/withdrawal-requests?status=pending" 
-        : "/api/admin/withdrawal-requests";
+      const url = withdrawalFilter === "all" 
+        ? "/api/admin/withdrawal-requests" 
+        : `/api/admin/withdrawal-requests?status=${withdrawalFilter}`;
       const res = await fetchWithAuth(url);
       const data = await res.json();
       if (data.success) {
@@ -3058,19 +3058,22 @@ export default function Admin() {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">포인트충전 신청 관리</h2>
                 <p className="text-gray-500 text-sm">
-                  {depositFilter === "pending" 
-                    ? `대기 중인 신청 ${depositRequests.length}건` 
-                    : `전체 ${depositRequests.length}건`}
+                  {depositFilter === "all" ? `전체 ${depositRequests.length}건` :
+                   depositFilter === "pending" ? `대기중 ${depositRequests.length}건` :
+                   depositFilter === "approved" ? `승인됨 ${depositRequests.length}건` :
+                   `거부됨 ${depositRequests.length}건`}
                 </p>
               </div>
               <div className="flex gap-3">
                 <select
                   className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500"
                   value={depositFilter}
-                  onChange={(e) => setDepositFilter(e.target.value as "all" | "pending")}
+                  onChange={(e) => setDepositFilter(e.target.value as "all" | "pending" | "approved" | "rejected")}
                 >
-                  <option value="pending">대기중만 보기</option>
-                  <option value="all">전체 보기</option>
+                  <option value="all">전체 내역</option>
+                  <option value="pending">대기중</option>
+                  <option value="approved">승인됨</option>
+                  <option value="rejected">거부됨</option>
                 </select>
                 <Button variant="outline" onClick={fetchDepositRequests}>
                   <RefreshCw className="w-4 h-4 mr-2" />
@@ -3081,7 +3084,10 @@ export default function Admin() {
 
             {depositRequests.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
-                {depositFilter === "pending" ? "대기 중인 충전 신청이 없습니다." : "충전 신청 내역이 없습니다."}
+                {depositFilter === "all" ? "충전 신청 내역이 없습니다." :
+                 depositFilter === "pending" ? "대기 중인 충전 신청이 없습니다." :
+                 depositFilter === "approved" ? "승인된 충전 내역이 없습니다." :
+                 "거부된 충전 내역이 없습니다."}
               </div>
             ) : (
               <div className="space-y-4">
@@ -3189,19 +3195,22 @@ export default function Admin() {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">포인트환급 신청 관리</h2>
                 <p className="text-gray-500 text-sm">
-                  {withdrawalFilter === "pending" 
-                    ? `대기 중인 신청 ${withdrawalRequests.length}건` 
-                    : `전체 ${withdrawalRequests.length}건`}
+                  {withdrawalFilter === "all" ? `전체 ${withdrawalRequests.length}건` :
+                   withdrawalFilter === "pending" ? `대기중 ${withdrawalRequests.length}건` :
+                   withdrawalFilter === "approved" ? `승인됨 ${withdrawalRequests.length}건` :
+                   `거부됨 ${withdrawalRequests.length}건`}
                 </p>
               </div>
               <div className="flex gap-3">
                 <select
                   className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500"
                   value={withdrawalFilter}
-                  onChange={(e) => setWithdrawalFilter(e.target.value as "all" | "pending")}
+                  onChange={(e) => setWithdrawalFilter(e.target.value as "all" | "pending" | "approved" | "rejected")}
                 >
-                  <option value="pending">대기중만 보기</option>
-                  <option value="all">전체 보기</option>
+                  <option value="all">전체 내역</option>
+                  <option value="pending">대기중</option>
+                  <option value="approved">승인됨</option>
+                  <option value="rejected">거부됨</option>
                 </select>
                 <Button variant="outline" onClick={fetchWithdrawalRequests}>
                   <RefreshCw className="w-4 h-4 mr-2" />
@@ -3212,7 +3221,10 @@ export default function Admin() {
 
             {withdrawalRequests.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
-                {withdrawalFilter === "pending" ? "대기 중인 환급 신청이 없습니다." : "환급 신청 내역이 없습니다."}
+                {withdrawalFilter === "all" ? "환급 신청 내역이 없습니다." :
+                 withdrawalFilter === "pending" ? "대기 중인 환급 신청이 없습니다." :
+                 withdrawalFilter === "approved" ? "승인된 환급 내역이 없습니다." :
+                 "거부된 환급 내역이 없습니다."}
               </div>
             ) : (
               <div className="space-y-4">
