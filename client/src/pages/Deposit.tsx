@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { MessageCircle, CheckCircle, Clock, XCircle, ExternalLink, Wallet, Banknote, AlertCircle, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import { MessageCircle, CheckCircle, Clock, XCircle, ExternalLink, Wallet, Banknote, AlertCircle, ArrowUpCircle, ArrowDownCircle, Gift, History, Plus, Minus } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface DepositRequest {
@@ -28,11 +28,20 @@ interface WithdrawalRequest {
   adminNote?: string;
 }
 
+interface PointTransaction {
+  id: string;
+  type: string;
+  amount: number;
+  balanceAfter: number;
+  description: string | null;
+  createdAt: string;
+}
+
 export default function Deposit() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"deposit" | "withdrawal">("deposit");
+  const [activeTab, setActiveTab] = useState<"deposit" | "withdrawal" | "history">("deposit");
   const [depositLoading, setDepositLoading] = useState(false);
   const [withdrawalLoading, setWithdrawalLoading] = useState(false);
   const [depositFormData, setDepositFormData] = useState({
@@ -128,6 +137,25 @@ export default function Deposit() {
     },
     enabled: !!memberToken,
     refetchInterval: 5000,
+  });
+
+  const { data: pointTransactions = [] } = useQuery<PointTransaction[]>({
+    queryKey: ["/api/members/point-transactions"],
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/members/point-transactions", {
+          headers: {
+            "Authorization": `Bearer ${memberToken}`,
+          },
+        });
+        if (!res.ok) return [];
+        const result = await res.json();
+        return result.data || [];
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!memberToken,
   });
 
   const handleDepositSubmit = async (e: React.FormEvent) => {
@@ -310,8 +338,8 @@ export default function Deposit() {
             </div>
           </div>
 
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "deposit" | "withdrawal")} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "deposit" | "withdrawal" | "history")} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="deposit" className="flex items-center gap-2 text-base" data-testid="tab-deposit">
                 <ArrowDownCircle className="w-4 h-4" />
                 포인트 충전
@@ -319,6 +347,10 @@ export default function Deposit() {
               <TabsTrigger value="withdrawal" className="flex items-center gap-2 text-base" data-testid="tab-withdrawal">
                 <ArrowUpCircle className="w-4 h-4" />
                 포인트 환급
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex items-center gap-2 text-base" data-testid="tab-history">
+                <Gift className="w-4 h-4" />
+                지급 내역
               </TabsTrigger>
             </TabsList>
 
@@ -645,6 +677,81 @@ export default function Deposit() {
                                   {request.adminNote}
                                 </p>
                               )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="history">
+              <Card className="shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center gap-2">
+                    <Gift className="w-5 h-5" />
+                    포인트 지급 내역
+                  </CardTitle>
+                  <CardDescription className="text-purple-100">
+                    이벤트 당첨금, 관리자 지급 등 포인트 변동 내역
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {pointTransactions.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p className="font-medium">포인트 지급 내역이 없습니다.</p>
+                      <p className="text-sm mt-2">이벤트 당첨금이나 관리자 지급 시 여기에 표시됩니다.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {pointTransactions.map((transaction) => (
+                        <div 
+                          key={transaction.id} 
+                          className={`p-4 border rounded-lg ${
+                            transaction.amount > 0
+                              ? "border-green-200 bg-green-50"
+                              : "border-red-200 bg-red-50"
+                          }`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-start gap-3">
+                              <div className={`p-2 rounded-full ${
+                                transaction.amount > 0 
+                                  ? "bg-green-100 text-green-600" 
+                                  : "bg-red-100 text-red-600"
+                              }`}>
+                                {transaction.amount > 0 ? <Plus className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+                              </div>
+                              <div>
+                                <div className={`text-lg font-bold ${
+                                  transaction.amount > 0 ? "text-green-700" : "text-red-700"
+                                }`}>
+                                  {transaction.amount > 0 ? "+" : ""}{transaction.amount.toLocaleString()}P
+                                </div>
+                                <div className="text-sm text-gray-600 mt-1">
+                                  {transaction.description || (
+                                    transaction.type === "admin_adjust" ? "관리자 조정" :
+                                    transaction.type === "deposit" ? "포인트 충전" :
+                                    transaction.type === "withdrawal" ? "포인트 환급" :
+                                    transaction.type === "purchase" ? "상품 구매" :
+                                    transaction.type
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {new Date(transaction.createdAt).toLocaleString("ko-KR")}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm text-gray-500">
+                                잔액
+                              </div>
+                              <div className="text-base font-semibold text-gray-700">
+                                {transaction.balanceAfter.toLocaleString()}P
+                              </div>
                             </div>
                           </div>
                         </div>
