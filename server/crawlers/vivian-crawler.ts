@@ -93,12 +93,28 @@ const SUBCATEGORY_KEYWORDS: Record<string, Record<string, string[]>> = {
   }
 };
 
+// Default subcategory for each main category (used when no keyword match found)
+const DEFAULT_SUBCATEGORY: Record<string, string> = {
+  home_interior: 'decor',
+  beauty: 'skincare',
+  electronics: 'home_appliance',
+  living: 'kitchen',
+  health: 'supplements',
+  luxury: 'accessories',
+  kids: 'toys'
+};
+
 function classifySubcategory(productName: string, category: string, description?: string): string {
   const keywords = SUBCATEGORY_KEYWORDS[category];
-  if (!keywords) return 'all';
+  if (!keywords) {
+    console.log(`[Classification] No keywords for category: ${category}, using default`);
+    return DEFAULT_SUBCATEGORY[category] || 'all';
+  }
   
   // Combine product name and description for better matching
   const searchText = (productName + ' ' + (description || '')).toLowerCase();
+  
+  console.log(`[Classification] Classifying: "${productName.substring(0, 40)}..." in ${category}`);
   
   // Score-based matching for better accuracy
   const scores: Record<string, number> = {};
@@ -121,18 +137,12 @@ function classifySubcategory(productName: string, category: string, description?
           // Keywords found in description get normal weight
           scores[subcategoryId] += baseScore;
         }
-        
-        // Bonus for exact word match (not substring of another word)
-        const wordBoundaryPattern = new RegExp(`(^|\\s|[^가-힣a-zA-Z])${lowerKeyword}($|\\s|[^가-힣a-zA-Z])`, 'i');
-        if (wordBoundaryPattern.test(searchText)) {
-          scores[subcategoryId] += baseScore * 0.5;
-        }
       }
     }
   }
   
   // Find subcategory with highest score
-  let bestMatch = 'all';
+  let bestMatch = DEFAULT_SUBCATEGORY[category] || 'all';
   let highestScore = 0;
   
   for (const [subcategoryId, score] of Object.entries(scores)) {
@@ -142,13 +152,14 @@ function classifySubcategory(productName: string, category: string, description?
     }
   }
   
-  // Require a minimum score threshold to avoid false positives
-  if (highestScore >= 3) {
-    return bestMatch;
+  // Log the classification result
+  if (highestScore > 0) {
+    console.log(`[Classification] → ${bestMatch} (score: ${highestScore})`);
+  } else {
+    console.log(`[Classification] → ${bestMatch} (default, no keyword match)`);
   }
   
-  // Return 'all' if no match found (will use admin-selected subcategory)
-  return 'all';
+  return bestMatch;
 }
 
 function convertUsdToKrw(usdPrice: number): number {
@@ -574,10 +585,11 @@ export async function crawlVivianCategory(categoryId: number, limit: number = 0,
         } else {
           // Auto-classify based on product name AND description for better accuracy
           subcategory = classifySubcategory(name, category, detail.description);
-          // If auto-classification failed and no forced subcategory, use 'all'
-          if (subcategory === 'all' && !forcedSubcategory) {
-            subcategory = 'all';
-          }
+        }
+        
+        // Ensure subcategory is never 'all' - use default for category
+        if (!subcategory || subcategory === 'all') {
+          subcategory = DEFAULT_SUBCATEGORY[category] || Object.keys(SUBCATEGORY_KEYWORDS[category] || {})[0] || 'all';
         }
         
         const product: VivianProduct = {
