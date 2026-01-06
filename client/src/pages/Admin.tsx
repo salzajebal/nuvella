@@ -172,10 +172,12 @@ export default function Admin() {
 
   const [depositRequests, setDepositRequests] = useState<AdminDepositRequest[]>([]);
   const [depositFilter, setDepositFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [depositSearch, setDepositSearch] = useState("");
   const [adminNote, setAdminNote] = useState("");
 
   const [withdrawalRequests, setWithdrawalRequests] = useState<AdminWithdrawalRequest[]>([]);
   const [withdrawalFilter, setWithdrawalFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [withdrawalSearch, setWithdrawalSearch] = useState("");
   const [withdrawalAdminNote, setWithdrawalAdminNote] = useState("");
   
   const [pointMemberId, setPointMemberId] = useState("");
@@ -3273,7 +3275,7 @@ export default function Admin() {
 
         {activeTab === "deposits" && (
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">포인트충전 신청 관리</h2>
                 <p className="text-gray-500 text-sm">
@@ -3283,7 +3285,17 @@ export default function Admin() {
                    `거부됨 ${depositRequests.length}건`}
                 </p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="이름 또는 금액 검색"
+                    value={depositSearch}
+                    onChange={(e) => setDepositSearch(e.target.value)}
+                    className="pl-9"
+                    data-testid="input-deposit-search"
+                  />
+                </div>
                 <select
                   className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500"
                   value={depositFilter}
@@ -3310,7 +3322,15 @@ export default function Admin() {
               </div>
             ) : (
               <div className="space-y-4">
-                {depositRequests.map((request) => (
+                {depositRequests
+                  .filter((request) => {
+                    if (!depositSearch.trim()) return true;
+                    const search = depositSearch.toLowerCase();
+                    return request.memberName?.toLowerCase().includes(search) || 
+                           request.depositorName?.toLowerCase().includes(search) ||
+                           request.amount?.toString().includes(search);
+                  })
+                  .map((request) => (
                   <div
                     key={request.id}
                     className={`p-4 border rounded-lg ${
@@ -3410,7 +3430,7 @@ export default function Admin() {
 
         {activeTab === "withdrawals" && (
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">포인트환급 신청 관리</h2>
                 <p className="text-gray-500 text-sm">
@@ -3420,7 +3440,17 @@ export default function Admin() {
                    `거부됨 ${withdrawalRequests.length}건`}
                 </p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="이름 또는 금액 검색"
+                    value={withdrawalSearch}
+                    onChange={(e) => setWithdrawalSearch(e.target.value)}
+                    className="pl-9"
+                    data-testid="input-withdrawal-search"
+                  />
+                </div>
                 <select
                   className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500"
                   value={withdrawalFilter}
@@ -3447,7 +3477,14 @@ export default function Admin() {
               </div>
             ) : (
               <div className="space-y-4">
-                {withdrawalRequests.map((request) => (
+                {withdrawalRequests
+                  .filter((request) => {
+                    if (!withdrawalSearch.trim()) return true;
+                    const search = withdrawalSearch.toLowerCase();
+                    return request.memberName?.toLowerCase().includes(search) || 
+                           request.amount?.toString().includes(search);
+                  })
+                  .map((request) => (
                   <div
                     key={request.id}
                     className={`p-4 border rounded-lg ${
