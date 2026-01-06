@@ -2768,6 +2768,10 @@ export default function Admin() {
                             <span className="ml-2 text-gray-900">{member.username}</span>
                           </div>
                           <div>
+                            <span className="text-gray-500">직업:</span>
+                            <span className="ml-2 text-gray-900">{member.job || "-"}</span>
+                          </div>
+                          <div>
                             <span className="text-gray-500">전화번호:</span>
                             <span className="ml-2 text-gray-900">{member.phone || "-"}</span>
                           </div>
