@@ -692,18 +692,72 @@ export async function registerRoutes(
     }
   });
 
+  // Check username availability
+  app.get("/api/members/check-username", async (req: Request, res: Response) => {
+    try {
+      const username = req.query.username as string;
+      if (!username) return res.json({ available: false });
+      const existing = await storage.getMemberByUsername(username);
+      res.json({ available: !existing });
+    } catch (error) {
+      res.json({ available: false });
+    }
+  });
+
+  // Check nickname availability
+  app.get("/api/members/check-nickname", async (req: Request, res: Response) => {
+    try {
+      const nickname = req.query.nickname as string;
+      if (!nickname) return res.json({ available: false });
+      const existing = await storage.getMemberByNickname(nickname);
+      res.json({ available: !existing });
+    } catch (error) {
+      res.json({ available: false });
+    }
+  });
+
+  // Check email availability
+  app.get("/api/members/check-email", async (req: Request, res: Response) => {
+    try {
+      const email = req.query.email as string;
+      if (!email) return res.json({ available: true });
+      const existing = await storage.getMemberByEmail(email);
+      res.json({ available: !existing });
+    } catch (error) {
+      res.json({ available: false });
+    }
+  });
+
   // Public member signup
   app.post("/api/members/signup", async (req: Request, res: Response) => {
     try {
-      const validatedData = insertMemberSchema.parse(req.body);
+      const { username, password, name, nickname, email } = req.body;
       
-      // Check if username already exists
-      const existing = await storage.getMemberByUsername(validatedData.username);
-      if (existing) {
-        return res.status(400).json({ success: false, error: "이미 사용중인 아이디입니다." });
+      if (!username || !password || !name || !nickname) {
+        return res.status(400).json({ success: false, error: "필수 항목을 모두 입력해주세요." });
       }
       
-      const member = await storage.createMember(validatedData);
+      // Check if username already exists
+      const existingUsername = await storage.getMemberByUsername(username);
+      if (existingUsername) {
+        return res.status(400).json({ success: false, error: "이미 사용중인 아이디입니다." });
+      }
+
+      // Check if nickname already exists
+      const existingNickname = await storage.getMemberByNickname(nickname);
+      if (existingNickname) {
+        return res.status(400).json({ success: false, error: "이미 사용중인 닉네임입니다." });
+      }
+
+      // Check if email already exists (if provided)
+      if (email) {
+        const existingEmail = await storage.getMemberByEmail(email);
+        if (existingEmail) {
+          return res.status(400).json({ success: false, error: "이미 사용중인 이메일입니다." });
+        }
+      }
+      
+      const member = await storage.createMember({ username, password, name, nickname, email: email || null });
       res.status(201).json({ success: true, message: "회원가입이 완료되었습니다." });
     } catch (error) {
       if (error instanceof z.ZodError) {
