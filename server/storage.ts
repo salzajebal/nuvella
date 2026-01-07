@@ -18,7 +18,24 @@ import {
   type Order, type InsertOrder, orders
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, or, ilike, gte, lte } from "drizzle-orm";
+
+export interface MemberSearchFilters {
+  searchField?: "name" | "username" | "nickname" | "email" | "phone" | "memo";
+  searchValue?: string;
+  isActive?: boolean | null;
+  isFrozen?: boolean | null;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface PointSearchFilters {
+  searchField?: "name" | "username" | "description";
+  searchValue?: string;
+  type?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
 
 export interface IStorage {
   // Users
@@ -43,6 +60,7 @@ export interface IStorage {
   
   // Members
   getAllMembers(): Promise<Member[]>;
+  searchMembers(filters: MemberSearchFilters): Promise<Member[]>;
   getMember(id: string): Promise<Member | undefined>;
   getMemberByUsername(username: string): Promise<Member | undefined>;
   getMemberByNickname(nickname: string): Promise<Member | undefined>;
@@ -131,6 +149,7 @@ export interface IStorage {
   
   // Point Transactions
   getAllPointTransactions(): Promise<PointTransaction[]>;
+  searchPointTransactions(filters: PointSearchFilters): Promise<PointTransaction[]>;
   getPointTransactionsByMember(memberId: string): Promise<PointTransaction[]>;
   createPointTransaction(transaction: InsertPointTransaction): Promise<PointTransaction>;
   
@@ -234,6 +253,58 @@ export class DatabaseStorage implements IStorage {
   // Members
   async getAllMembers(): Promise<Member[]> {
     return db.select().from(members).orderBy(desc(members.createdAt));
+  }
+
+  async searchMembers(filters: MemberSearchFilters): Promise<Member[]> {
+    const conditions: any[] = [];
+
+    if (filters.searchValue && filters.searchField) {
+      const searchPattern = `%${filters.searchValue}%`;
+      switch (filters.searchField) {
+        case "name":
+          conditions.push(ilike(members.name, searchPattern));
+          break;
+        case "username":
+          conditions.push(ilike(members.username, searchPattern));
+          break;
+        case "nickname":
+          conditions.push(ilike(members.nickname, searchPattern));
+          break;
+        case "email":
+          conditions.push(ilike(members.email, searchPattern));
+          break;
+        case "phone":
+          conditions.push(ilike(members.phone, searchPattern));
+          break;
+        case "memo":
+          conditions.push(ilike(members.memo, searchPattern));
+          break;
+      }
+    }
+
+    if (filters.isActive !== null && filters.isActive !== undefined) {
+      conditions.push(eq(members.isActive, filters.isActive));
+    }
+
+    if (filters.isFrozen !== null && filters.isFrozen !== undefined) {
+      conditions.push(eq(members.isFrozen, filters.isFrozen));
+    }
+
+    if (filters.dateFrom) {
+      conditions.push(gte(members.createdAt, new Date(filters.dateFrom)));
+    }
+
+    if (filters.dateTo) {
+      const endDate = new Date(filters.dateTo);
+      endDate.setHours(23, 59, 59, 999);
+      conditions.push(lte(members.createdAt, endDate));
+    }
+
+    if (conditions.length === 0) {
+      return db.select().from(members).orderBy(desc(members.createdAt));
+    }
+
+    return db.select().from(members).where(and(...conditions)).orderBy(desc(members.createdAt));
   }
 
   async getMember(id: string): Promise<Member | undefined> {
@@ -716,6 +787,37 @@ export class DatabaseStorage implements IStorage {
   async getAllPointTransactions(): Promise<PointTransaction[]> {
     return db.select().from(pointTransactions)
       .orderBy(desc(pointTransactions.createdAt));
+  }
+
+  async searchPointTransactions(filters: PointSearchFilters): Promise<PointTransaction[]> {
+    const conditions: any[] = [];
+
+    if (filters.type) {
+      conditions.push(eq(pointTransactions.type, filters.type));
+    }
+
+    if (filters.dateFrom) {
+      conditions.push(gte(pointTransactions.createdAt, new Date(filters.dateFrom)));
+    }
+
+    if (filters.dateTo) {
+      const endDate = new Date(filters.dateTo);
+      endDate.setHours(23, 59, 59, 999);
+      conditions.push(lte(pointTransactions.createdAt, endDate));
+    }
+
+    if (filters.searchValue && filters.searchField) {
+      const searchPattern = `%${filters.searchValue}%`;
+      if (filters.searchField === "description") {
+        conditions.push(ilike(pointTransactions.description, searchPattern));
+      }
+    }
+
+    if (conditions.length === 0) {
+      return db.select().from(pointTransactions).orderBy(desc(pointTransactions.createdAt));
+    }
+
+    return db.select().from(pointTransactions).where(and(...conditions)).orderBy(desc(pointTransactions.createdAt));
   }
 
   async getPointTransactionsByMember(memberId: string): Promise<PointTransaction[]> {

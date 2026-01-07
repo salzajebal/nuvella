@@ -606,8 +606,28 @@ export async function registerRoutes(
     }
     
     try {
-      const memberList = await storage.getAllMembers();
-      res.json({ success: true, data: memberList });
+      const { searchField, searchValue, isActive, isFrozen, dateFrom, dateTo } = req.query;
+      
+      const hasSearchQuery = searchField && searchValue && String(searchValue).trim();
+      const hasStatusFilter = isActive === "true" || isActive === "false" || isFrozen === "true" || isFrozen === "false";
+      const hasDateFilter = dateFrom || dateTo;
+      const hasFilters = hasSearchQuery || hasStatusFilter || hasDateFilter;
+      
+      if (hasFilters) {
+        const filters = {
+          searchField: searchField as any,
+          searchValue: searchValue as string,
+          isActive: isActive === "true" ? true : isActive === "false" ? false : null,
+          isFrozen: isFrozen === "true" ? true : isFrozen === "false" ? false : null,
+          dateFrom: dateFrom as string,
+          dateTo: dateTo as string,
+        };
+        const memberList = await storage.searchMembers(filters);
+        res.json({ success: true, data: memberList });
+      } else {
+        const memberList = await storage.getAllMembers();
+        res.json({ success: true, data: memberList });
+      }
     } catch (error) {
       console.error("Error fetching members:", error);
       res.status(500).json({ success: false, error: "회원 목록을 불러올 수 없습니다." });
@@ -1254,17 +1274,45 @@ export async function registerRoutes(
   // Get all point transactions (admin)
   app.get("/api/admin/point-transactions", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      const transactions = await storage.getAllPointTransactions();
-      const members = await storage.getAllMembers();
+      const { searchField, searchValue, type, dateFrom, dateTo } = req.query;
       
-      const transactionsWithMemberInfo = transactions.map(t => {
-        const member = members.find(m => m.id === t.memberId);
+      const hasDbFilters = type || dateFrom || dateTo || (searchField === "description" && searchValue && String(searchValue).trim());
+      const hasNameSearch = searchValue && String(searchValue).trim() && (searchField === "name" || searchField === "username");
+      
+      let transactions;
+      if (hasDbFilters) {
+        const filters = {
+          searchField: searchField as any,
+          searchValue: searchValue as string,
+          type: type as string,
+          dateFrom: dateFrom as string,
+          dateTo: dateTo as string,
+        };
+        transactions = await storage.searchPointTransactions(filters);
+      } else {
+        transactions = await storage.getAllPointTransactions();
+      }
+      
+      const allMembers = await storage.getAllMembers();
+      
+      let transactionsWithMemberInfo = transactions.map(t => {
+        const member = allMembers.find(m => m.id === t.memberId);
         return {
           ...t,
           memberName: member?.name || "알 수 없음",
           memberUsername: member?.username || "알 수 없음",
         };
       });
+      
+      if (hasNameSearch) {
+        const search = String(searchValue).toLowerCase();
+        transactionsWithMemberInfo = transactionsWithMemberInfo.filter(t => {
+          if (searchField === "name") {
+            return t.memberName.toLowerCase().includes(search);
+          }
+          return t.memberUsername.toLowerCase().includes(search);
+        });
+      }
       
       res.json({ success: true, data: transactionsWithMemberInfo });
     } catch (error) {

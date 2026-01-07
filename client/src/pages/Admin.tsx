@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { Product, Category, Member, Review, Notice, ChatConversation, ChatMessage, Order } from "@shared/schema";
 import { ShoppingCart } from "lucide-react";
 import { useRef, useCallback } from "react";
+import { AdminSearchPanel } from "@/components/admin/AdminSearchPanel";
+import { PointSearchPanel } from "@/components/admin/PointSearchPanel";
 
 const playNotificationSound = () => {
   try {
@@ -104,6 +106,14 @@ export default function Admin() {
   const [members, setMembers] = useState<Member[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberPage, setMemberPage] = useState(0);
+  const [memberSearchFilters, setMemberSearchFilters] = useState<{
+    searchField: string;
+    searchValue: string;
+    isActive: boolean | null;
+    isFrozen: boolean | null;
+    dateFrom: string;
+    dateTo: string;
+  } | null>(null);
   const [depositPage, setDepositPage] = useState(0);
   const [withdrawalPage, setWithdrawalPage] = useState(0);
   const itemsPerPage = 10;
@@ -195,6 +205,13 @@ export default function Admin() {
   const [pointTransactions, setPointTransactions] = useState<{id: string; memberId: string; type: string; amount: number; balanceAfter: number; description: string | null; createdAt: string | null; memberName?: string; memberUsername?: string}[]>([]);
   const [pointSearch, setPointSearch] = useState("");
   const [pointPage, setPointPage] = useState(0);
+  const [pointSearchFilters, setPointSearchFilters] = useState<{
+    searchField: string;
+    searchValue: string;
+    type: string;
+    dateFrom: string;
+    dateTo: string;
+  } | null>(null);
 
   const [adminOrders, setAdminOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -356,24 +373,75 @@ export default function Admin() {
     }
   };
 
-  const fetchMembers = async () => {
+  const fetchMembers = async (filters?: typeof memberSearchFilters) => {
     try {
-      const res = await fetchWithAuth("/api/admin/members");
+      let url = "/api/admin/members";
+      const params = new URLSearchParams();
+      
+      if (filters) {
+        if (filters.searchField && filters.searchValue) {
+          params.append("searchField", filters.searchField);
+          params.append("searchValue", filters.searchValue);
+        }
+        if (filters.isActive !== null) {
+          params.append("isActive", String(filters.isActive));
+        }
+        if (filters.isFrozen !== null) {
+          params.append("isFrozen", String(filters.isFrozen));
+        }
+        if (filters.dateFrom) {
+          params.append("dateFrom", filters.dateFrom);
+        }
+        if (filters.dateTo) {
+          params.append("dateTo", filters.dateTo);
+        }
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      
+      const res = await fetchWithAuth(url);
       const data = await res.json();
       if (data.success) {
         setMembers(data.data);
+        setMemberPage(0);
       }
     } catch (error) {
       console.error("Error fetching members:", error);
     }
   };
 
-  const fetchPointTransactions = async () => {
+  const fetchPointTransactions = async (filters?: typeof pointSearchFilters) => {
     try {
-      const res = await fetchWithAuth("/api/admin/point-transactions");
+      let url = "/api/admin/point-transactions";
+      const params = new URLSearchParams();
+      
+      if (filters) {
+        if (filters.searchField && filters.searchValue) {
+          params.append("searchField", filters.searchField);
+          params.append("searchValue", filters.searchValue);
+        }
+        if (filters.type) {
+          params.append("type", filters.type);
+        }
+        if (filters.dateFrom) {
+          params.append("dateFrom", filters.dateFrom);
+        }
+        if (filters.dateTo) {
+          params.append("dateTo", filters.dateTo);
+        }
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      
+      const res = await fetchWithAuth(url);
       const data = await res.json();
       if (data.success) {
         setPointTransactions(data.data);
+        setPointPage(0);
       }
     } catch (error) {
       console.error("Error fetching point transactions:", error);
@@ -2741,18 +2809,8 @@ export default function Admin() {
                 <h2 className="text-xl font-bold text-gray-900">회원 관리</h2>
                 <p className="text-gray-500 text-sm">총 {members.length}명의 회원</p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <div className="relative flex-1 sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="이름 또는 아이디 검색"
-                    value={memberSearch}
-                    onChange={(e) => setMemberSearch(e.target.value)}
-                    className="pl-9"
-                    data-testid="input-member-search"
-                  />
-                </div>
-                <Button variant="outline" onClick={fetchMembers}>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => fetchMembers(memberSearchFilters || undefined)}>
                   <RefreshCw className="w-4 h-4 mr-2" />
                   새로고침
                 </Button>
@@ -2766,6 +2824,18 @@ export default function Admin() {
                 </Button>
               </div>
             </div>
+
+            <AdminSearchPanel
+              onSearch={(filters) => {
+                setMemberSearchFilters(filters);
+                fetchMembers(filters);
+              }}
+              onReset={() => {
+                setMemberSearchFilters(null);
+                fetchMembers();
+              }}
+              isLoading={loading}
+            />
 
             {showAddMemberForm && (
               <div className="bg-gray-50 p-6 rounded-lg mb-6 border border-gray-200">
@@ -2996,13 +3066,8 @@ export default function Admin() {
                 <Button size="sm" onClick={() => setShowAddMemberForm(true)} variant="outline">회원 추가하기</Button>
               </div>
             ) : (() => {
-              const filteredMembers = members.filter((member) => {
-                if (!memberSearch.trim()) return true;
-                const search = memberSearch.toLowerCase();
-                return member.name.toLowerCase().includes(search) || member.username.toLowerCase().includes(search);
-              });
-              const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
-              const paginatedMembers = filteredMembers.slice(memberPage * itemsPerPage, (memberPage + 1) * itemsPerPage);
+              const totalPages = Math.ceil(members.length / itemsPerPage);
+              const paginatedMembers = members.slice(memberPage * itemsPerPage, (memberPage + 1) * itemsPerPage);
               
               return (
                 <>
@@ -3075,7 +3140,7 @@ export default function Admin() {
                   </div>
                   {totalPages > 1 && (
                     <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                      <p className="text-sm text-gray-500">총 {filteredMembers.length}명 중 {memberPage * itemsPerPage + 1}-{Math.min((memberPage + 1) * itemsPerPage, filteredMembers.length)}명</p>
+                      <p className="text-sm text-gray-500">총 {members.length}명 중 {memberPage * itemsPerPage + 1}-{Math.min((memberPage + 1) * itemsPerPage, members.length)}명</p>
                       <div className="flex gap-1">
                         <Button size="sm" variant="outline" disabled={memberPage === 0} onClick={() => setMemberPage(p => p - 1)}>이전</Button>
                         <span className="px-3 py-1 text-sm">{memberPage + 1} / {totalPages}</span>
@@ -3794,29 +3859,25 @@ export default function Admin() {
             </div>
 
             <div className="mt-8">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                <h3 className="font-bold text-lg">포인트 내역</h3>
-                <div className="relative w-full sm:w-72">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="이름, 아이디, 내용으로 검색"
-                    value={pointSearch}
-                    onChange={(e) => { setPointSearch(e.target.value); setPointPage(0); }}
-                    className="pl-9"
-                    data-testid="input-point-search"
-                  />
-                </div>
-              </div>
+              <h3 className="font-bold text-lg mb-4">포인트 내역</h3>
+              
+              <PointSearchPanel
+                onSearch={(filters) => {
+                  setPointSearchFilters(filters);
+                  fetchPointTransactions(filters);
+                }}
+                onReset={() => {
+                  setPointSearchFilters(null);
+                  fetchPointTransactions();
+                }}
+                isLoading={loading}
+              />
+              
               {(() => {
-                const filteredTx = pointTransactions.filter((tx) => {
-                  if (!pointSearch.trim()) return true;
-                  const search = pointSearch.toLowerCase();
-                  return (tx.memberName?.toLowerCase().includes(search) || tx.memberUsername?.toLowerCase().includes(search) || tx.description?.toLowerCase().includes(search));
-                });
-                const totalPages = Math.ceil(filteredTx.length / itemsPerPage);
-                const paginatedTx = filteredTx.slice(pointPage * itemsPerPage, (pointPage + 1) * itemsPerPage);
+                const totalPages = Math.ceil(pointTransactions.length / itemsPerPage);
+                const paginatedTx = pointTransactions.slice(pointPage * itemsPerPage, (pointPage + 1) * itemsPerPage);
                 
-                if (filteredTx.length === 0) {
+                if (pointTransactions.length === 0) {
                   return (
                     <div className="text-center py-8 text-gray-500">
                       <p>포인트 내역이 없습니다.</p>
@@ -3877,7 +3938,7 @@ export default function Admin() {
                     </div>
                     {totalPages > 1 && (
                       <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                        <p className="text-sm text-gray-500">총 {filteredTx.length}건</p>
+                        <p className="text-sm text-gray-500">총 {pointTransactions.length}건</p>
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" disabled={pointPage === 0} onClick={() => setPointPage(p => p - 1)}>이전</Button>
                           <span className="px-3 py-1 text-sm">{pointPage + 1} / {totalPages}</span>
