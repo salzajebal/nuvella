@@ -103,6 +103,10 @@ export default function Admin() {
   const [products, setProducts] = useState<Product[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
+  const [memberPage, setMemberPage] = useState(0);
+  const [depositPage, setDepositPage] = useState(0);
+  const [withdrawalPage, setWithdrawalPage] = useState(0);
+  const itemsPerPage = 10;
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -2964,221 +2968,109 @@ export default function Admin() {
             )}
 
             {members.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4">등록된 회원이 없습니다.</p>
-                <Button onClick={() => setShowAddMemberForm(true)} variant="outline">회원 추가하기</Button>
+              <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 mb-3 text-sm">등록된 회원이 없습니다.</p>
+                <Button size="sm" onClick={() => setShowAddMemberForm(true)} variant="outline">회원 추가하기</Button>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {members
-                  .filter((member) => {
-                    if (!memberSearch.trim()) return true;
-                    const search = memberSearch.toLowerCase();
-                    return member.name.toLowerCase().includes(search) || 
-                           member.username.toLowerCase().includes(search);
-                  })
-                  .map((member) => (
-                  <div key={member.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="flex-1 min-w-[200px]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-bold text-lg text-gray-900">{member.name}</span>
-                          {member.isAdmin ? (
-                            <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-medium">관리자</span>
-                          ) : (
-                            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs">일반</span>
-                          )}
-                          {member.isActive ? (
-                            <span className="inline-flex items-center gap-1 text-green-600 text-xs">
-                              <CheckCircle className="w-3 h-3" />
-                              활성
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-gray-400 text-xs">
-                              <XCircle className="w-3 h-3" />
-                              비활성
-                            </span>
-                          )}
-                          {(member as any).isFrozen && (
-                            <span className="inline-flex items-center gap-1 text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">
-                              <Snowflake className="w-3 h-3" />
-                              동결됨
-                            </span>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm">
-                          <div>
-                            <span className="text-gray-500">아이디:</span>
-                            <span className="ml-2 text-gray-900">{member.username}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">직업:</span>
-                            <span className="ml-2 text-gray-900">{member.job || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">전화번호:</span>
-                            <span className="ml-2 text-gray-900">{member.phone || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">가입일:</span>
-                            <span className="ml-2 text-gray-900">{member.createdAt ? new Date(member.createdAt).toLocaleDateString('ko-KR') : "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">주소:</span>
-                            <span className="ml-2 text-gray-900">{(member as any).address || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">은행:</span>
-                            <span className="ml-2 text-gray-900">{(member as any).bank || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">계좌번호:</span>
-                            <span className="ml-2 text-gray-900">{(member as any).accountNumber || "-"}</span>
-                          </div>
-                          <div className="sm:col-span-2 lg:col-span-3">
-                            <span className="text-gray-500">메모:</span>
-                            <span className="ml-2 text-gray-900">{member.memo || "-"}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
-                        <div className="text-right">
-                          <span className="text-gray-500 text-xs md:text-sm">포인트</span>
-                          <div className="font-bold text-lg md:text-xl text-amber-600">
-                            {((member as any).pointBalance || 0).toLocaleString()}P
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-1 justify-end">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => {
-                              setSelectedMemberForAction(member.id);
-                              setActionType("adjust");
-                              setAdjustAmount("");
-                            }} 
-                            className="text-amber-600 border-amber-300 hover:bg-amber-50 text-xs md:text-sm"
-                          >
-                            <Wallet className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                            <span className="hidden sm:inline">포인트</span>
-                          </Button>
-                          {(member as any).isFrozen ? (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleUnfreezeMember(member.id)} 
-                              className="text-blue-600 border-blue-300 hover:bg-blue-50 text-xs md:text-sm"
-                            >
-                              <Unlock className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                              <span className="hidden sm:inline">해제</span>
-                            </Button>
-                          ) : (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedMemberForAction(member.id);
-                                setActionType("freeze");
-                                setFreezeReason("");
-                              }} 
-                              className="text-cyan-600 border-cyan-300 hover:bg-cyan-50 text-xs md:text-sm"
-                            >
-                              <Snowflake className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                              <span className="hidden sm:inline">동결</span>
-                            </Button>
-                          )}
-                          <Button 
-                            data-testid={`button-edit-member-${member.id}`}
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => startEditMember(member)} 
-                            className="text-xs md:text-sm"
-                          >
-                            <Pencil className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                            <span className="hidden sm:inline">수정</span>
-                          </Button>
-                          <Button 
-                            data-testid={`button-delete-member-${member.id}`}
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleDeleteMember(member.id)} 
-                            className="text-red-500 border-red-300 hover:bg-red-50 text-xs md:text-sm"
-                          >
-                            <Trash2 className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                            <span className="hidden sm:inline">삭제</span>
-                          </Button>
-                        </div>
+            ) : (() => {
+              const filteredMembers = members.filter((member) => {
+                if (!memberSearch.trim()) return true;
+                const search = memberSearch.toLowerCase();
+                return member.name.toLowerCase().includes(search) || member.username.toLowerCase().includes(search);
+              });
+              const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
+              const paginatedMembers = filteredMembers.slice(memberPage * itemsPerPage, (memberPage + 1) * itemsPerPage);
+              
+              return (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-y border-gray-200">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">이름</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">아이디</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">전화번호</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-600">포인트</th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600">상태</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">가입일</th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600">관리</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {paginatedMembers.map((member) => (
+                          <tr key={member.id} className="hover:bg-gray-50" data-testid={`row-member-${member.id}`}>
+                            <td className="px-3 py-2">
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium text-gray-900">{member.name}</span>
+                                {member.isAdmin && <span className="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded text-xs">관리자</span>}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-gray-600">{member.username}</td>
+                            <td className="px-3 py-2 text-gray-600">{member.phone || "-"}</td>
+                            <td className="px-3 py-2 text-right font-bold text-amber-600">{((member as any).pointBalance || 0).toLocaleString()}P</td>
+                            <td className="px-3 py-2 text-center">
+                              {(member as any).isFrozen ? (
+                                <span className="inline-flex items-center gap-0.5 text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded"><Snowflake className="w-3 h-3" />동결</span>
+                              ) : member.isActive ? (
+                                <span className="text-xs text-green-600">활성</span>
+                              ) : (
+                                <span className="text-xs text-gray-400">비활성</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-gray-500 text-xs">{member.createdAt ? new Date(member.createdAt).toLocaleDateString('ko-KR') : "-"}</td>
+                            <td className="px-3 py-2">
+                              <div className="flex items-center justify-center gap-1">
+                                <Button size="sm" variant="ghost" onClick={() => { setSelectedMemberForAction(member.id); setActionType("adjust"); setAdjustAmount(""); }} className="h-7 w-7 p-0 text-amber-600"><Wallet className="w-3.5 h-3.5" /></Button>
+                                {(member as any).isFrozen ? (
+                                  <Button size="sm" variant="ghost" onClick={() => handleUnfreezeMember(member.id)} className="h-7 w-7 p-0 text-blue-600"><Unlock className="w-3.5 h-3.5" /></Button>
+                                ) : (
+                                  <Button size="sm" variant="ghost" onClick={() => { setSelectedMemberForAction(member.id); setActionType("freeze"); setFreezeReason(""); }} className="h-7 w-7 p-0 text-cyan-600"><Snowflake className="w-3.5 h-3.5" /></Button>
+                                )}
+                                <Button size="sm" variant="ghost" onClick={() => startEditMember(member)} className="h-7 w-7 p-0" data-testid={`button-edit-member-${member.id}`}><Pencil className="w-3.5 h-3.5" /></Button>
+                                <Button size="sm" variant="ghost" onClick={() => handleDeleteMember(member.id)} className="h-7 w-7 p-0 text-red-500" data-testid={`button-delete-member-${member.id}`}><Trash2 className="w-3.5 h-3.5" /></Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                      <p className="text-sm text-gray-500">총 {filteredMembers.length}명 중 {memberPage * itemsPerPage + 1}-{Math.min((memberPage + 1) * itemsPerPage, filteredMembers.length)}명</p>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" disabled={memberPage === 0} onClick={() => setMemberPage(p => p - 1)}>이전</Button>
+                        <span className="px-3 py-1 text-sm">{memberPage + 1} / {totalPages}</span>
+                        <Button size="sm" variant="outline" disabled={memberPage >= totalPages - 1} onClick={() => setMemberPage(p => p + 1)}>다음</Button>
                       </div>
                     </div>
-                    
-                    {selectedMemberForAction === member.id && actionType === "adjust" && (
-                      <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                        <h4 className="font-bold text-sm mb-2">포인트 조정</h4>
-                        <div className="flex gap-2">
-                          <Input
-                            type="number"
-                            placeholder="금액 (음수 가능)"
-                            value={adjustAmount}
-                            onChange={(e) => setAdjustAmount(e.target.value)}
-                            className="max-w-xs"
-                          />
-                          <Button 
-                            size="sm" 
-                            className="bg-amber-500 hover:bg-amber-600"
-                            onClick={() => handleAdjustPoints(member.id)}
-                          >
-                            적용
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedMemberForAction(null);
-                              setActionType(null);
-                            }}
-                          >
-                            취소
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                  )}
 
-                    {selectedMemberForAction === member.id && actionType === "freeze" && (
-                      <div className="mt-4 p-4 bg-cyan-50 border border-cyan-200 rounded-lg">
-                        <h4 className="font-bold text-sm mb-2">계정 동결</h4>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="동결 사유"
-                            value={freezeReason}
-                            onChange={(e) => setFreezeReason(e.target.value)}
-                            className="max-w-xs"
-                          />
-                          <Button 
-                            size="sm" 
-                            variant="destructive"
-                            onClick={() => handleFreezeMember(member.id)}
-                          >
-                            동결
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedMemberForAction(null);
-                              setActionType(null);
-                            }}
-                          >
-                            취소
-                          </Button>
-                        </div>
+                  {selectedMemberForAction && actionType === "adjust" && (
+                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <h4 className="font-bold text-sm mb-2">포인트 조정 - {members.find(m => m.id === selectedMemberForAction)?.name}</h4>
+                      <div className="flex gap-2">
+                        <Input type="number" placeholder="금액 (음수 가능)" value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} className="max-w-xs" />
+                        <Button size="sm" className="bg-amber-500 hover:bg-amber-600" onClick={() => handleAdjustPoints(selectedMemberForAction)}>적용</Button>
+                        <Button size="sm" variant="outline" onClick={() => { setSelectedMemberForAction(null); setActionType(null); }}>취소</Button>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                    </div>
+                  )}
+
+                  {selectedMemberForAction && actionType === "freeze" && (
+                    <div className="mt-4 p-4 bg-cyan-50 border border-cyan-200 rounded-lg">
+                      <h4 className="font-bold text-sm mb-2">계정 동결 - {members.find(m => m.id === selectedMemberForAction)?.name}</h4>
+                      <div className="flex gap-2">
+                        <Input placeholder="동결 사유" value={freezeReason} onChange={(e) => setFreezeReason(e.target.value)} className="max-w-xs" />
+                        <Button size="sm" variant="destructive" onClick={() => handleFreezeMember(selectedMemberForAction)}>동결</Button>
+                        <Button size="sm" variant="outline" onClick={() => { setSelectedMemberForAction(null); setActionType(null); }}>취소</Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 
@@ -3552,118 +3444,73 @@ export default function Admin() {
               </div>
             </div>
 
-            {depositRequests.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                {depositFilter === "all" ? "충전 신청 내역이 없습니다." :
-                 depositFilter === "pending" ? "대기 중인 충전 신청이 없습니다." :
-                 depositFilter === "approved" ? "승인된 충전 내역이 없습니다." :
-                 "거부된 충전 내역이 없습니다."}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {depositRequests
-                  .filter((request) => {
-                    if (!depositSearch.trim()) return true;
-                    const search = depositSearch.toLowerCase();
-                    return request.memberName?.toLowerCase().includes(search) || 
-                           request.depositorName?.toLowerCase().includes(search) ||
-                           request.amount?.toString().includes(search);
-                  })
-                  .map((request) => (
-                  <div
-                    key={request.id}
-                    className={`p-4 border rounded-lg ${
-                      request.status === "pending"
-                        ? "border-yellow-300 bg-yellow-50"
-                        : request.status === "approved"
-                        ? "border-green-200 bg-green-50"
-                        : "border-red-200 bg-red-50"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-2xl font-bold text-gray-900">
-                            {request.amount.toLocaleString()}원
-                          </span>
-                          {request.status === "pending" ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
-                              <Clock className="w-3 h-3" />
-                              대기중
-                            </span>
-                          ) : request.status === "approved" ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                              <CheckCircle className="w-3 h-3" />
-                              승인됨
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                              <XCircle className="w-3 h-3" />
-                              거부됨
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p>
-                            <span className="font-medium">회원:</span> {request.memberName} ({request.memberEmail})
-                          </p>
-                          <p>
-                            <span className="font-medium">입금자:</span> {request.depositorName}
-                            {request.bankName && request.bankName !== "카카오톡문의" && (
-                              <span className="text-gray-500"> ({request.bankName})</span>
-                            )}
-                          </p>
-                          <p>
-                            <span className="font-medium">신청일:</span>{" "}
-                            {new Date(request.requestedAt).toLocaleString("ko-KR")}
-                          </p>
-                          {request.processedAt && (
-                            <p>
-                              <span className="font-medium">처리일:</span>{" "}
-                              {new Date(request.processedAt).toLocaleString("ko-KR")}
-                            </p>
-                          )}
-                          {request.adminNote && (
-                            <p className="text-amber-600">
-                              <span className="font-medium">관리자 메모:</span> {request.adminNote}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {request.status === "pending" && (
-                        <div className="flex flex-col gap-2 ml-4">
-                          <Input
-                            placeholder="관리자 메모 (선택)"
-                            className="w-48"
-                            value={adminNote}
-                            onChange={(e) => setAdminNote(e.target.value)}
-                          />
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              className="bg-green-500 hover:bg-green-600"
-                              onClick={() => handleApproveDeposit(request.id)}
-                            >
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              승인
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleRejectDeposit(request.id)}
-                            >
-                              <XCircle className="w-4 h-4 mr-1" />
-                              거부
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+            {(() => {
+              const filteredDeposits = depositRequests.filter((request) => {
+                if (!depositSearch.trim()) return true;
+                const search = depositSearch.toLowerCase();
+                return request.memberName?.toLowerCase().includes(search) || request.depositorName?.toLowerCase().includes(search) || request.amount?.toString().includes(search);
+              });
+              const totalPages = Math.ceil(filteredDeposits.length / itemsPerPage);
+              const paginatedDeposits = filteredDeposits.slice(depositPage * itemsPerPage, (depositPage + 1) * itemsPerPage);
+              
+              if (filteredDeposits.length === 0) {
+                return (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    {depositFilter === "all" ? "충전 신청 내역이 없습니다." : depositFilter === "pending" ? "대기 중인 충전 신청이 없습니다." : depositFilter === "approved" ? "승인된 충전 내역이 없습니다." : "거부된 충전 내역이 없습니다."}
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              }
+              
+              return (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-y border-gray-200">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">회원</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">입금자</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-600">금액</th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600">상태</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">신청일</th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600">처리</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {paginatedDeposits.map((request) => (
+                          <tr key={request.id} className={`${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
+                            <td className="px-3 py-2"><span className="font-medium">{request.memberName}</span></td>
+                            <td className="px-3 py-2 text-gray-600">{request.depositorName}{request.bankName && request.bankName !== "카카오톡문의" && <span className="text-gray-400 text-xs ml-1">({request.bankName})</span>}</td>
+                            <td className="px-3 py-2 text-right font-bold text-blue-600">{request.amount.toLocaleString()}원</td>
+                            <td className="px-3 py-2 text-center">
+                              {request.status === "pending" ? <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded">대기</span> : request.status === "approved" ? <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">승인</span> : <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-700 rounded">거부</span>}
+                            </td>
+                            <td className="px-3 py-2 text-gray-500 text-xs">{new Date(request.requestedAt).toLocaleDateString('ko-KR')}</td>
+                            <td className="px-3 py-2 text-center">
+                              {request.status === "pending" ? (
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-green-600" onClick={() => handleApproveDeposit(request.id)}><CheckCircle className="w-3.5 h-3.5 mr-1" />승인</Button>
+                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-red-600" onClick={() => handleRejectDeposit(request.id)}><XCircle className="w-3.5 h-3.5 mr-1" />거부</Button>
+                                </div>
+                              ) : <span className="text-xs text-gray-400">처리완료</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                      <p className="text-sm text-gray-500">총 {filteredDeposits.length}건</p>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" disabled={depositPage === 0} onClick={() => setDepositPage(p => p - 1)}>이전</Button>
+                        <span className="px-3 py-1 text-sm">{depositPage + 1} / {totalPages}</span>
+                        <Button size="sm" variant="outline" disabled={depositPage >= totalPages - 1} onClick={() => setDepositPage(p => p + 1)}>다음</Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 
@@ -3707,117 +3554,73 @@ export default function Admin() {
               </div>
             </div>
 
-            {withdrawalRequests.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                {withdrawalFilter === "all" ? "환급 신청 내역이 없습니다." :
-                 withdrawalFilter === "pending" ? "대기 중인 환급 신청이 없습니다." :
-                 withdrawalFilter === "approved" ? "승인된 환급 내역이 없습니다." :
-                 "거부된 환급 내역이 없습니다."}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {withdrawalRequests
-                  .filter((request) => {
-                    if (!withdrawalSearch.trim()) return true;
-                    const search = withdrawalSearch.toLowerCase();
-                    return request.memberName?.toLowerCase().includes(search) || 
-                           request.amount?.toString().includes(search);
-                  })
-                  .map((request) => (
-                  <div
-                    key={request.id}
-                    className={`p-4 border rounded-lg ${
-                      request.status === "pending"
-                        ? "border-yellow-300 bg-yellow-50"
-                        : request.status === "approved"
-                        ? "border-green-200 bg-green-50"
-                        : "border-red-200 bg-red-50"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-2xl font-bold text-gray-900">
-                            {request.amount.toLocaleString()}원
-                          </span>
-                          {request.status === "pending" ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
-                              <Clock className="w-3 h-3" />
-                              대기중
-                            </span>
-                          ) : request.status === "approved" ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                              <CheckCircle className="w-3 h-3" />
-                              승인됨
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                              <XCircle className="w-3 h-3" />
-                              거부됨
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p>
-                            <span className="font-medium">회원:</span> {request.memberName} ({request.memberEmail})
-                          </p>
-                          <p>
-                            <span className="font-medium">계좌정보:</span> {request.bankName || "-"} {request.accountNumber || "-"} ({request.accountHolder || "-"})
-                          </p>
-                          <p>
-                            <span className="font-medium">생년월일:</span> {request.birthdate || "-"}
-                          </p>
-                          <p>
-                            <span className="font-medium">신청일:</span>{" "}
-                            {new Date(request.requestedAt).toLocaleString("ko-KR")}
-                          </p>
-                          {request.processedAt && (
-                            <p>
-                              <span className="font-medium">처리일:</span>{" "}
-                              {new Date(request.processedAt).toLocaleString("ko-KR")}
-                            </p>
-                          )}
-                          {request.adminNote && (
-                            <p className="text-amber-600">
-                              <span className="font-medium">관리자 메모:</span> {request.adminNote}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {request.status === "pending" && (
-                        <div className="flex flex-col gap-2 ml-4">
-                          <Input
-                            placeholder="관리자 메모 (선택)"
-                            className="w-48"
-                            value={withdrawalAdminNote}
-                            onChange={(e) => setWithdrawalAdminNote(e.target.value)}
-                          />
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              className="bg-green-500 hover:bg-green-600"
-                              onClick={() => handleApproveWithdrawal(request.id)}
-                            >
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              승인
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleRejectWithdrawal(request.id)}
-                            >
-                              <XCircle className="w-4 h-4 mr-1" />
-                              거부
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+            {(() => {
+              const filteredWithdrawals = withdrawalRequests.filter((request) => {
+                if (!withdrawalSearch.trim()) return true;
+                const search = withdrawalSearch.toLowerCase();
+                return request.memberName?.toLowerCase().includes(search) || request.amount?.toString().includes(search);
+              });
+              const totalPages = Math.ceil(filteredWithdrawals.length / itemsPerPage);
+              const paginatedWithdrawals = filteredWithdrawals.slice(withdrawalPage * itemsPerPage, (withdrawalPage + 1) * itemsPerPage);
+              
+              if (filteredWithdrawals.length === 0) {
+                return (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    {withdrawalFilter === "all" ? "환급 신청 내역이 없습니다." : withdrawalFilter === "pending" ? "대기 중인 환급 신청이 없습니다." : withdrawalFilter === "approved" ? "승인된 환급 내역이 없습니다." : "거부된 환급 내역이 없습니다."}
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              }
+              
+              return (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-y border-gray-200">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">회원</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">계좌정보</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-600">금액</th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600">상태</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">신청일</th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600">처리</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {paginatedWithdrawals.map((request) => (
+                          <tr key={request.id} className={`${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
+                            <td className="px-3 py-2"><span className="font-medium">{request.memberName}</span></td>
+                            <td className="px-3 py-2 text-gray-600 text-xs">{request.bankName || "-"} {request.accountNumber || "-"}</td>
+                            <td className="px-3 py-2 text-right font-bold text-orange-600">{request.amount.toLocaleString()}원</td>
+                            <td className="px-3 py-2 text-center">
+                              {request.status === "pending" ? <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded">대기</span> : request.status === "approved" ? <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">승인</span> : <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-700 rounded">거부</span>}
+                            </td>
+                            <td className="px-3 py-2 text-gray-500 text-xs">{new Date(request.requestedAt).toLocaleDateString('ko-KR')}</td>
+                            <td className="px-3 py-2 text-center">
+                              {request.status === "pending" ? (
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-green-600" onClick={() => handleApproveWithdrawal(request.id)}><CheckCircle className="w-3.5 h-3.5 mr-1" />승인</Button>
+                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-red-600" onClick={() => handleRejectWithdrawal(request.id)}><XCircle className="w-3.5 h-3.5 mr-1" />거부</Button>
+                                </div>
+                              ) : <span className="text-xs text-gray-400">처리완료</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                      <p className="text-sm text-gray-500">총 {filteredWithdrawals.length}건</p>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" disabled={withdrawalPage === 0} onClick={() => setWithdrawalPage(p => p - 1)}>이전</Button>
+                        <span className="px-3 py-1 text-sm">{withdrawalPage + 1} / {totalPages}</span>
+                        <Button size="sm" variant="outline" disabled={withdrawalPage >= totalPages - 1} onClick={() => setWithdrawalPage(p => p + 1)}>다음</Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 
