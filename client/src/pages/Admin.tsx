@@ -200,6 +200,7 @@ export default function Admin() {
   const [pointAmount, setPointAmount] = useState("");
   const [pointReason, setPointReason] = useState("");
   const [pointAction, setPointAction] = useState<"add" | "subtract">("add");
+  const [pointMemberSearch, setPointMemberSearch] = useState("");
   const [adjustAmount, setAdjustAmount] = useState("");
   const [freezeReason, setFreezeReason] = useState("");
   const [pointTransactions, setPointTransactions] = useState<{id: string; memberId: string; type: string; amount: number; balanceAfter: number; description: string | null; createdAt: string | null; memberName?: string; memberUsername?: string}[]>([]);
@@ -3738,18 +3739,35 @@ export default function Admin() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">회원 선택 *</label>
+                  <Input
+                    placeholder="이름 또는 아이디로 검색..."
+                    value={pointMemberSearch}
+                    onChange={(e) => setPointMemberSearch(e.target.value)}
+                    className="mb-2"
+                    data-testid="input-point-member-search"
+                  />
                   <select
                     className="w-full h-10 border border-gray-200 rounded-md px-3 bg-white"
                     value={pointMemberId}
                     onChange={(e) => setPointMemberId(e.target.value)}
                     data-testid="select-point-member"
                   >
-                    <option value="">회원을 선택하세요</option>
-                    {members.map((member) => (
-                      <option key={member.id} value={member.id}>
-                        {member.name} ({member.username}) - 현재: {(member.pointBalance || 0).toLocaleString()}P
-                      </option>
-                    ))}
+                    <option value="">회원을 선택하세요 ({members.filter(m => 
+                      !pointMemberSearch || 
+                      m.name.toLowerCase().includes(pointMemberSearch.toLowerCase()) ||
+                      m.username.toLowerCase().includes(pointMemberSearch.toLowerCase())
+                    ).length}명)</option>
+                    {members
+                      .filter(m => 
+                        !pointMemberSearch || 
+                        m.name.toLowerCase().includes(pointMemberSearch.toLowerCase()) ||
+                        m.username.toLowerCase().includes(pointMemberSearch.toLowerCase())
+                      )
+                      .map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.name} ({member.username}) - 현재: {(member.pointBalance || 0).toLocaleString()}P
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div>
