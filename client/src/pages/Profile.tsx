@@ -97,6 +97,7 @@ export default function Profile() {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewContent, setReviewContent] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [activeProfileTab, setActiveProfileTab] = useState("info");
   
   const memberToken = localStorage.getItem("memberToken");
   const isLoggedIn = memberToken !== null;
@@ -474,7 +475,7 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <Tabs defaultValue="info" className="w-full">
+                <Tabs value={activeProfileTab} onValueChange={setActiveProfileTab} className="w-full">
                   <TabsList className="w-full grid grid-cols-6 h-auto gap-0">
                     <TabsTrigger value="info" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">정보</TabsTrigger>
                     <TabsTrigger value="orders" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">주문</TabsTrigger>
@@ -749,7 +750,7 @@ export default function Profile() {
                       </Link>
                       
                       <button
-                        onClick={() => setActiveTab("orders")}
+                        onClick={() => setActiveProfileTab("orders")}
                         className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors text-left"
                         data-testid="link-orders"
                       >

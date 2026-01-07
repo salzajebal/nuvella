@@ -3921,14 +3921,18 @@ export default function Admin() {
                                 <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
                                   tx.type === 'deposit_approved' ? 'bg-blue-100 text-blue-700' :
                                   tx.type === 'withdrawal_approved' ? 'bg-orange-100 text-orange-700' :
+                                  tx.type === 'admin_add' ? 'bg-purple-100 text-purple-700' :
+                                  tx.type === 'admin_subtract' ? 'bg-red-100 text-red-700' :
                                   tx.type === 'manual_adjustment' ? 'bg-purple-100 text-purple-700' :
-                                  tx.type === 'order_payment' ? 'bg-green-100 text-green-700' :
+                                  tx.type === 'order_payment' || tx.type === 'use' ? 'bg-green-100 text-green-700' :
                                   'bg-gray-100 text-gray-700'
                                 }`}>
                                   {tx.type === 'deposit_approved' ? '충전' :
                                    tx.type === 'withdrawal_approved' ? '출금' :
+                                   tx.type === 'admin_add' ? '관리자 지급' :
+                                   tx.type === 'admin_subtract' ? '관리자 차감' :
                                    tx.type === 'manual_adjustment' ? '관리자' :
-                                   tx.type === 'order_payment' ? '주문' : tx.type}
+                                   tx.type === 'order_payment' || tx.type === 'use' ? '주문' : tx.type}
                                 </span>
                               </td>
                             </tr>

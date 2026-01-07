@@ -27,8 +27,11 @@ const TYPE_OPTIONS = [
   { value: "", label: "전체" },
   { value: "deposit_approved", label: "충전" },
   { value: "withdrawal_approved", label: "출금" },
-  { value: "manual_adjustment", label: "관리자" },
-  { value: "order_payment", label: "주문" },
+  { value: "admin_add", label: "관리자 지급" },
+  { value: "admin_subtract", label: "관리자 차감" },
+  { value: "manual_adjustment", label: "관리자(기존)" },
+  { value: "use", label: "주문" },
+  { value: "order_payment", label: "주문(기존)" },
 ];
 
 const getDatePreset = (preset: string): { from: string; to: string } => {
