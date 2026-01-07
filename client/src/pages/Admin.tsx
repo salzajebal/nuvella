@@ -186,6 +186,7 @@ export default function Admin() {
   const [pointAction, setPointAction] = useState<"add" | "subtract">("add");
   const [adjustAmount, setAdjustAmount] = useState("");
   const [freezeReason, setFreezeReason] = useState("");
+  const [pointTransactions, setPointTransactions] = useState<{id: string; memberId: string; type: string; amount: number; balanceAfter: number; description: string | null; createdAt: string | null; memberName?: string; memberUsername?: string}[]>([]);
 
   const [adminOrders, setAdminOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -356,6 +357,18 @@ export default function Admin() {
       }
     } catch (error) {
       console.error("Error fetching members:", error);
+    }
+  };
+
+  const fetchPointTransactions = async () => {
+    try {
+      const res = await fetchWithAuth("/api/admin/point-transactions");
+      const data = await res.json();
+      if (data.success) {
+        setPointTransactions(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching point transactions:", error);
     }
   };
 
@@ -664,6 +677,7 @@ export default function Admin() {
       fetchReviews();
       fetchNotices();
       fetchSiteSettings();
+      fetchPointTransactions();
     }
   }, [isAuthenticated]);
   
@@ -3893,6 +3907,7 @@ export default function Admin() {
                       setPointAmount("");
                       setPointReason("");
                       fetchMembers();
+                      fetchPointTransactions();
                     } else {
                       toast({ title: "오류", description: data.error || "포인트 처리에 실패했습니다.", variant: "destructive" });
                     }
@@ -3936,6 +3951,69 @@ export default function Admin() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="mt-8">
+              <h3 className="font-bold text-lg mb-4">포인트 지급/차감 내역</h3>
+              {pointTransactions.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>포인트 내역이 없습니다.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-medium text-gray-600">일시</th>
+                        <th className="px-4 py-3 text-left font-medium text-gray-600">회원</th>
+                        <th className="px-4 py-3 text-left font-medium text-gray-600">유형</th>
+                        <th className="px-4 py-3 text-right font-medium text-gray-600">금액</th>
+                        <th className="px-4 py-3 text-right font-medium text-gray-600">잔액</th>
+                        <th className="px-4 py-3 text-left font-medium text-gray-600">설명</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {pointTransactions.slice(0, 50).map((tx) => (
+                        <tr key={tx.id} className="hover:bg-gray-50" data-testid={`row-point-tx-${tx.id}`}>
+                          <td className="px-4 py-3 text-gray-600">
+                            {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="font-medium text-gray-900">{tx.memberName || '알 수 없음'}</p>
+                              <p className="text-xs text-gray-500">{tx.memberUsername || ''}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              tx.type === 'deposit_approved' ? 'bg-blue-100 text-blue-700' :
+                              tx.type === 'withdrawal_approved' ? 'bg-orange-100 text-orange-700' :
+                              tx.type === 'manual_adjustment' ? 'bg-purple-100 text-purple-700' :
+                              tx.type === 'order_payment' ? 'bg-green-100 text-green-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {tx.type === 'deposit_approved' ? '충전' :
+                               tx.type === 'withdrawal_approved' ? '출금' :
+                               tx.type === 'manual_adjustment' ? '관리자' :
+                               tx.type === 'order_payment' ? '주문' :
+                               tx.type}
+                            </span>
+                          </td>
+                          <td className={`px-4 py-3 text-right font-bold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {tx.amount >= 0 ? '+' : ''}{tx.amount.toLocaleString()}P
+                          </td>
+                          <td className="px-4 py-3 text-right text-gray-700">
+                            {tx.balanceAfter.toLocaleString()}P
+                          </td>
+                          <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
+                            {tx.description || '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         )}
