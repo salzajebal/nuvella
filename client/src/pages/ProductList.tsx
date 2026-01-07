@@ -10,12 +10,27 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { CATEGORIES, getCategoryById, getSubcategoryName } from "@/lib/categories";
 
+const CATEGORY_IMAGES: Record<string, string> = {
+  home_interior: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=500&h=500&fit=crop",
+  beauty: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500&h=500&fit=crop",
+  electronics: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=500&h=500&fit=crop",
+  living: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&h=500&fit=crop",
+  health: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=500&h=500&fit=crop",
+  luxury: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&h=500&fit=crop",
+  kids: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop",
+  baby: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=500&h=500&fit=crop",
+};
+
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop";
 
 function getProductImage(product: Product): string {
-  if (product.imageUrl) return product.imageUrl;
-  if (product.imageUrls && product.imageUrls.length > 0) return product.imageUrls[0];
-  return DEFAULT_IMAGE;
+  if (product.imageUrl && !product.imageUrl.includes('placehold.co')) {
+    return product.imageUrl;
+  }
+  if (product.imageUrls && product.imageUrls.length > 0 && !product.imageUrls[0].includes('placehold.co')) {
+    return product.imageUrls[0];
+  }
+  return CATEGORY_IMAGES[product.category] || DEFAULT_IMAGE;
 }
 
 export default function ProductList() {

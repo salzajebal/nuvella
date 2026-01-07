@@ -11,7 +11,26 @@ import { ShoppingCart, Heart, ChevronRight, Truck, Shield, Award, RotateCcw, Sho
 import { useToast } from "@/hooks/use-toast";
 import type { Product, Review } from "@shared/schema";
 
+const CATEGORY_IMAGES: Record<string, string> = {
+  home_interior: "https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=800&h=800&fit=crop",
+  beauty: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&h=800&fit=crop",
+  electronics: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=800&h=800&fit=crop",
+  living: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=800&fit=crop",
+  health: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=800&h=800&fit=crop",
+  luxury: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=800&fit=crop",
+  kids: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800&h=800&fit=crop",
+  baby: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800&h=800&fit=crop",
+};
+
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=800&fit=crop";
+
+function getProductImage(product: Product | null, url?: string | null): string {
+  if (url && !url.includes('placehold.co')) return url;
+  if (product?.imageUrl && !product.imageUrl.includes('placehold.co')) return product.imageUrl;
+  if (product?.imageUrls && product.imageUrls.length > 0 && !product.imageUrls[0].includes('placehold.co')) return product.imageUrls[0];
+  if (product?.category) return CATEGORY_IMAGES[product.category] || DEFAULT_IMAGE;
+  return DEFAULT_IMAGE;
+}
 
 const PRODUCT_DETAILS: Record<string, { features: string[]; specs: { label: string; value: string }[]; notice: string }> = {
   home_interior: {
@@ -353,31 +372,39 @@ export default function ProductDetail() {
             <div className="space-y-4">
               <div className="aspect-square bg-gray-100 overflow-hidden">
                 <img
-                  src={
-                    product.imageUrls && product.imageUrls.length > 0
-                      ? product.imageUrls[selectedImageIndex] || product.imageUrls[0]
-                      : product.imageUrl || DEFAULT_IMAGE
-                  }
+                  src={(() => {
+                    const urls = product.imageUrls && product.imageUrls.length > 0 
+                      ? product.imageUrls.filter(u => u && !u.includes('placehold.co')) 
+                      : [];
+                    if (urls.length > 0) return urls[selectedImageIndex] || urls[0];
+                    return getProductImage(product);
+                  })()}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2">
-                {(product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : [product.imageUrl || DEFAULT_IMAGE]).map((url, index) => (
-                  <div 
-                    key={index} 
-                    className={`w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 overflow-hidden cursor-pointer border-2 flex-shrink-0 ${
-                      selectedImageIndex === index ? 'border-gray-900' : 'border-transparent'
-                    }`}
-                    onClick={() => setSelectedImageIndex(index)}
-                  >
-                    <img
-                      src={url || DEFAULT_IMAGE}
-                      alt={`${product.name} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+                {(() => {
+                  const urls = product.imageUrls && product.imageUrls.length > 0 
+                    ? product.imageUrls.filter(u => u && !u.includes('placehold.co')) 
+                    : [];
+                  const displayUrls = urls.length > 0 ? urls : [getProductImage(product)];
+                  return displayUrls.map((url, index) => (
+                    <div 
+                      key={index} 
+                      className={`w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 overflow-hidden cursor-pointer border-2 flex-shrink-0 ${
+                        selectedImageIndex === index ? 'border-gray-900' : 'border-transparent'
+                      }`}
+                      onClick={() => setSelectedImageIndex(index)}
+                    >
+                      <img
+                        src={url || getProductImage(product)}
+                        alt={`${product.name} ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
 
