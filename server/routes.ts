@@ -1197,6 +1197,39 @@ export async function registerRoutes(
     }
   });
 
+  // Get all point transactions (admin)
+  app.get("/api/admin/point-transactions", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const transactions = await storage.getAllPointTransactions();
+      const members = await storage.getAllMembers();
+      
+      const transactionsWithMemberInfo = transactions.map(t => {
+        const member = members.find(m => m.id === t.memberId);
+        return {
+          ...t,
+          memberName: member?.name || "알 수 없음",
+          memberUsername: member?.username || "알 수 없음",
+        };
+      });
+      
+      res.json({ success: true, data: transactionsWithMemberInfo });
+    } catch (error) {
+      console.error("Error fetching point transactions:", error);
+      res.status(500).json({ success: false, error: "포인트 내역을 불러올 수 없습니다." });
+    }
+  });
+
+  // Get point transactions by member (admin)
+  app.get("/api/admin/members/:id/point-transactions", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const transactions = await storage.getPointTransactionsByMember(req.params.id);
+      res.json({ success: true, data: transactions });
+    } catch (error) {
+      console.error("Error fetching member point transactions:", error);
+      res.status(500).json({ success: false, error: "포인트 내역을 불러올 수 없습니다." });
+    }
+  });
+
   // ==================== ADMIN STATS ====================
   
   app.get("/api/admin/stats", async (req: Request, res: Response) => {

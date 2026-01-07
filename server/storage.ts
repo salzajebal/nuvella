@@ -128,6 +128,7 @@ export interface IStorage {
   rejectWithdrawalRequest(id: string, adminNote?: string): Promise<WithdrawalRequest | undefined>;
   
   // Point Transactions
+  getAllPointTransactions(): Promise<PointTransaction[]>;
   getPointTransactionsByMember(memberId: string): Promise<PointTransaction[]>;
   createPointTransaction(transaction: InsertPointTransaction): Promise<PointTransaction>;
   
@@ -700,6 +701,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Point Transactions
+  async getAllPointTransactions(): Promise<PointTransaction[]> {
+    return db.select().from(pointTransactions)
+      .orderBy(desc(pointTransactions.createdAt));
+  }
+
   async getPointTransactionsByMember(memberId: string): Promise<PointTransaction[]> {
     return db.select().from(pointTransactions)
       .where(eq(pointTransactions.memberId, memberId))
