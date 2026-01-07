@@ -21,6 +21,7 @@ import Profile from "@/pages/Profile";
 import Deposit from "@/pages/Deposit";
 import Withdrawal from "@/pages/Withdrawal";
 import Order from "@/pages/Order";
+import Terms from "@/pages/Terms";
 
 function Router() {
   return (
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/products/:category" component={ProductList} />
       <Route path="/products" component={ProductList} />
       <Route path="/admin" component={Admin} />
+      <Route path="/terms" component={Terms} />
       <Route path="/signup" component={Signup} />
       <Route path="/login" component={Login} />
       <Route path="/support" component={Support} />

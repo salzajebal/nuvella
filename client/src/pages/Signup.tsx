@@ -2,14 +2,22 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useSearch } from "wouter";
 import { User, Lock, Mail, Smile, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Signup() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const searchString = useSearch();
   const { toast } = useToast();
+  
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    if (params.get("agreed") !== "true") {
+      setLocation("/terms");
+    }
+  }, [searchString, setLocation]);
   const [loading, setLoading] = useState(false);
   const [usernameChecked, setUsernameChecked] = useState(false);
   const [nicknameChecked, setNicknameChecked] = useState(false);
@@ -21,9 +29,6 @@ export default function Signup() {
     name: "",
     nickname: "",
     email: "",
-    agreeTerms: false,
-    agreePrivacy: false,
-    agreeMarketing: false,
   });
 
   const checkUsername = async () => {
@@ -103,11 +108,6 @@ export default function Signup() {
 
     if (formData.password.length < 8) {
       toast({ title: "비밀번호 오류", description: "비밀번호는 8자 이상이어야 합니다.", variant: "destructive" });
-      return;
-    }
-
-    if (!formData.agreeTerms || !formData.agreePrivacy) {
-      toast({ title: "약관 동의 필요", description: "필수 약관에 동의해주세요.", variant: "destructive" });
       return;
     }
 
@@ -283,50 +283,7 @@ export default function Signup() {
                 </div>
               </div>
 
-              <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
-                <h2 className="font-bold text-gray-800">기타 개인설정</h2>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="mt-1 w-4 h-4 text-primary border-gray-300 rounded"
-                    checked={formData.agreeMarketing}
-                    onChange={(e) => setFormData({ ...formData, agreeMarketing: e.target.checked })}
-                  />
-                  <span className="text-sm text-gray-700">정보 메일을 받겠습니다.</span>
-                </label>
-
-                <div className="border-t border-gray-100 pt-4 space-y-3">
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="mt-1 w-4 h-4 text-primary border-gray-300 rounded"
-                      checked={formData.agreeTerms}
-                      onChange={(e) => setFormData({ ...formData, agreeTerms: e.target.checked })}
-                      required
-                    />
-                    <span className="text-sm text-gray-700">
-                      <span className="text-red-500">[필수]</span> 이용약관에 동의합니다
-                    </span>
-                  </label>
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="mt-1 w-4 h-4 text-primary border-gray-300 rounded"
-                      checked={formData.agreePrivacy}
-                      onChange={(e) => setFormData({ ...formData, agreePrivacy: e.target.checked })}
-                      required
-                    />
-                    <span className="text-sm text-gray-700">
-                      <span className="text-red-500">[필수]</span> 개인정보 수집 및 이용에 동의합니다
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="p-6 pt-0">
+              <div className="p-6">
                 <Button 
                   type="submit"
                   className="w-full h-14 bg-primary hover:bg-primary/90 text-white rounded-none text-base font-bold"
