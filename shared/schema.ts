@@ -22,7 +22,7 @@ export const members = pgTable("members", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
-  job: text("job").notNull(),
+  job: text("job"),
   phone: text("phone"),
   isActive: boolean("is_active").default(true),
   isAdmin: boolean("is_admin").default(false),

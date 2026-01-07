@@ -13,7 +13,6 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    job: "",
     username: "",
     password: "",
     passwordConfirm: "",
@@ -60,7 +59,6 @@ export default function Signup() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
-          job: formData.job,
           username: formData.username,
           password: formData.password,
         }),
@@ -116,21 +114,6 @@ export default function Signup() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     data-testid="input-name"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">직업 <span className="text-red-500">*</span></label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder="직업을 입력해주세요"
-                    className="h-12 rounded-none"
-                    value={formData.job}
-                    onChange={(e) => setFormData({ ...formData, job: e.target.value })}
-                    data-testid="input-job"
                     required
                   />
                 </div>
