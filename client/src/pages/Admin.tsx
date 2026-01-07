@@ -107,6 +107,8 @@ export default function Admin() {
   const [depositPage, setDepositPage] = useState(0);
   const [withdrawalPage, setWithdrawalPage] = useState(0);
   const itemsPerPage = 10;
+  const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
+  const [memoValue, setMemoValue] = useState("");
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -1188,6 +1190,24 @@ export default function Admin() {
       }
     } catch (error) {
       toast({ title: "오류", description: "회원 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleSaveMemo = async (memberId: string) => {
+    try {
+      const res = await fetchWithAuth(`/api/admin/members/${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memo: memoValue }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "저장됨", description: "메모가 저장되었습니다." });
+        setEditingMemoId(null);
+        fetchMembers();
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "메모 저장에 실패했습니다.", variant: "destructive" });
     }
   };
 
@@ -2993,6 +3013,7 @@ export default function Admin() {
                           <th className="px-3 py-2 text-left font-medium text-gray-600">전화번호</th>
                           <th className="px-3 py-2 text-right font-medium text-gray-600">포인트</th>
                           <th className="px-3 py-2 text-center font-medium text-gray-600">상태</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">메모</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-600">가입일</th>
                           <th className="px-3 py-2 text-center font-medium text-gray-600">관리</th>
                         </tr>
@@ -3016,6 +3037,20 @@ export default function Admin() {
                                 <span className="text-xs text-green-600">활성</span>
                               ) : (
                                 <span className="text-xs text-gray-400">비활성</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2">
+                              {editingMemoId === member.id ? (
+                                <div className="flex items-center gap-1">
+                                  <Input value={memoValue} onChange={(e) => setMemoValue(e.target.value)} className="h-7 text-xs w-32" placeholder="담당자명 등" />
+                                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-600" onClick={() => handleSaveMemo(member.id)}><CheckCircle className="w-3.5 h-3.5" /></Button>
+                                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-gray-400" onClick={() => setEditingMemoId(null)}><XCircle className="w-3.5 h-3.5" /></Button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 group cursor-pointer" onClick={() => { setEditingMemoId(member.id); setMemoValue(member.memo || ""); }}>
+                                  <span className="text-xs text-gray-600">{member.memo || <span className="text-gray-300">클릭하여 입력</span>}</span>
+                                  <Pencil className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100" />
+                                </div>
                               )}
                             </td>
                             <td className="px-3 py-2 text-gray-500 text-xs">{member.createdAt ? new Date(member.createdAt).toLocaleDateString('ko-KR') : "-"}</td>
