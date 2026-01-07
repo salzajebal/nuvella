@@ -3733,7 +3733,7 @@ export default function Admin() {
               <p className="text-gray-500 text-sm">회원 포인트를 직접 추가하거나 차감할 수 있습니다</p>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 mb-6">
+            <div id="point-adjust-form" className="bg-gray-50 rounded-lg p-6 border border-gray-200 mb-6">
               <h3 className="font-bold text-lg mb-4">포인트 지급/차감</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -3910,8 +3910,30 @@ export default function Admin() {
                               <td className="px-3 py-2 text-gray-600 text-xs">
                                 {tx.createdAt ? new Date(tx.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '-'}
                               </td>
-                              <td className="px-3 py-2 text-gray-600">{tx.memberUsername || '-'}</td>
-                              <td className="px-3 py-2 font-medium text-gray-900">{tx.memberName || '-'}</td>
+                              <td className="px-3 py-2">
+                                <button 
+                                  className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                  onClick={() => {
+                                    setPointMemberId(tx.memberId);
+                                    document.getElementById('point-adjust-form')?.scrollIntoView({ behavior: 'smooth' });
+                                  }}
+                                  title="클릭하여 이 회원 선택"
+                                >
+                                  {tx.memberUsername || '-'}
+                                </button>
+                              </td>
+                              <td className="px-3 py-2">
+                                <button 
+                                  className="font-medium text-gray-900 hover:text-blue-600 hover:underline cursor-pointer"
+                                  onClick={() => {
+                                    setPointMemberId(tx.memberId);
+                                    document.getElementById('point-adjust-form')?.scrollIntoView({ behavior: 'smooth' });
+                                  }}
+                                  title="클릭하여 이 회원 선택"
+                                >
+                                  {tx.memberName || '-'}
+                                </button>
+                              </td>
                               <td className="px-3 py-2 text-gray-600 max-w-[200px] truncate">{tx.description || '-'}</td>
                               <td className={`px-3 py-2 text-right font-bold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {tx.amount >= 0 ? '+' : ''}{tx.amount.toLocaleString()}P
