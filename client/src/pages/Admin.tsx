@@ -193,6 +193,8 @@ export default function Admin() {
   const [adjustAmount, setAdjustAmount] = useState("");
   const [freezeReason, setFreezeReason] = useState("");
   const [pointTransactions, setPointTransactions] = useState<{id: string; memberId: string; type: string; amount: number; balanceAfter: number; description: string | null; createdAt: string | null; memberName?: string; memberUsername?: string}[]>([]);
+  const [pointSearch, setPointSearch] = useState("");
+  const [pointPage, setPointPage] = useState(0);
 
   const [adminOrders, setAdminOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -3792,66 +3794,100 @@ export default function Admin() {
             </div>
 
             <div className="mt-8">
-              <h3 className="font-bold text-lg mb-4">포인트 지급/차감 내역</h3>
-              {pointTransactions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p>포인트 내역이 없습니다.</p>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                <h3 className="font-bold text-lg">포인트 내역</h3>
+                <div className="relative w-full sm:w-72">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="이름, 아이디, 내용으로 검색"
+                    value={pointSearch}
+                    onChange={(e) => { setPointSearch(e.target.value); setPointPage(0); }}
+                    className="pl-9"
+                    data-testid="input-point-search"
+                  />
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">일시</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">회원</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">유형</th>
-                        <th className="px-4 py-3 text-right font-medium text-gray-600">금액</th>
-                        <th className="px-4 py-3 text-right font-medium text-gray-600">잔액</th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-600">설명</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {pointTransactions.slice(0, 50).map((tx) => (
-                        <tr key={tx.id} className="hover:bg-gray-50" data-testid={`row-point-tx-${tx.id}`}>
-                          <td className="px-4 py-3 text-gray-600">
-                            {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div>
-                              <p className="font-medium text-gray-900">{tx.memberName || '알 수 없음'}</p>
-                              <p className="text-xs text-gray-500">{tx.memberUsername || ''}</p>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              tx.type === 'deposit_approved' ? 'bg-blue-100 text-blue-700' :
-                              tx.type === 'withdrawal_approved' ? 'bg-orange-100 text-orange-700' :
-                              tx.type === 'manual_adjustment' ? 'bg-purple-100 text-purple-700' :
-                              tx.type === 'order_payment' ? 'bg-green-100 text-green-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {tx.type === 'deposit_approved' ? '충전' :
-                               tx.type === 'withdrawal_approved' ? '출금' :
-                               tx.type === 'manual_adjustment' ? '관리자' :
-                               tx.type === 'order_payment' ? '주문' :
-                               tx.type}
-                            </span>
-                          </td>
-                          <td className={`px-4 py-3 text-right font-bold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {tx.amount >= 0 ? '+' : ''}{tx.amount.toLocaleString()}P
-                          </td>
-                          <td className="px-4 py-3 text-right text-gray-700">
-                            {tx.balanceAfter.toLocaleString()}P
-                          </td>
-                          <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
-                            {tx.description || '-'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              </div>
+              {(() => {
+                const filteredTx = pointTransactions.filter((tx) => {
+                  if (!pointSearch.trim()) return true;
+                  const search = pointSearch.toLowerCase();
+                  return (tx.memberName?.toLowerCase().includes(search) || tx.memberUsername?.toLowerCase().includes(search) || tx.description?.toLowerCase().includes(search));
+                });
+                const totalPages = Math.ceil(filteredTx.length / itemsPerPage);
+                const paginatedTx = filteredTx.slice(pointPage * itemsPerPage, (pointPage + 1) * itemsPerPage);
+                
+                if (filteredTx.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>포인트 내역이 없습니다.</p>
+                    </div>
+                  );
+                }
+                
+                return (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 border-y border-gray-200">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-medium text-gray-600">날짜</th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-600">시간</th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-600">아이디</th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-600">이름</th>
+                            <th className="px-3 py-2 text-left font-medium text-gray-600">내용</th>
+                            <th className="px-3 py-2 text-right font-medium text-gray-600">금액</th>
+                            <th className="px-3 py-2 text-right font-medium text-gray-600">잔액</th>
+                            <th className="px-3 py-2 text-center font-medium text-gray-600">상태</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {paginatedTx.map((tx) => (
+                            <tr key={tx.id} className="hover:bg-gray-50" data-testid={`row-point-tx-${tx.id}`}>
+                              <td className="px-3 py-2 text-gray-600 text-xs">
+                                {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('ko-KR') : '-'}
+                              </td>
+                              <td className="px-3 py-2 text-gray-600 text-xs">
+                                {tx.createdAt ? new Date(tx.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                              </td>
+                              <td className="px-3 py-2 text-gray-600">{tx.memberUsername || '-'}</td>
+                              <td className="px-3 py-2 font-medium text-gray-900">{tx.memberName || '-'}</td>
+                              <td className="px-3 py-2 text-gray-600 max-w-[200px] truncate">{tx.description || '-'}</td>
+                              <td className={`px-3 py-2 text-right font-bold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {tx.amount >= 0 ? '+' : ''}{tx.amount.toLocaleString()}P
+                              </td>
+                              <td className="px-3 py-2 text-right font-medium text-amber-600">{tx.balanceAfter.toLocaleString()}P</td>
+                              <td className="px-3 py-2 text-center">
+                                <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                                  tx.type === 'deposit_approved' ? 'bg-blue-100 text-blue-700' :
+                                  tx.type === 'withdrawal_approved' ? 'bg-orange-100 text-orange-700' :
+                                  tx.type === 'manual_adjustment' ? 'bg-purple-100 text-purple-700' :
+                                  tx.type === 'order_payment' ? 'bg-green-100 text-green-700' :
+                                  'bg-gray-100 text-gray-700'
+                                }`}>
+                                  {tx.type === 'deposit_approved' ? '충전' :
+                                   tx.type === 'withdrawal_approved' ? '출금' :
+                                   tx.type === 'manual_adjustment' ? '관리자' :
+                                   tx.type === 'order_payment' ? '주문' : tx.type}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                        <p className="text-sm text-gray-500">총 {filteredTx.length}건</p>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" disabled={pointPage === 0} onClick={() => setPointPage(p => p - 1)}>이전</Button>
+                          <span className="px-3 py-1 text-sm">{pointPage + 1} / {totalPages}</span>
+                          <Button size="sm" variant="outline" disabled={pointPage >= totalPages - 1} onClick={() => setPointPage(p => p + 1)}>다음</Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
