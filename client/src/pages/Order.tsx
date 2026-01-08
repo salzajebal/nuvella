@@ -131,7 +131,7 @@ export default function Order() {
         if (memberRes.ok) {
           const memberData = await memberRes.json();
           if (memberData.success && memberData.data) {
-            setMemberPoints(memberData.data.points || 0);
+            setMemberPoints(memberData.data.pointBalance || 0);
           }
         }
         
