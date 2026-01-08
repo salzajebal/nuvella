@@ -22,6 +22,7 @@ import Deposit from "@/pages/Deposit";
 import Withdrawal from "@/pages/Withdrawal";
 import Order from "@/pages/Order";
 import Terms from "@/pages/Terms";
+import Search from "@/pages/Search";
 
 function Router() {
   return (
@@ -42,6 +43,7 @@ function Router() {
       <Route path="/deposit" component={Deposit} />
       <Route path="/withdrawal" component={Withdrawal} />
       <Route path="/order/:id" component={Order} />
+      <Route path="/search" component={Search} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -476,13 +476,14 @@ export default function Profile() {
                 </div>
 
                 <Tabs value={activeProfileTab} onValueChange={setActiveProfileTab} className="w-full">
-                  <TabsList className="w-full grid grid-cols-6 h-auto gap-0">
-                    <TabsTrigger value="info" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">정보</TabsTrigger>
-                    <TabsTrigger value="orders" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">주문</TabsTrigger>
-                    <TabsTrigger value="reviews" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3 text-amber-600 font-semibold">후기</TabsTrigger>
-                    <TabsTrigger value="menu" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">메뉴</TabsTrigger>
-                    <TabsTrigger value="deposit" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">충전</TabsTrigger>
-                    <TabsTrigger value="points" className="text-[9px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-3">적립금</TabsTrigger>
+                  <TabsList className="w-full grid grid-cols-7 h-auto gap-0">
+                    <TabsTrigger value="info" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">정보</TabsTrigger>
+                    <TabsTrigger value="orders" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">주문</TabsTrigger>
+                    <TabsTrigger value="reviews" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2 text-amber-600 font-semibold">후기</TabsTrigger>
+                    <TabsTrigger value="menu" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">메뉴</TabsTrigger>
+                    <TabsTrigger value="deposit" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">충전</TabsTrigger>
+                    <TabsTrigger value="withdraw" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">환전</TabsTrigger>
+                    <TabsTrigger value="points" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">적립금</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="info" className="mt-4">
@@ -870,129 +871,132 @@ export default function Profile() {
                         )}
                       </div>
 
-                      <div className="border-t pt-6 mt-6">
-                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
-                          <h3 className="font-bold text-green-800 mb-2">환급 안내</h3>
-                          <div className="text-sm text-green-700">
-                            <p>보유 포인트를 현금으로 환급받으실 수 있습니다.</p>
-                            <p className="mt-1">현재 보유 포인트: <strong>{(memberInfo?.pointBalance || 0).toLocaleString()}P</strong></p>
-                          </div>
-                        </div>
+                      </div>
+                  </TabsContent>
 
-                        <Dialog open={showWithdrawalForm} onOpenChange={setShowWithdrawalForm}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              className="w-full bg-green-600 hover:bg-green-700"
-                              disabled={memberInfo?.isFrozen || (memberInfo?.pointBalance || 0) <= 0}
-                            >
-                              <Wallet className="w-4 h-4 mr-2" />
-                              환급 신청하기
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>환급 신청</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 pt-4">
-                              <div className="p-3 bg-gray-50 rounded-lg text-sm">
-                                <p>현재 보유 포인트: <strong className="text-green-600">{(memberInfo?.pointBalance || 0).toLocaleString()}P</strong></p>
-                              </div>
-                              <div>
-                                <Label htmlFor="withdrawalAmount">환급 금액 (원)</Label>
-                                <Input
-                                  id="withdrawalAmount"
-                                  type="text"
-                                  placeholder="예: 100,000"
-                                  value={withdrawalAmount}
-                                  onChange={(e) => setWithdrawalAmount(e.target.value)}
-                                  data-testid="input-withdrawal-amount"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="withdrawalBankName">은행명</Label>
-                                <Input
-                                  id="withdrawalBankName"
-                                  placeholder="예: 국민은행"
-                                  value={withdrawalBankName}
-                                  onChange={(e) => setWithdrawalBankName(e.target.value)}
-                                  data-testid="input-withdrawal-bank"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="withdrawalAccountNumber">계좌번호</Label>
-                                <Input
-                                  id="withdrawalAccountNumber"
-                                  placeholder="- 없이 입력"
-                                  value={withdrawalAccountNumber}
-                                  onChange={(e) => setWithdrawalAccountNumber(e.target.value)}
-                                  data-testid="input-withdrawal-account"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="withdrawalAccountHolder">예금주</Label>
-                                <Input
-                                  id="withdrawalAccountHolder"
-                                  placeholder="실명을 입력해주세요"
-                                  value={withdrawalAccountHolder}
-                                  onChange={(e) => setWithdrawalAccountHolder(e.target.value)}
-                                  data-testid="input-withdrawal-holder"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="withdrawalBirthdate">생년월일</Label>
-                                <Input
-                                  id="withdrawalBirthdate"
-                                  placeholder="예: 19901231"
-                                  value={withdrawalBirthdate}
-                                  onChange={(e) => setWithdrawalBirthdate(e.target.value)}
-                                  data-testid="input-withdrawal-birthdate"
-                                />
-                              </div>
-                              <Button
-                                className="w-full bg-green-600 hover:bg-green-700"
-                                onClick={handleWithdrawalSubmit}
-                                disabled={withdrawalMutation.isPending}
-                                data-testid="button-withdrawal-submit"
-                              >
-                                {withdrawalMutation.isPending ? "처리중..." : "환급 신청하기"}
-                              </Button>
+                  <TabsContent value="withdraw" className="mt-4">
+                    <div className="space-y-4">
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <h3 className="font-bold text-green-800 mb-2">환급 안내</h3>
+                        <div className="text-sm text-green-700">
+                          <p>보유 포인트를 현금으로 환급받으실 수 있습니다.</p>
+                          <p className="mt-1">현재 보유 포인트: <strong>{(memberInfo?.pointBalance || 0).toLocaleString()}P</strong></p>
+                        </div>
+                      </div>
+
+                      <Dialog open={showWithdrawalForm} onOpenChange={setShowWithdrawalForm}>
+                        <DialogTrigger asChild>
+                          <Button 
+                            className="w-full bg-green-600 hover:bg-green-700"
+                            disabled={memberInfo?.isFrozen || (memberInfo?.pointBalance || 0) <= 0}
+                          >
+                            <Wallet className="w-4 h-4 mr-2" />
+                            환급 신청하기
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>환급 신청</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 pt-4">
+                            <div className="p-3 bg-gray-50 rounded-lg text-sm">
+                              <p>현재 보유 포인트: <strong className="text-green-600">{(memberInfo?.pointBalance || 0).toLocaleString()}P</strong></p>
                             </div>
-                          </DialogContent>
-                        </Dialog>
+                            <div>
+                              <Label htmlFor="withdrawalAmount">환급 금액 (원)</Label>
+                              <Input
+                                id="withdrawalAmount"
+                                type="text"
+                                placeholder="예: 100,000"
+                                value={withdrawalAmount}
+                                onChange={(e) => setWithdrawalAmount(e.target.value)}
+                                data-testid="input-withdrawal-amount"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="withdrawalBankName">은행명</Label>
+                              <Input
+                                id="withdrawalBankName"
+                                placeholder="예: 국민은행"
+                                value={withdrawalBankName}
+                                onChange={(e) => setWithdrawalBankName(e.target.value)}
+                                data-testid="input-withdrawal-bank"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="withdrawalAccountNumber">계좌번호</Label>
+                              <Input
+                                id="withdrawalAccountNumber"
+                                placeholder="- 없이 입력"
+                                value={withdrawalAccountNumber}
+                                onChange={(e) => setWithdrawalAccountNumber(e.target.value)}
+                                data-testid="input-withdrawal-account"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="withdrawalAccountHolder">예금주</Label>
+                              <Input
+                                id="withdrawalAccountHolder"
+                                placeholder="실명을 입력해주세요"
+                                value={withdrawalAccountHolder}
+                                onChange={(e) => setWithdrawalAccountHolder(e.target.value)}
+                                data-testid="input-withdrawal-holder"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="withdrawalBirthdate">생년월일</Label>
+                              <Input
+                                id="withdrawalBirthdate"
+                                placeholder="예: 19901231"
+                                value={withdrawalBirthdate}
+                                onChange={(e) => setWithdrawalBirthdate(e.target.value)}
+                                data-testid="input-withdrawal-birthdate"
+                              />
+                            </div>
+                            <Button
+                              className="w-full bg-green-600 hover:bg-green-700"
+                              onClick={handleWithdrawalSubmit}
+                              disabled={withdrawalMutation.isPending}
+                              data-testid="button-withdrawal-submit"
+                            >
+                              {withdrawalMutation.isPending ? "처리중..." : "환급 신청하기"}
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
 
-                        <div className="space-y-3 mt-4">
-                          <h3 className="font-bold text-gray-900">환급 신청 내역</h3>
-                          {!withdrawalRequests?.length ? (
-                            <p className="text-sm text-gray-500 text-center py-8">
-                              환급 신청 내역이 없습니다.
-                            </p>
-                          ) : (
-                            withdrawalRequests.map((request) => (
-                              <div
-                                key={request.id}
-                                className="p-4 border rounded-lg bg-white"
-                                data-testid={`withdrawal-request-${request.id}`}
-                              >
-                                <div className="flex justify-between items-start mb-2">
-                                  <div className="font-bold text-lg">
-                                    {request.amount.toLocaleString()}원
-                                  </div>
-                                  {getStatusBadge(request.status)}
+                      <div className="space-y-3">
+                        <h3 className="font-bold text-gray-900">환급 신청 내역</h3>
+                        {!withdrawalRequests?.length ? (
+                          <p className="text-sm text-gray-500 text-center py-8">
+                            환급 신청 내역이 없습니다.
+                          </p>
+                        ) : (
+                          withdrawalRequests.map((request) => (
+                            <div
+                              key={request.id}
+                              className="p-4 border rounded-lg bg-white"
+                              data-testid={`withdrawal-request-${request.id}`}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div className="font-bold text-lg">
+                                  {request.amount.toLocaleString()}원
                                 </div>
-                                <div className="text-sm text-gray-500 space-y-1">
-                                  <p>계좌: {request.bankName} {request.accountNumber} ({request.accountHolder})</p>
-                                  <p>신청일: {formatDate(request.requestedAt)}</p>
-                                  {request.processedAt && (
-                                    <p>처리일: {formatDate(request.processedAt)}</p>
-                                  )}
-                                  {request.adminNote && (
-                                    <p className="text-amber-600">메모: {request.adminNote}</p>
-                                  )}
-                                </div>
+                                {getStatusBadge(request.status)}
                               </div>
-                            ))
-                          )}
-                        </div>
+                              <div className="text-sm text-gray-500 space-y-1">
+                                <p>계좌: {request.bankName} {request.accountNumber} ({request.accountHolder})</p>
+                                <p>신청일: {formatDate(request.requestedAt)}</p>
+                                {request.processedAt && (
+                                  <p>처리일: {formatDate(request.processedAt)}</p>
+                                )}
+                                {request.adminNote && (
+                                  <p className="text-amber-600">메모: {request.adminNote}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   </TabsContent>

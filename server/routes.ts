@@ -139,6 +139,30 @@ export async function registerRoutes(
     }
   });
   
+  // Search products
+  app.get("/api/products/search", async (req: Request, res: Response) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== "string") {
+        return res.json({ success: true, data: [] });
+      }
+      
+      const allProducts = await storage.getAllProducts();
+      const searchQuery = q.toLowerCase().trim();
+      
+      const results = allProducts.filter(product => {
+        const name = (product.name || "").toLowerCase();
+        const description = (product.description || "").toLowerCase();
+        return name.includes(searchQuery) || description.includes(searchQuery);
+      });
+      
+      res.json({ success: true, data: results });
+    } catch (error) {
+      console.error("Error searching products:", error);
+      res.status(500).json({ success: false, error: "검색에 실패했습니다." });
+    }
+  });
+
   // Get single product
   app.get("/api/products/:id", async (req: Request, res: Response) => {
     try {

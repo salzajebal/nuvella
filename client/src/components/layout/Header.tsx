@@ -1,6 +1,7 @@
-import { Search, ShoppingCart, Menu, LogOut, User, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, ShoppingCart, Menu, LogOut, User, ChevronDown, ChevronRight, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/contexts/WishlistContext";
@@ -15,8 +16,26 @@ export function Header() {
   const [memberName, setMemberName] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (searchQuery.trim()) {
+      setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSearch(false);
+      setSearchQuery("");
+    }
+  };
+
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearch]);
 
   useEffect(() => {
     const checkLoginStatus = () => {
@@ -149,9 +168,49 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button variant="ghost" size="icon" className="w-9 h-9" data-testid="button-search">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="w-9 h-9" 
+            data-testid="button-search"
+            onClick={() => setShowSearch(true)}
+          >
             <Search className="w-5 h-5 text-gray-700" />
           </Button>
+          
+          {showSearch && (
+            <div className="fixed inset-0 z-[100] bg-black/50" onClick={() => setShowSearch(false)}>
+              <div className="bg-white w-full py-4 px-4" onClick={(e) => e.stopPropagation()}>
+                <div className="container-custom flex items-center gap-3">
+                  <form onSubmit={handleSearch} className="flex-1 flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Input
+                        ref={searchInputRef}
+                        type="text"
+                        placeholder="상품명을 검색하세요"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 h-12 text-lg"
+                        data-testid="input-search"
+                      />
+                    </div>
+                    <Button type="submit" className="h-12 px-6" data-testid="button-search-submit">
+                      검색
+                    </Button>
+                  </form>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setShowSearch(false)}
+                    data-testid="button-search-close"
+                  >
+                    <X className="w-6 h-6" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
           
           <Link href="/cart">
             <Button variant="ghost" size="icon" className="relative w-9 h-9" data-testid="button-cart">
