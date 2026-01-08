@@ -3861,39 +3861,37 @@ export default function Admin() {
                           <th className="px-2 py-2 text-center font-medium text-gray-600 text-xs">처리</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        {paginatedWithdrawals.map((request) => (
-                          <React.Fragment key={request.id}>
-                            <tr className={`border-t border-gray-200 ${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
-                              <td className="px-2 py-1.5 text-xs text-gray-600">{request.memberUsername || "-"}</td>
-                              <td className="px-2 py-1.5 text-xs font-medium">{request.memberName}</td>
-                              <td className="px-2 py-1.5 text-xs text-gray-600">
-                                {request.bankName || "-"} / {request.accountNumber || "-"} / {request.accountHolder || "-"} / {request.birthdate || "-"}
-                              </td>
-                              <td className="px-2 py-1.5 text-right font-bold text-orange-600 text-xs">{request.amount.toLocaleString()}원</td>
-                              <td className="px-2 py-1.5 text-center text-xs text-gray-500">{new Date(request.requestedAt).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
-                              <td className="px-2 py-1.5 text-center">
-                                {request.status === "pending" ? <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded">대기</span> : request.status === "approved" ? <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">승인</span> : <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-700 rounded">거부</span>}
-                              </td>
-                              <td className="px-2 py-1.5 text-center">
-                                {request.status === "pending" ? (
-                                  <div className="flex items-center justify-center gap-1">
-                                    <Button size="sm" variant="ghost" className="h-6 px-1.5 text-green-600 text-xs" onClick={() => handleApproveWithdrawal(request.id)}><CheckCircle className="w-3 h-3" /></Button>
-                                    <Button size="sm" variant="ghost" className="h-6 px-1.5 text-red-600 text-xs" onClick={() => handleRejectWithdrawal(request.id)}><XCircle className="w-3 h-3" /></Button>
-                                  </div>
-                                ) : <span className="text-xs text-gray-400">완료</span>}
+                      {paginatedWithdrawals.map((request) => (
+                        <tbody key={request.id}>
+                          <tr className={`border-t border-gray-200 ${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
+                            <td className="px-2 py-1.5 text-xs text-gray-600">{request.memberId || "-"}</td>
+                            <td className="px-2 py-1.5 text-xs font-medium">{request.memberName}</td>
+                            <td className="px-2 py-1.5 text-xs text-gray-600">
+                              {request.bankName || "-"} / {request.accountNumber || "-"} / {request.accountHolder || "-"} / {request.birthdate || "-"}
+                            </td>
+                            <td className="px-2 py-1.5 text-right font-bold text-orange-600 text-xs">{request.amount.toLocaleString()}원</td>
+                            <td className="px-2 py-1.5 text-center text-xs text-gray-500">{new Date(request.requestedAt).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                            <td className="px-2 py-1.5 text-center">
+                              {request.status === "pending" ? <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded">대기</span> : request.status === "approved" ? <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">승인</span> : <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-700 rounded">거부</span>}
+                            </td>
+                            <td className="px-2 py-1.5 text-center">
+                              {request.status === "pending" ? (
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button size="sm" variant="ghost" className="h-6 px-1.5 text-green-600 text-xs" onClick={() => handleApproveWithdrawal(request.id)}><CheckCircle className="w-3 h-3" /></Button>
+                                  <Button size="sm" variant="ghost" className="h-6 px-1.5 text-red-600 text-xs" onClick={() => handleRejectWithdrawal(request.id)}><XCircle className="w-3 h-3" /></Button>
+                                </div>
+                              ) : <span className="text-xs text-gray-400">완료</span>}
+                            </td>
+                          </tr>
+                          {request.adminNote && (
+                            <tr className={`${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
+                              <td colSpan={7} className="px-2 py-1 text-xs text-gray-500 border-b border-gray-100">
+                                <span className="text-gray-400">메모:</span> {request.adminNote}
                               </td>
                             </tr>
-                            {request.adminNote && (
-                              <tr className={`${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
-                                <td colSpan={7} className="px-2 py-1 text-xs text-gray-500 border-b border-gray-100">
-                                  <span className="text-gray-400">메모:</span> {request.adminNote}
-                                </td>
-                              </tr>
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </tbody>
+                          )}
+                        </tbody>
+                      ))}
                     </table>
                   </div>
                   {totalPages > 1 && (
