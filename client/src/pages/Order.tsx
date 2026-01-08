@@ -56,6 +56,9 @@ export default function Order() {
     memberName: "",
     memberEmail: "",
     memberPhone: "",
+    memberZipcode: "",
+    memberAddress: "",
+    memberAddressDetail: "",
     shippingName: "",
     shippingPhone: "",
     shippingZipcode: "",
@@ -64,6 +67,31 @@ export default function Order() {
     shippingMemo: "",
     sameAsOrderer: true,
   });
+
+  const handleMemberAddressSearch = () => {
+    openPostcode({
+      onComplete: (data) => {
+        let fullAddress = data.address;
+        let extraAddress = "";
+        
+        if (data.addressType === "R") {
+          if (data.bname !== "") {
+            extraAddress += data.bname;
+          }
+          if (data.buildingName !== "") {
+            extraAddress += extraAddress !== "" ? `, ${data.buildingName}` : data.buildingName;
+          }
+          fullAddress += extraAddress !== "" ? ` (${extraAddress})` : "";
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          memberZipcode: data.zonecode,
+          memberAddress: fullAddress,
+        }));
+      },
+    });
+  };
 
   const handleAddressSearch = () => {
     openPostcode({
@@ -186,6 +214,9 @@ export default function Order() {
       sameAsOrderer: checked,
       shippingName: checked ? prev.memberName : prev.shippingName,
       shippingPhone: checked ? prev.memberPhone : prev.shippingPhone,
+      shippingZipcode: checked ? prev.memberZipcode : prev.shippingZipcode,
+      shippingAddress: checked ? prev.memberAddress : prev.shippingAddress,
+      shippingAddressDetail: checked ? prev.memberAddressDetail : prev.shippingAddressDetail,
     }));
   };
 
@@ -195,9 +226,12 @@ export default function Order() {
         ...prev,
         shippingName: prev.memberName,
         shippingPhone: prev.memberPhone,
+        shippingZipcode: prev.memberZipcode,
+        shippingAddress: prev.memberAddress,
+        shippingAddressDetail: prev.memberAddressDetail,
       }));
     }
-  }, [formData.memberName, formData.memberPhone, formData.sameAsOrderer]);
+  }, [formData.memberName, formData.memberPhone, formData.memberZipcode, formData.memberAddress, formData.memberAddressDetail, formData.sameAsOrderer]);
 
   const calculateTotal = () => {
     if (!product) return "0";
@@ -403,7 +437,7 @@ export default function Order() {
             <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />
-                주문자 정보
+                주문하시는 분
               </h2>
               
               <div className="grid gap-4 sm:grid-cols-2">
@@ -443,88 +477,143 @@ export default function Order() {
                     data-testid="input-member-email"
                   />
                 </div>
+                <div className="sm:col-span-2">
+                  <Label htmlFor="memberZipcode">우편번호</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="memberZipcode"
+                      name="memberZipcode"
+                      value={formData.memberZipcode}
+                      onChange={handleInputChange}
+                      placeholder="우편번호"
+                      readOnly
+                      className="flex-1 bg-gray-50"
+                      data-testid="input-member-zipcode"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleMemberAddressSearch}
+                      className="flex items-center gap-2 whitespace-nowrap"
+                      data-testid="button-member-address-search"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      주소 찾기
+                    </Button>
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <Label htmlFor="memberAddress">주소</Label>
+                  <Input
+                    id="memberAddress"
+                    name="memberAddress"
+                    value={formData.memberAddress}
+                    onChange={handleInputChange}
+                    placeholder="주소"
+                    readOnly
+                    className="bg-gray-50"
+                    data-testid="input-member-address"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label htmlFor="memberAddressDetail">상세주소</Label>
+                  <Input
+                    id="memberAddressDetail"
+                    name="memberAddressDetail"
+                    value={formData.memberAddressDetail}
+                    onChange={handleInputChange}
+                    placeholder="상세주소 입력"
+                    data-testid="input-member-address-detail"
+                  />
+                </div>
               </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-primary" />
-                  배송지 정보
-                </h2>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.sameAsOrderer}
-                    onChange={(e) => handleSameAsOrderer(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300"
-                  />
-                  <span>주문자 정보와 동일</span>
-                </label>
+              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                받으시는 분
+              </h2>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Button
+                  type="button"
+                  variant={formData.sameAsOrderer ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleSameAsOrderer(true)}
+                  className="flex items-center gap-2"
+                  data-testid="button-same-as-orderer"
+                >
+                  <User className="w-4 h-4" />
+                  주문자와 동일
+                </Button>
+                {recentAddresses.length > 0 && (
+                  <Button
+                    type="button"
+                    variant={showRecentAddresses ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setShowRecentAddresses(!showRecentAddresses);
+                      if (!showRecentAddresses) {
+                        setFormData(prev => ({ ...prev, sameAsOrderer: false }));
+                      }
+                    }}
+                    className="flex items-center gap-2"
+                    data-testid="button-toggle-recent-addresses"
+                  >
+                    <Clock className="w-4 h-4" />
+                    최근 배송지
+                    {showRecentAddresses ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant={addressMode === "new" && !showRecentAddresses && !formData.sameAsOrderer ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setShowRecentAddresses(false);
+                    setAddressMode("new");
+                    setFormData(prev => ({
+                      ...prev,
+                      sameAsOrderer: false,
+                      shippingName: "",
+                      shippingPhone: "",
+                      shippingZipcode: "",
+                      shippingAddress: "",
+                      shippingAddressDetail: "",
+                    }));
+                  }}
+                  className="flex items-center gap-2"
+                  data-testid="button-new-address"
+                >
+                  <Plus className="w-4 h-4" />
+                  신규 배송지
+                </Button>
               </div>
 
-              {recentAddresses.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex gap-2 mb-3">
-                    <Button
+              {recentAddresses.length > 0 && showRecentAddresses && (
+                <div className="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">최근 배송지 선택</p>
+                  {recentAddresses.map((addr) => (
+                    <button
+                      key={addr.id}
                       type="button"
-                      variant={showRecentAddresses ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setShowRecentAddresses(!showRecentAddresses)}
-                      className="flex items-center gap-2"
-                      data-testid="button-toggle-recent-addresses"
+                      onClick={() => handleSelectRecentAddress(addr)}
+                      className="w-full text-left p-3 bg-white rounded-lg border border-gray-200 hover:border-primary hover:bg-amber-50 transition-colors"
+                      data-testid={`button-select-address-${addr.id}`}
                     >
-                      <Clock className="w-4 h-4" />
-                      최근 배송지
-                      {showRecentAddresses ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={addressMode === "new" && !showRecentAddresses ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        setShowRecentAddresses(false);
-                        setAddressMode("new");
-                        setFormData(prev => ({
-                          ...prev,
-                          shippingZipcode: "",
-                          shippingAddress: "",
-                          shippingAddressDetail: "",
-                        }));
-                      }}
-                      className="flex items-center gap-2"
-                      data-testid="button-new-address"
-                    >
-                      <Plus className="w-4 h-4" />
-                      신규 배송지
-                    </Button>
-                  </div>
-
-                  {showRecentAddresses && (
-                    <div className="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
-                      <p className="text-sm font-medium text-gray-700 mb-2">최근 배송지 선택</p>
-                      {recentAddresses.map((addr) => (
-                        <button
-                          key={addr.id}
-                          type="button"
-                          onClick={() => handleSelectRecentAddress(addr)}
-                          className="w-full text-left p-3 bg-white rounded-lg border border-gray-200 hover:border-primary hover:bg-amber-50 transition-colors"
-                          data-testid={`button-select-address-${addr.id}`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="font-medium text-gray-900">{addr.name}</div>
-                              <div className="text-sm text-gray-600">{addr.phone}</div>
-                              <div className="text-sm text-gray-500 mt-1">
-                                [{addr.zipcode}] {addr.address} {addr.addressDetail}
-                              </div>
-                            </div>
-                            <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="font-medium text-gray-900">{addr.name}</div>
+                          <div className="text-sm text-gray-600">{addr.phone}</div>
+                          <div className="text-sm text-gray-500 mt-1">
+                            [{addr.zipcode}] {addr.address} {addr.addressDetail}
                           </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                        </div>
+                        <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      </div>
+                    </button>
+                  ))}
                 </div>
               )}
               
