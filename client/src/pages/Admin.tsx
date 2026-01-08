@@ -2284,7 +2284,7 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-amber-600 group-hover:text-amber-700">{adminOrders.filter(o => o.status === "pending").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "pending").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "pending").reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
@@ -2301,7 +2301,7 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-blue-600 group-hover:text-blue-700">{adminOrders.filter(o => o.status === "confirmed").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "confirmed").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "confirmed").reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
@@ -2318,7 +2318,7 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-green-600 group-hover:text-green-700">{adminOrders.filter(o => o.status === "shipped").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "shipped").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "shipped").reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
@@ -2335,7 +2335,7 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-purple-600 group-hover:text-purple-700">{adminOrders.filter(o => o.status === "delivered").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "delivered").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "delivered").reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
@@ -2352,7 +2352,7 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-red-600 group-hover:text-red-700">{adminOrders.filter(o => o.status === "cancelled").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "cancelled").reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "cancelled").reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()}원</p>
               </button>
             </div>
 
