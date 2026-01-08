@@ -99,7 +99,7 @@ export default function Admin() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings" | "crawling">("dashboard");
   const [stats, setStats] = useState<AdminStats | null>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -269,6 +269,27 @@ export default function Admin() {
 
   const [flashDeposit, setFlashDeposit] = useState(false);
   const [flashWithdrawal, setFlashWithdrawal] = useState(false);
+
+  const [crawlingCategory, setCrawlingCategory] = useState<string | null>(null);
+  const [crawlingProgress, setCrawlingProgress] = useState<{
+    status: 'idle' | 'crawling' | 'importing' | 'completed' | 'error';
+    currentCategory?: string;
+    crawledCount: number;
+    importedCount: number;
+    totalCategories: number;
+    completedCategories: number;
+    message: string;
+    categoryProgress: { [key: string]: { crawled: number; imported: number; status: string } };
+  }>({
+    status: 'idle',
+    crawledCount: 0,
+    importedCount: 0,
+    totalCategories: 0,
+    completedCategories: 0,
+    message: '',
+    categoryProgress: {},
+  });
+  const [crawlLimit, setCrawlLimit] = useState(20);
 
   useEffect(() => {
     const filteredLength = selectedMemberForHistory 
@@ -1123,6 +1144,134 @@ export default function Admin() {
     }
   };
 
+  const handleCrawlCategory = async (categoryId: string) => {
+    if (crawlingProgress.status === 'crawling' || crawlingProgress.status === 'importing') {
+      toast({ title: "알림", description: "이미 크롤링이 진행 중입니다.", variant: "destructive" });
+      return;
+    }
+
+    setCrawlingCategory(categoryId);
+    setCrawlingProgress(prev => ({
+      ...prev,
+      status: 'crawling',
+      currentCategory: categoryId,
+      message: `${CATEGORY_OPTIONS.find(c => c.id === categoryId)?.name || categoryId} 카테고리 크롤링 중...`,
+      categoryProgress: {
+        ...prev.categoryProgress,
+        [categoryId]: { crawled: 0, imported: 0, status: 'crawling' }
+      }
+    }));
+
+    try {
+      const res = await fetchWithAuth("/api/admin/crawling/vivian-category", {
+        method: "POST",
+        body: JSON.stringify({ categoryId: getCategoryIdNumber(categoryId), limit: crawlLimit }),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setCrawlingProgress(prev => ({
+          ...prev,
+          status: 'completed',
+          message: `${data.categoryName}: ${data.crawledCount}개 크롤링, ${data.importedCount}개 저장 완료`,
+          categoryProgress: {
+            ...prev.categoryProgress,
+            [categoryId]: { crawled: data.crawledCount, imported: data.importedCount, status: 'completed' }
+          }
+        }));
+        toast({ 
+          title: "크롤링 완료", 
+          description: `${data.categoryName}: ${data.importedCount}개 상품이 저장되었습니다.` 
+        });
+        fetchProducts();
+        fetchStats();
+      } else {
+        throw new Error(data.error || "크롤링 실패");
+      }
+    } catch (error) {
+      setCrawlingProgress(prev => ({
+        ...prev,
+        status: 'error',
+        message: `크롤링 오류: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+        categoryProgress: {
+          ...prev.categoryProgress,
+          [categoryId]: { crawled: 0, imported: 0, status: 'error' }
+        }
+      }));
+      toast({ title: "오류", description: "크롤링에 실패했습니다.", variant: "destructive" });
+    } finally {
+      setCrawlingCategory(null);
+    }
+  };
+
+  const handleCrawlAllCategories = async () => {
+    if (crawlingProgress.status === 'crawling' || crawlingProgress.status === 'importing') {
+      toast({ title: "알림", description: "이미 크롤링이 진행 중입니다.", variant: "destructive" });
+      return;
+    }
+
+    setCrawlingProgress({
+      status: 'crawling',
+      crawledCount: 0,
+      importedCount: 0,
+      totalCategories: CATEGORY_OPTIONS.length,
+      completedCategories: 0,
+      message: '전체 카테고리 크롤링 시작...',
+      categoryProgress: {},
+    });
+
+    try {
+      const res = await fetchWithAuth("/api/admin/crawling/batch-vivian", {
+        method: "POST",
+        body: JSON.stringify({ productsPerCategory: crawlLimit }),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setCrawlingProgress({
+          status: 'completed',
+          crawledCount: data.totalCrawled,
+          importedCount: data.totalImported,
+          totalCategories: CATEGORY_OPTIONS.length,
+          completedCategories: CATEGORY_OPTIONS.length,
+          message: `전체 크롤링 완료: ${data.totalCrawled}개 크롤링, ${data.totalImported}개 저장`,
+          categoryProgress: data.categoryResults?.reduce((acc: any, r: any) => ({
+            ...acc,
+            [r.category]: { crawled: r.crawled, imported: r.imported, status: 'completed' }
+          }), {}) || {},
+        });
+        toast({ 
+          title: "전체 크롤링 완료", 
+          description: `${data.totalImported}개 상품이 저장되었습니다.` 
+        });
+        fetchProducts();
+        fetchStats();
+      } else {
+        throw new Error(data.error || "크롤링 실패");
+      }
+    } catch (error) {
+      setCrawlingProgress(prev => ({
+        ...prev,
+        status: 'error',
+        message: `크롤링 오류: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+      }));
+      toast({ title: "오류", description: "전체 크롤링에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const getCategoryIdNumber = (categoryId: string): number => {
+    const mapping: { [key: string]: number } = {
+      'home_interior': 10,
+      'beauty': 20,
+      'electronics': 30,
+      'living': 40,
+      'health': 50,
+      'luxury': 60,
+      'kids': 70,
+    };
+    return mapping[categoryId] || 10;
+  };
+
   const handleCreate = async () => {
     try {
       const res = await fetchWithAuth("/api/products", {
@@ -1927,6 +2076,18 @@ export default function Admin() {
                   </span>
                 )}
               </button>
+              <button
+                data-testid="tab-crawling"
+                onClick={() => setActiveTab("crawling")}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === "crawling" 
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Download className="w-5 h-5" />
+                상품 크롤링
+              </button>
             </div>
 
             <div className="pt-4">
@@ -2078,6 +2239,7 @@ export default function Admin() {
               {[
                 { id: "dashboard", icon: BarChart3, label: "메인" },
                 { id: "products", icon: Package, label: "상품" },
+                { id: "crawling", icon: Download, label: "크롤링" },
                 { id: "members", icon: Users, label: "회원" },
                 { id: "orders", icon: ShoppingCart, label: "주문" },
                 { id: "deposits", icon: Wallet, label: "충전" },
@@ -5055,6 +5217,178 @@ export default function Admin() {
                   </ul>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "crawling" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">상품 크롤링</h2>
+                <p className="text-gray-600">vivian-mall.com에서 상품을 자동으로 가져옵니다</p>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-6 border border-amber-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-xl shadow-lg">
+                    <Download className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900">전체 카테고리 크롤링</h3>
+                    <p className="text-sm text-gray-600">모든 카테고리에서 상품을 한 번에 가져옵니다</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600">카테고리당 상품 수:</label>
+                    <Input
+                      type="number"
+                      value={crawlLimit}
+                      onChange={(e) => setCrawlLimit(Math.max(1, Math.min(100, parseInt(e.target.value) || 20)))}
+                      className="w-20"
+                      min={1}
+                      max={100}
+                      data-testid="input-crawl-limit"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleCrawlAllCategories}
+                    disabled={crawlingProgress.status === 'crawling' || crawlingProgress.status === 'importing'}
+                    className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-bold"
+                    data-testid="button-crawl-all"
+                  >
+                    {crawlingProgress.status === 'crawling' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        크롤링 중...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 mr-2" />
+                        전체 크롤링 시작
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {crawlingProgress.status !== 'idle' && (
+                <div className="mt-4 p-4 bg-white rounded-lg border border-amber-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    {crawlingProgress.status === 'crawling' && <Loader2 className="w-4 h-4 text-amber-500 animate-spin" />}
+                    {crawlingProgress.status === 'completed' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                    {crawlingProgress.status === 'error' && <XCircle className="w-4 h-4 text-red-500" />}
+                    <span className={`text-sm font-medium ${
+                      crawlingProgress.status === 'completed' ? 'text-green-600' : 
+                      crawlingProgress.status === 'error' ? 'text-red-600' : 'text-amber-600'
+                    }`}>
+                      {crawlingProgress.message}
+                    </span>
+                  </div>
+                  {crawlingProgress.status === 'completed' && (
+                    <div className="text-sm text-gray-600">
+                      총 {crawlingProgress.crawledCount}개 크롤링, {crawlingProgress.importedCount}개 저장됨
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-4 bg-gray-50 border-b border-gray-200">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <Package className="w-5 h-5 text-amber-500" />
+                  카테고리별 크롤링
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">원하는 카테고리만 선택하여 크롤링할 수 있습니다</p>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {CATEGORY_OPTIONS.map((category) => {
+                  const categoryProgress = crawlingProgress.categoryProgress[category.id];
+                  const isCrawling = crawlingCategory === category.id;
+                  const productCount = stats?.productsByCategory?.find(p => p.id === category.id)?.count || 0;
+                  
+                  return (
+                    <div 
+                      key={category.id}
+                      className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          category.id === 'home_interior' ? 'bg-blue-100 text-blue-600' :
+                          category.id === 'beauty' ? 'bg-pink-100 text-pink-600' :
+                          category.id === 'electronics' ? 'bg-purple-100 text-purple-600' :
+                          category.id === 'living' ? 'bg-green-100 text-green-600' :
+                          category.id === 'health' ? 'bg-red-100 text-red-600' :
+                          category.id === 'luxury' ? 'bg-amber-100 text-amber-600' :
+                          'bg-cyan-100 text-cyan-600'
+                        }`}>
+                          <Package className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{category.name}</h4>
+                          <p className="text-sm text-gray-500">현재 {productCount}개 상품</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        {categoryProgress && (
+                          <div className="text-sm">
+                            {categoryProgress.status === 'completed' && (
+                              <span className="text-green-600 flex items-center gap-1">
+                                <CheckCircle className="w-4 h-4" />
+                                {categoryProgress.imported}개 저장됨
+                              </span>
+                            )}
+                            {categoryProgress.status === 'error' && (
+                              <span className="text-red-600 flex items-center gap-1">
+                                <XCircle className="w-4 h-4" />
+                                오류 발생
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <Button
+                          onClick={() => handleCrawlCategory(category.id)}
+                          disabled={crawlingProgress.status === 'crawling' || crawlingProgress.status === 'importing'}
+                          variant="outline"
+                          size="sm"
+                          className="min-w-[100px]"
+                          data-testid={`button-crawl-${category.id}`}
+                        >
+                          {isCrawling ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                              크롤링 중
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4 mr-1" />
+                              크롤링
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                크롤링 정보
+              </h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• 상품은 vivian-mall.com에서 자동으로 가져옵니다</li>
+                <li>• 가격은 USD에서 KRW로 자동 변환됩니다 (환율: 1,450원)</li>
+                <li>• 카테고리는 자동으로 분류됩니다</li>
+                <li>• 갤러리 이미지와 상품 설명 이미지가 함께 저장됩니다</li>
+              </ul>
             </div>
           </div>
         )}
