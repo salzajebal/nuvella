@@ -201,7 +201,10 @@ export default function Admin() {
   const [pointReason, setPointReason] = useState("");
   const [pointAction, setPointAction] = useState<"add" | "subtract">("add");
   const [pointMemberSearch, setPointMemberSearch] = useState("");
+  const [pointMemberListSearch, setPointMemberListSearch] = useState("");
+  const [selectedMemberForHistory, setSelectedMemberForHistory] = useState<string | null>(null);
   const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustReason, setAdjustReason] = useState("");
   const [freezeReason, setFreezeReason] = useState("");
   const [pointTransactions, setPointTransactions] = useState<{id: string; memberId: string; type: string; amount: number; balanceAfter: number; description: string | null; createdAt: string | null; memberName?: string; memberUsername?: string}[]>([]);
   const [pointSearch, setPointSearch] = useState("");
@@ -266,6 +269,16 @@ export default function Admin() {
 
   const [flashDeposit, setFlashDeposit] = useState(false);
   const [flashWithdrawal, setFlashWithdrawal] = useState(false);
+
+  useEffect(() => {
+    const filteredLength = selectedMemberForHistory 
+      ? pointTransactions.filter(tx => tx.memberId === selectedMemberForHistory).length
+      : pointTransactions.length;
+    const maxPage = Math.max(0, Math.ceil(filteredLength / itemsPerPage) - 1);
+    if (pointPage > maxPage) {
+      setPointPage(maxPage);
+    }
+  }, [pointTransactions, selectedMemberForHistory, pointPage]);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -660,13 +673,14 @@ export default function Admin() {
     try {
       const res = await fetchWithAuth(`/api/admin/members/${memberId}/adjust-points`, {
         method: "POST",
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ amount, reason: adjustReason || undefined }),
       });
       const data = await res.json();
       if (data.success) {
         toast({ title: "완료", description: data.message });
         fetchMembers();
         setAdjustAmount("");
+        setAdjustReason("");
         setSelectedMemberForAction(null);
         setActionType(null);
       } else {
@@ -3153,10 +3167,11 @@ export default function Admin() {
                   {selectedMemberForAction && actionType === "adjust" && (
                     <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                       <h4 className="font-bold text-sm mb-2">포인트 조정 - {members.find(m => m.id === selectedMemberForAction)?.name}</h4>
-                      <div className="flex gap-2">
-                        <Input type="number" placeholder="금액 (음수 가능)" value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} className="max-w-xs" />
+                      <div className="flex gap-2 flex-wrap">
+                        <Input type="number" placeholder="금액 (음수 가능)" value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} className="w-32" />
+                        <Input placeholder="사유 (선택)" value={adjustReason} onChange={(e) => setAdjustReason(e.target.value)} className="w-48" />
                         <Button size="sm" className="bg-amber-500 hover:bg-amber-600" onClick={() => handleAdjustPoints(selectedMemberForAction)}>적용</Button>
-                        <Button size="sm" variant="outline" onClick={() => { setSelectedMemberForAction(null); setActionType(null); }}>취소</Button>
+                        <Button size="sm" variant="outline" onClick={() => { setSelectedMemberForAction(null); setActionType(null); setAdjustReason(""); }}>취소</Button>
                       </div>
                     </div>
                   )}
@@ -3675,33 +3690,46 @@ export default function Admin() {
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50 border-y border-gray-200">
                         <tr>
-                          <th className="px-3 py-2 text-left font-medium text-gray-600">회원</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-600">계좌정보</th>
-                          <th className="px-3 py-2 text-right font-medium text-gray-600">금액</th>
-                          <th className="px-3 py-2 text-center font-medium text-gray-600">상태</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-600">신청일</th>
-                          <th className="px-3 py-2 text-center font-medium text-gray-600">처리</th>
+                          <th className="px-2 py-2 text-left font-medium text-gray-600 text-xs">아이디</th>
+                          <th className="px-2 py-2 text-left font-medium text-gray-600 text-xs">이름</th>
+                          <th className="px-2 py-2 text-left font-medium text-gray-600 text-xs">계좌정보 (은행/계좌/예금주/생년월일)</th>
+                          <th className="px-2 py-2 text-right font-medium text-gray-600 text-xs">금액</th>
+                          <th className="px-2 py-2 text-center font-medium text-gray-600 text-xs">일시</th>
+                          <th className="px-2 py-2 text-center font-medium text-gray-600 text-xs">상태</th>
+                          <th className="px-2 py-2 text-center font-medium text-gray-600 text-xs">처리</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody>
                         {paginatedWithdrawals.map((request) => (
-                          <tr key={request.id} className={`${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
-                            <td className="px-3 py-2"><span className="font-medium">{request.memberName}</span></td>
-                            <td className="px-3 py-2 text-gray-600 text-xs">{request.bankName || "-"} {request.accountNumber || "-"}</td>
-                            <td className="px-3 py-2 text-right font-bold text-orange-600">{request.amount.toLocaleString()}원</td>
-                            <td className="px-3 py-2 text-center">
-                              {request.status === "pending" ? <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded">대기</span> : request.status === "approved" ? <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">승인</span> : <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-700 rounded">거부</span>}
-                            </td>
-                            <td className="px-3 py-2 text-gray-500 text-xs">{new Date(request.requestedAt).toLocaleDateString('ko-KR')}</td>
-                            <td className="px-3 py-2 text-center">
-                              {request.status === "pending" ? (
-                                <div className="flex items-center justify-center gap-1">
-                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-green-600" onClick={() => handleApproveWithdrawal(request.id)}><CheckCircle className="w-3.5 h-3.5 mr-1" />승인</Button>
-                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-red-600" onClick={() => handleRejectWithdrawal(request.id)}><XCircle className="w-3.5 h-3.5 mr-1" />거부</Button>
-                                </div>
-                              ) : <span className="text-xs text-gray-400">처리완료</span>}
-                            </td>
-                          </tr>
+                          <React.Fragment key={request.id}>
+                            <tr className={`border-t border-gray-200 ${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
+                              <td className="px-2 py-1.5 text-xs text-gray-600">{request.memberUsername || "-"}</td>
+                              <td className="px-2 py-1.5 text-xs font-medium">{request.memberName}</td>
+                              <td className="px-2 py-1.5 text-xs text-gray-600">
+                                {request.bankName || "-"} / {request.accountNumber || "-"} / {request.accountHolder || "-"} / {request.birthdate || "-"}
+                              </td>
+                              <td className="px-2 py-1.5 text-right font-bold text-orange-600 text-xs">{request.amount.toLocaleString()}원</td>
+                              <td className="px-2 py-1.5 text-center text-xs text-gray-500">{new Date(request.requestedAt).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                              <td className="px-2 py-1.5 text-center">
+                                {request.status === "pending" ? <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded">대기</span> : request.status === "approved" ? <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">승인</span> : <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-700 rounded">거부</span>}
+                              </td>
+                              <td className="px-2 py-1.5 text-center">
+                                {request.status === "pending" ? (
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Button size="sm" variant="ghost" className="h-6 px-1.5 text-green-600 text-xs" onClick={() => handleApproveWithdrawal(request.id)}><CheckCircle className="w-3 h-3" /></Button>
+                                    <Button size="sm" variant="ghost" className="h-6 px-1.5 text-red-600 text-xs" onClick={() => handleRejectWithdrawal(request.id)}><XCircle className="w-3 h-3" /></Button>
+                                  </div>
+                                ) : <span className="text-xs text-gray-400">완료</span>}
+                              </td>
+                            </tr>
+                            {request.adminNote && (
+                              <tr className={`${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
+                                <td colSpan={7} className="px-2 py-1 text-xs text-gray-500 border-b border-gray-100">
+                                  <span className="text-gray-400">메모:</span> {request.adminNote}
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         ))}
                       </tbody>
                     </table>
@@ -3850,25 +3878,57 @@ export default function Admin() {
             </div>
 
             <div>
-              <h3 className="font-bold text-lg mb-4">회원별 포인트 현황</h3>
-              <div className="space-y-2">
-                {members.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-yellow-600" />
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg">회원별 포인트 현황</h3>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="이름/아이디 검색"
+                    value={pointMemberListSearch}
+                    onChange={(e) => setPointMemberListSearch(e.target.value)}
+                    className="pl-9 h-9"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                {members
+                  .filter(m => !pointMemberListSearch || m.name.toLowerCase().includes(pointMemberListSearch.toLowerCase()) || m.username.toLowerCase().includes(pointMemberListSearch.toLowerCase()))
+                  .map((member) => (
+                  <div 
+                    key={member.id} 
+                    onClick={() => {
+                      if (selectedMemberForHistory === member.id) {
+                        setSelectedMemberForHistory(null);
+                      } else {
+                        setSelectedMemberForHistory(member.id);
+                      }
+                      setPointPage(0);
+                    }}
+                    className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all ${selectedMemberForHistory === member.id ? 'bg-amber-100 border-amber-400 ring-2 ring-amber-200' : 'bg-gray-50 hover:bg-gray-100'}`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="w-4 h-4 text-yellow-600" />
                       </div>
-                      <div>
-                        <p className="font-medium">{member.name}</p>
-                        <p className="text-sm text-gray-500">{member.username}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{member.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{member.username}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-lg text-amber-600">{(member.pointBalance || 0).toLocaleString()}P</p>
-                    </div>
+                    <p className="font-bold text-amber-600 text-sm flex-shrink-0">{(member.pointBalance || 0).toLocaleString()}P</p>
                   </div>
                 ))}
               </div>
+              {selectedMemberForHistory && (
+                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+                  <span className="text-sm text-amber-800">
+                    <strong>{members.find(m => m.id === selectedMemberForHistory)?.name}</strong> 님의 내역만 표시 중
+                  </span>
+                  <Button size="sm" variant="ghost" className="h-7 text-amber-600" onClick={() => { setSelectedMemberForHistory(null); setPointPage(0); }}>
+                    필터 해제
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="mt-8">
@@ -3877,23 +3937,29 @@ export default function Admin() {
               <PointSearchPanel
                 onSearch={(filters) => {
                   setPointSearchFilters(filters);
+                  setPointPage(0);
                   fetchPointTransactions(filters);
                 }}
                 onReset={() => {
                   setPointSearchFilters(null);
+                  setPointPage(0);
                   fetchPointTransactions();
                 }}
                 isLoading={loading}
               />
               
               {(() => {
-                const totalPages = Math.ceil(pointTransactions.length / itemsPerPage);
-                const paginatedTx = pointTransactions.slice(pointPage * itemsPerPage, (pointPage + 1) * itemsPerPage);
+                const filteredTx = selectedMemberForHistory 
+                  ? pointTransactions.filter(tx => tx.memberId === selectedMemberForHistory)
+                  : pointTransactions;
+                const totalPages = Math.ceil(filteredTx.length / itemsPerPage);
+                const safePage = Math.min(pointPage, Math.max(0, totalPages - 1));
+                const paginatedTx = filteredTx.slice(safePage * itemsPerPage, (safePage + 1) * itemsPerPage);
                 
-                if (pointTransactions.length === 0) {
+                if (filteredTx.length === 0) {
                   return (
                     <div className="text-center py-8 text-gray-500">
-                      <p>포인트 내역이 없습니다.</p>
+                      <p>{selectedMemberForHistory ? "해당 회원의 포인트 내역이 없습니다." : "포인트 내역이 없습니다."}</p>
                     </div>
                   );
                 }
@@ -3977,11 +4043,11 @@ export default function Admin() {
                     </div>
                     {totalPages > 1 && (
                       <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                        <p className="text-sm text-gray-500">총 {pointTransactions.length}건</p>
+                        <p className="text-sm text-gray-500">총 {filteredTx.length}건</p>
                         <div className="flex gap-1">
-                          <Button size="sm" variant="outline" disabled={pointPage === 0} onClick={() => setPointPage(p => p - 1)}>이전</Button>
-                          <span className="px-3 py-1 text-sm">{pointPage + 1} / {totalPages}</span>
-                          <Button size="sm" variant="outline" disabled={pointPage >= totalPages - 1} onClick={() => setPointPage(p => p + 1)}>다음</Button>
+                          <Button size="sm" variant="outline" disabled={safePage === 0} onClick={() => setPointPage(Math.max(0, safePage - 1))}>이전</Button>
+                          <span className="px-3 py-1 text-sm">{safePage + 1} / {totalPages}</span>
+                          <Button size="sm" variant="outline" disabled={safePage >= totalPages - 1} onClick={() => setPointPage(Math.min(totalPages - 1, safePage + 1))}>다음</Button>
                         </div>
                       </div>
                     )}
