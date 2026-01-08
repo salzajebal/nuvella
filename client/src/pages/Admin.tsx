@@ -3223,112 +3223,107 @@ export default function Admin() {
             ) : adminOrders.length === 0 ? (
               <div className="text-center py-12 text-gray-500">주문 내역이 없습니다.</div>
             ) : (
-              <div className="space-y-4">
-                {adminOrders
-                  .filter(order => orderFilter === "all" || order.status === orderFilter)
-                  .filter(order => {
-                    if (!orderSearch.trim()) return true;
-                    const search = orderSearch.toLowerCase();
-                    return order.customerName?.toLowerCase().includes(search) || 
-                           order.orderNumber?.toLowerCase().includes(search);
-                  })
-                  .map((order) => (
-                  <div
-                    key={order.id}
-                    className={`p-4 border rounded-lg ${
-                      order.status === "pending"
-                        ? "border-yellow-300 bg-yellow-50"
-                        : order.status === "confirmed"
-                        ? "border-blue-300 bg-blue-50"
-                        : order.status === "shipped"
-                        ? "border-purple-300 bg-purple-50"
-                        : order.status === "delivered"
-                        ? "border-green-300 bg-green-50"
-                        : order.status === "cancelled"
-                        ? "border-red-300 bg-red-50"
-                        : "border-gray-200"
-                    }`}
-                  >
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg">{order.orderNumber}</span>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            order.status === "pending" ? "bg-yellow-200 text-yellow-800" :
-                            order.status === "confirmed" ? "bg-blue-200 text-blue-800" :
-                            order.status === "shipped" ? "bg-purple-200 text-purple-800" :
-                            order.status === "delivered" ? "bg-green-200 text-green-800" :
-                            order.status === "cancelled" ? "bg-red-200 text-red-800" :
-                            "bg-gray-200 text-gray-800"
-                          }`}>
-                            {order.status === "pending" ? "대기중" :
-                             order.status === "confirmed" ? "확인됨" :
-                             order.status === "shipped" ? "배송중" :
-                             order.status === "delivered" ? "배송완료" :
-                             order.status === "cancelled" ? "취소됨" : order.status}
-                          </span>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            order.paymentStatus === "pending" ? "bg-orange-200 text-orange-800" :
-                            order.paymentStatus === "paid" ? "bg-green-200 text-green-800" :
-                            order.paymentStatus === "refunded" ? "bg-gray-200 text-gray-800" :
-                            "bg-gray-200 text-gray-800"
-                          }`}>
-                            {order.paymentStatus === "pending" ? "결제 대기" :
-                             order.paymentStatus === "paid" ? "결제 완료" :
-                             order.paymentStatus === "refunded" ? "환불됨" : order.paymentStatus}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          <p><strong>상품:</strong> {order.productName}</p>
-                          <p><strong>수량:</strong> {order.quantity}개 | <strong>총액:</strong> {Number(order.totalAmount).toLocaleString()}원</p>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          <p><strong>주문자:</strong> {order.memberName} ({order.memberEmail})</p>
-                          <p><strong>연락처:</strong> {order.memberPhone}</p>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          <p><strong>배송지:</strong> {order.shippingName} ({order.shippingPhone})</p>
-                          <p>{order.shippingAddress} {order.shippingAddressDetail}</p>
-                          {order.shippingMemo && <p><strong>배송 메모:</strong> {order.shippingMemo}</p>}
-                        </div>
-                        <p className="text-xs text-gray-400">
-                          주문일시: {order.createdAt ? new Date(order.createdAt).toLocaleString("ko-KR") : "-"}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openOrderDetail(order)}
-                          data-testid={`button-order-detail-${order.id}`}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          상세보기
-                        </Button>
-                        <select
-                          className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-yellow-500"
-                          value={order.status || "pending"}
-                          onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                        >
-                          <option value="pending">대기중</option>
-                          <option value="confirmed">확인됨</option>
-                          <option value="shipped">배송중</option>
-                          <option value="delivered">배송완료</option>
-                          <option value="cancelled">취소됨</option>
-                        </select>
-                        <select
-                          className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-yellow-500"
-                          value={order.paymentStatus || "pending"}
-                          onChange={(e) => handleUpdatePaymentStatus(order.id, e.target.value)}
-                        >
-                          <option value="pending">결제 대기</option>
-                          <option value="paid">결제 완료</option>
-                          <option value="refunded">환불됨</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-700">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium">주문번호/일시</th>
+                      <th className="px-3 py-2 text-left font-medium">상품/금액</th>
+                      <th className="px-3 py-2 text-left font-medium">주문자/배송지</th>
+                      <th className="px-3 py-2 text-center font-medium">상태</th>
+                      <th className="px-3 py-2 text-center font-medium">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {adminOrders
+                      .filter(order => orderFilter === "all" || order.status === orderFilter)
+                      .filter(order => {
+                        if (!orderSearch.trim()) return true;
+                        const search = orderSearch.toLowerCase();
+                        return order.customerName?.toLowerCase().includes(search) || 
+                               order.orderNumber?.toLowerCase().includes(search);
+                      })
+                      .map((order) => (
+                      <tr key={order.id} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 align-top">
+                          <div className="font-bold text-gray-900">{order.orderNumber}</div>
+                          <div className="text-xs text-gray-500">
+                            {order.createdAt ? new Date(order.createdAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "-"}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 align-top">
+                          <div className="font-medium text-gray-900 line-clamp-1 max-w-[200px]" title={order.productName}>{order.productName}</div>
+                          <div className="text-xs text-gray-600">{order.quantity}개 · {Number(order.totalAmount).toLocaleString()}원</div>
+                        </td>
+                        <td className="px-3 py-2 align-top">
+                          <div className="text-gray-900">{order.memberName}</div>
+                          <div className="text-xs text-gray-500 line-clamp-1 max-w-[200px]" title={order.shippingAddress}>→ {order.shippingName} / {order.shippingPhone}</div>
+                        </td>
+                        <td className="px-3 py-2 align-top text-center">
+                          <div className="flex flex-col gap-1 items-center">
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              order.status === "pending" ? "bg-yellow-200 text-yellow-800" :
+                              order.status === "confirmed" ? "bg-blue-200 text-blue-800" :
+                              order.status === "shipped" ? "bg-purple-200 text-purple-800" :
+                              order.status === "delivered" ? "bg-green-200 text-green-800" :
+                              order.status === "cancelled" ? "bg-red-200 text-red-800" :
+                              "bg-gray-200 text-gray-800"
+                            }`}>
+                              {order.status === "pending" ? "대기" :
+                               order.status === "confirmed" ? "확인" :
+                               order.status === "shipped" ? "배송중" :
+                               order.status === "delivered" ? "완료" :
+                               order.status === "cancelled" ? "취소" : order.status}
+                            </span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              order.paymentStatus === "pending" ? "bg-orange-100 text-orange-700" :
+                              order.paymentStatus === "paid" ? "bg-green-100 text-green-700" :
+                              "bg-gray-100 text-gray-700"
+                            }`}>
+                              {order.paymentStatus === "pending" ? "미결제" :
+                               order.paymentStatus === "paid" ? "결제" :
+                               order.paymentStatus === "refunded" ? "환불" : order.paymentStatus}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 align-top">
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                              onClick={() => openOrderDetail(order)}
+                              data-testid={`button-order-detail-${order.id}`}
+                            >
+                              <Eye className="w-3 h-3 mr-1" />
+                              상세
+                            </Button>
+                            <select
+                              className="h-7 px-2 text-xs border rounded focus:ring-1 focus:ring-yellow-500"
+                              value={order.status || "pending"}
+                              onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                            >
+                              <option value="pending">대기중</option>
+                              <option value="confirmed">확인</option>
+                              <option value="shipped">배송중</option>
+                              <option value="delivered">완료</option>
+                              <option value="cancelled">취소</option>
+                            </select>
+                            <select
+                              className="h-7 px-2 text-xs border rounded focus:ring-1 focus:ring-yellow-500"
+                              value={order.paymentStatus || "pending"}
+                              onChange={(e) => handleUpdatePaymentStatus(order.id, e.target.value)}
+                            >
+                              <option value="pending">미결제</option>
+                              <option value="paid">결제완료</option>
+                              <option value="refunded">환불</option>
+                            </select>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
 

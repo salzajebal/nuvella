@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Link } from "wouter";
@@ -10,18 +10,20 @@ import type { Product } from "@shared/schema";
 
 export default function Search() {
   const [location, setLocation] = useLocation();
-  const searchParams = new URLSearchParams(window.location.search);
-  const initialQuery = searchParams.get("q") || "";
+  const searchString = useSearch();
+  const searchParams = new URLSearchParams(searchString);
+  const urlQuery = searchParams.get("q") || "";
   
-  const [query, setQuery] = useState(initialQuery);
+  const [query, setQuery] = useState(urlQuery);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (initialQuery) {
-      searchProducts(initialQuery);
+    setQuery(urlQuery);
+    if (urlQuery) {
+      searchProducts(urlQuery);
     }
-  }, [initialQuery]);
+  }, [urlQuery]);
 
   const searchProducts = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
@@ -91,9 +93,9 @@ export default function Search() {
             </div>
           </form>
 
-          {initialQuery && (
+          {urlQuery && (
             <p className="text-gray-600 mb-4">
-              "<span className="font-bold text-gray-900">{initialQuery}</span>" 검색 결과 
+              "<span className="font-bold text-gray-900">{urlQuery}</span>" 검색 결과 
               <span className="font-bold text-primary ml-1">{products.length}건</span>
             </p>
           )}
@@ -102,7 +104,7 @@ export default function Search() {
             <div className="text-center py-12 text-gray-500">
               검색 중...
             </div>
-          ) : products.length === 0 && initialQuery ? (
+          ) : products.length === 0 && urlQuery ? (
             <div className="text-center py-16 bg-white rounded-xl border">
               <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 mb-2">검색 결과가 없습니다.</p>
