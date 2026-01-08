@@ -1344,6 +1344,36 @@ export default function Admin() {
     }
   };
 
+  const handleDeleteAllProducts = async () => {
+    const confirmMessage = `⚠️ 경고: 전체 상품 삭제\n\n정말로 모든 상품(${products.length}개)을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+    
+    const doubleConfirm = window.confirm("마지막 확인: 정말로 모든 상품을 삭제하시겠습니까?\n\n'확인'을 누르면 모든 상품이 영구 삭제됩니다.");
+    
+    if (!doubleConfirm) {
+      return;
+    }
+    
+    try {
+      const res = await fetchWithAuth("/api/admin/products/all", { method: "DELETE" });
+      const data = await res.json();
+      
+      if (data.success) {
+        toast({ title: "성공", description: `${data.deletedCount || 0}개의 상품이 삭제되었습니다.` });
+        fetchProducts();
+        fetchStats();
+      } else {
+        toast({ title: "오류", description: data.error || "전체 삭제에 실패했습니다.", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Delete all products error:", error);
+      toast({ title: "오류", description: "전체 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
   const startEdit = (product: Product) => {
     setEditingId(product.id);
     const existingUrls = product.imageUrls || [];
@@ -2535,6 +2565,15 @@ export default function Admin() {
                 <Button variant="outline" onClick={fetchProducts}>
                   <RefreshCw className="w-4 h-4 mr-2" />
                   새로고침
+                </Button>
+                <Button 
+                  data-testid="button-delete-all-products"
+                  variant="outline"
+                  onClick={handleDeleteAllProducts}
+                  className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  전체 삭제
                 </Button>
                 <Button 
                   data-testid="button-add-product"
