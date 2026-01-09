@@ -120,7 +120,7 @@ export async function registerRoutes(
   // Get all products
   app.get("/api/products", async (req: Request, res: Response) => {
     try {
-      const { category, subcategory } = req.query;
+      const { category, subcategory, isBest, isNew } = req.query;
       let productList;
       
       if (category && category !== "all") {
@@ -130,6 +130,16 @@ export async function registerRoutes(
         }
       } else {
         productList = await storage.getAllProducts();
+      }
+      
+      // Filter by isBest flag
+      if (isBest === "true") {
+        productList = productList.filter(p => p.isBest === true);
+      }
+      
+      // Filter by isNew flag
+      if (isNew === "true") {
+        productList = productList.filter(p => p.isNew === true);
       }
       
       res.json({ success: true, data: productList });
