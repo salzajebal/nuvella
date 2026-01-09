@@ -1167,6 +1167,13 @@ export default function Admin() {
         method: "POST",
         body: JSON.stringify({ categoryId: getCategoryIdNumber(categoryId), limit: crawlLimit }),
       });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Category crawl response error:", res.status, errorText);
+        throw new Error(`서버 오류 (${res.status})`);
+      }
+      
       const data = await res.json();
       
       if (data.success) {
@@ -1225,6 +1232,13 @@ export default function Admin() {
         method: "POST",
         body: JSON.stringify({ productsPerCategory: crawlLimit }),
       });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Batch crawl response error:", res.status, errorText);
+        throw new Error(`서버 오류 (${res.status}): ${errorText.substring(0, 100)}`);
+      }
+      
       const data = await res.json();
       
       if (data.success) {
