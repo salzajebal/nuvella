@@ -2780,6 +2780,7 @@ export async function registerRoutes(
                 imageUrls: allImages,
                 descriptionImageUrls: descImages,
                 category: product.category,
+                subcategory: product.subcategory,
                 description: product.description || `에스텔라 프리미엄 상품입니다.`,
                 isBest: Math.random() > 0.7,
                 isNew: true,
