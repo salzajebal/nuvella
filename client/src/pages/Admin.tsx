@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Plus, Pencil, Trash2, Check, X, RefreshCw, Database, 
   LogOut, Users, Package, BarChart3, Eye, EyeOff,
@@ -1407,7 +1407,7 @@ export default function Admin() {
       if (data.success) {
         toast({ title: "성공", description: "회원이 추가되었습니다." });
         setShowAddMemberForm(false);
-        setMemberFormData({ email: "", password: "", name: "", phone: "", address: "", bank: "", accountNumber: "", isActive: true, isAdmin: false });
+        setMemberFormData({ email: "", password: "", name: "", phone: "", address: "", bank: "", accountNumber: "", memo: "", isActive: true, isAdmin: false });
         fetchMembers();
         fetchStats();
       } else {
@@ -2441,7 +2441,7 @@ export default function Admin() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm text-gray-800">{chat.memberName || "회원"}</span>
+                            <span className="font-medium text-sm text-gray-800">{(chat as any).memberName || "회원"}</span>
                             {chat.status === "open" && (
                               <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full">대기</span>
                             )}
@@ -3408,7 +3408,7 @@ export default function Admin() {
                 <div className="relative flex-1 sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
-                    placeholder="이름 또는 주문번호 검색"
+                    placeholder="이름/아이디/주문번호 검색"
                     value={orderSearch}
                     onChange={(e) => setOrderSearch(e.target.value)}
                     className="pl-9"
@@ -3440,103 +3440,85 @@ export default function Admin() {
               <div className="text-center py-12 text-gray-500">주문 내역이 없습니다.</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs">
                   <thead className="bg-gray-50 text-gray-700">
                     <tr>
-                      <th className="px-3 py-2 text-left font-medium">주문번호/일시</th>
-                      <th className="px-3 py-2 text-left font-medium">상품/금액</th>
-                      <th className="px-3 py-2 text-left font-medium">주문자/배송지</th>
-                      <th className="px-3 py-2 text-center font-medium">상태</th>
-                      <th className="px-3 py-2 text-center font-medium">관리</th>
+                      <th className="px-2 py-1.5 text-left font-medium">상품</th>
+                      <th className="px-2 py-1.5 text-left font-medium">주문번호</th>
+                      <th className="px-2 py-1.5 text-left font-medium">주문자</th>
+                      <th className="px-2 py-1.5 text-right font-medium">금액</th>
+                      <th className="px-2 py-1.5 text-center font-medium">일시</th>
+                      <th className="px-2 py-1.5 text-center font-medium">상태</th>
+                      <th className="px-2 py-1.5 text-center font-medium">관리</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody>
                     {adminOrders
                       .filter(order => orderFilter === "all" || order.status === orderFilter)
                       .filter(order => {
                         if (!orderSearch.trim()) return true;
                         const search = orderSearch.toLowerCase();
-                        return order.customerName?.toLowerCase().includes(search) || 
-                               order.orderNumber?.toLowerCase().includes(search);
+                        return order.memberName?.toLowerCase().includes(search) || 
+                               order.orderNumber?.toLowerCase().includes(search) ||
+                               (order as any).memberUsername?.toLowerCase().includes(search);
                       })
                       .map((order) => (
-                      <tr key={order.id} className="hover:bg-gray-50">
-                        <td className="px-3 py-2 align-top">
-                          <div className="font-bold text-gray-900">{order.orderNumber}</div>
-                          <div className="text-xs text-gray-500">
+                      <React.Fragment key={order.id}>
+                        <tr className={`border-t border-gray-200 ${order.status === "pending" ? "bg-yellow-50/50" : ""}`}>
+                          <td className="px-2 py-1.5 max-w-[150px]">
+                            <span className="line-clamp-1 font-medium" title={order.productName}>{order.productName}</span>
+                          </td>
+                          <td className="px-2 py-1.5 text-gray-600">{order.orderNumber}</td>
+                          <td className="px-2 py-1.5">
+                            <span className="font-medium">{order.memberName}</span>
+                            {(order as any).memberUsername && <span className="text-gray-400 ml-1">({(order as any).memberUsername})</span>}
+                          </td>
+                          <td className="px-2 py-1.5 text-right font-bold text-amber-600">{Number(order.totalAmount).toLocaleString()}원</td>
+                          <td className="px-2 py-1.5 text-center text-gray-500">
                             {order.createdAt ? new Date(order.createdAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "-"}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <div className="font-medium text-gray-900 line-clamp-1 max-w-[200px]" title={order.productName}>{order.productName}</div>
-                          <div className="text-xs text-gray-600">{order.quantity}개 · {Number(order.totalAmount).toLocaleString()}원</div>
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <div className="text-gray-900">{order.memberName}</div>
-                          <div className="text-xs text-gray-500 line-clamp-1 max-w-[200px]" title={order.shippingAddress}>→ {order.shippingName} / {order.shippingPhone}</div>
-                        </td>
-                        <td className="px-3 py-2 align-top text-center">
-                          <div className="flex flex-col gap-1 items-center">
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              order.status === "pending" ? "bg-yellow-200 text-yellow-800" :
-                              order.status === "confirmed" ? "bg-blue-200 text-blue-800" :
-                              order.status === "shipped" ? "bg-purple-200 text-purple-800" :
-                              order.status === "delivered" ? "bg-green-200 text-green-800" :
-                              order.status === "cancelled" ? "bg-red-200 text-red-800" :
-                              "bg-gray-200 text-gray-800"
-                            }`}>
-                              {order.status === "pending" ? "대기" :
-                               order.status === "confirmed" ? "확인" :
-                               order.status === "shipped" ? "배송중" :
-                               order.status === "delivered" ? "완료" :
-                               order.status === "cancelled" ? "취소" : order.status}
-                            </span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              order.paymentStatus === "pending" ? "bg-orange-100 text-orange-700" :
-                              order.paymentStatus === "paid" ? "bg-green-100 text-green-700" :
-                              "bg-gray-100 text-gray-700"
-                            }`}>
-                              {order.paymentStatus === "pending" ? "미결제" :
-                               order.paymentStatus === "paid" ? "결제" :
-                               order.paymentStatus === "refunded" ? "환불" : order.paymentStatus}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs"
-                              onClick={() => openOrderDetail(order)}
-                              data-testid={`button-order-detail-${order.id}`}
-                            >
-                              <Eye className="w-3 h-3 mr-1" />
-                              상세
-                            </Button>
-                            <select
-                              className="h-7 px-2 text-xs border rounded focus:ring-1 focus:ring-yellow-500"
-                              value={order.status || "pending"}
-                              onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                            >
-                              <option value="pending">대기중</option>
-                              <option value="confirmed">확인</option>
-                              <option value="shipped">배송중</option>
-                              <option value="delivered">완료</option>
-                              <option value="cancelled">취소</option>
-                            </select>
-                            <select
-                              className="h-7 px-2 text-xs border rounded focus:ring-1 focus:ring-yellow-500"
-                              value={order.paymentStatus || "pending"}
-                              onChange={(e) => handleUpdatePaymentStatus(order.id, e.target.value)}
-                            >
-                              <option value="pending">미결제</option>
-                              <option value="paid">결제완료</option>
-                              <option value="refunded">환불</option>
-                            </select>
-                          </div>
-                        </td>
-                      </tr>
+                          </td>
+                          <td className="px-2 py-1.5 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <span className={`px-1.5 py-0.5 rounded text-xs ${
+                                order.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                                order.status === "confirmed" ? "bg-blue-100 text-blue-700" :
+                                order.status === "shipped" ? "bg-purple-100 text-purple-700" :
+                                order.status === "delivered" ? "bg-green-100 text-green-700" :
+                                "bg-red-100 text-red-700"
+                              }`}>
+                                {order.status === "pending" ? "대기" : order.status === "confirmed" ? "확인" : order.status === "shipped" ? "배송" : order.status === "delivered" ? "완료" : "취소"}
+                              </span>
+                              <span className={`px-1.5 py-0.5 rounded text-xs ${order.paymentStatus === "paid" || order.paymentStatus === "completed" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                                {order.paymentStatus === "paid" || order.paymentStatus === "completed" ? "결제" : "미결제"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-2 py-1.5 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openOrderDetail(order)} data-testid={`button-order-detail-${order.id}`}>
+                                <Eye className="w-3.5 h-3.5" />
+                              </Button>
+                              <select className="h-6 px-1 text-xs border rounded" value={order.status || "pending"} onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}>
+                                <option value="pending">대기</option>
+                                <option value="confirmed">확인</option>
+                                <option value="shipped">배송</option>
+                                <option value="delivered">완료</option>
+                                <option value="cancelled">취소</option>
+                              </select>
+                              <select className="h-6 px-1 text-xs border rounded" value={order.paymentStatus || "pending"} onChange={(e) => handleUpdatePaymentStatus(order.id, e.target.value)}>
+                                <option value="pending">미결</option>
+                                <option value="paid">결제</option>
+                                <option value="refunded">환불</option>
+                              </select>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr className={`${order.status === "pending" ? "bg-yellow-50/50" : ""}`}>
+                          <td colSpan={7} className="px-2 py-1 text-gray-500 border-b border-gray-100">
+                            <span className="text-gray-400">배송:</span> {order.shippingName} ({order.shippingPhone}) | {order.quantity}개 | {order.shippingAddress?.substring(0, 30)}...
+                          </td>
+                        </tr>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>

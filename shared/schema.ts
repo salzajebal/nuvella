@@ -340,6 +340,7 @@ export const orders = pgTable("orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   orderNumber: text("order_number").notNull().unique(),
   memberId: varchar("member_id"),
+  memberUsername: text("member_username"),
   memberName: text("member_name").notNull(),
   memberEmail: text("member_email").notNull(),
   memberPhone: text("member_phone").notNull(),

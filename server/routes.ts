@@ -2309,9 +2309,11 @@ export async function registerRoutes(
       let orderStatus = "pending";
       
       // Auto-payment with points for logged-in members
+      let memberUsername: string | null = null;
       if (memberId) {
         const member = await storage.getMember(memberId);
         if (member) {
+          memberUsername = member.username;
           const currentPoints = member.pointBalance || 0;
           
           if (currentPoints >= orderTotalAmount) {
@@ -2348,6 +2350,7 @@ export async function registerRoutes(
       const orderData = {
         orderNumber,
         memberId: memberId || null,
+        memberUsername: memberUsername,
         memberName: String(memberName).trim(),
         memberEmail: String(memberEmail).trim(),
         memberPhone: String(memberPhone).trim(),
