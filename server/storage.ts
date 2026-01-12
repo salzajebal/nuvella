@@ -176,7 +176,7 @@ export interface IStorage {
   createPointTransaction(transaction: InsertPointTransaction): Promise<PointTransaction>;
   
   // Member Point & Freeze Management
-  updateMemberPoints(id: string, amount: number): Promise<Member | undefined>;
+  updateMemberPoints(id: string, amount: number, reason?: string): Promise<Member | undefined>;
   freezeMember(id: string, reason: string): Promise<Member | undefined>;
   unfreezeMember(id: string): Promise<Member | undefined>;
   
@@ -913,7 +913,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Member Point & Freeze Management
-  async updateMemberPoints(id: string, amount: number): Promise<Member | undefined> {
+  async updateMemberPoints(id: string, amount: number, reason?: string): Promise<Member | undefined> {
     const member = await this.getMember(id);
     if (!member) return undefined;
 
@@ -924,12 +924,16 @@ export class DatabaseStorage implements IStorage {
       .where(eq(members.id, id))
       .returning();
 
+    const defaultDescription = amount >= 0 
+      ? `관리자 포인트 지급: ${amount.toLocaleString()}원` 
+      : `관리자 포인트 차감: ${Math.abs(amount).toLocaleString()}원`;
+
     await db.insert(pointTransactions).values({
       memberId: id,
-      type: "manual_adjustment",
+      type: amount >= 0 ? "admin_add" : "admin_subtract",
       amount: amount,
       balanceAfter: newBalance,
-      description: amount >= 0 ? `관리자 포인트 지급: ${amount.toLocaleString()}원` : `관리자 포인트 차감: ${Math.abs(amount).toLocaleString()}원`,
+      description: reason || defaultDescription,
     });
 
     return updated;

@@ -12,19 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-interface MemberInfo {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string | null;
-  bank: string | null;
-  accountNumber: string | null;
-  pointBalance: number;
-  isFrozen: boolean;
-  createdAt: string;
-}
+import { useMemberInfo, type MemberInfo } from "@/hooks/useMemberInfo";
 
 interface DepositRequest {
   id: string;
@@ -99,23 +87,7 @@ export default function Profile() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState("info");
   
-  const memberToken = localStorage.getItem("memberToken");
-  const isLoggedIn = memberToken !== null;
-
-  const { data: memberInfo, refetch: refetchMember } = useQuery<MemberInfo>({
-    queryKey: ["member-info"],
-    queryFn: async () => {
-      const res = await fetch("/api/members/me", {
-        headers: {
-          Authorization: `Bearer ${memberToken}`,
-        },
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error);
-      return data.data;
-    },
-    enabled: isLoggedIn,
-  });
+  const { data: memberInfo, refetch: refetchMember, isLoggedIn, memberToken } = useMemberInfo();
 
   const { data: depositRequests } = useQuery<DepositRequest[]>({
     queryKey: ["deposit-requests"],

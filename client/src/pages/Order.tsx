@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useKakaoLink } from "@/hooks/use-kakao-link";
+import { useMemberInfo } from "@/hooks/useMemberInfo";
 import { KakaoConfirmDialog } from "@/components/KakaoConfirmDialog";
 import { CheckCircle, Package, User, MapPin, MessageCircle, Search, Clock, Plus, ChevronDown, ChevronUp, Wallet, AlertCircle } from "lucide-react";
 import type { Product } from "@shared/schema";
@@ -45,8 +46,8 @@ export default function Order() {
   const [recentAddresses, setRecentAddresses] = useState<SavedAddress[]>([]);
   const [showRecentAddresses, setShowRecentAddresses] = useState(false);
   const [addressMode, setAddressMode] = useState<"recent" | "new">("new");
-  const [memberPoints, setMemberPoints] = useState<number>(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { data: memberInfo, isLoggedIn, memberToken } = useMemberInfo();
+  const memberPoints = memberInfo?.pointBalance || 0;
   
   const searchParams = new URLSearchParams(window.location.search);
   const quantityParam = parseInt(searchParams.get("quantity") || "1");
@@ -135,7 +136,7 @@ export default function Order() {
   useEffect(() => {
     const memberName = localStorage.getItem("memberName") || "";
     const memberEmail = localStorage.getItem("memberEmail") || "";
-    const memberToken = localStorage.getItem("memberToken");
+    const storedToken = localStorage.getItem("memberToken");
     
     setFormData(prev => ({
       ...prev,
@@ -144,29 +145,13 @@ export default function Order() {
       shippingName: memberName,
     }));
     
-    setIsLoggedIn(!!memberToken);
-    
-    const fetchMemberData = async () => {
-      if (!memberToken) return;
+    const fetchRecentAddresses = async () => {
+      if (!storedToken) return;
       
       try {
-        // Fetch member info for points
-        const memberRes = await fetch("/api/members/me", {
-          headers: {
-            "Authorization": `Bearer ${memberToken}`,
-          },
-        });
-        if (memberRes.ok) {
-          const memberData = await memberRes.json();
-          if (memberData.success && memberData.data) {
-            setMemberPoints(memberData.data.pointBalance || 0);
-          }
-        }
-        
-        // Fetch recent addresses
         const addressRes = await fetch("/api/members/recent-addresses", {
           headers: {
-            "Authorization": `Bearer ${memberToken}`,
+            "Authorization": `Bearer ${storedToken}`,
           },
         });
         if (addressRes.ok) {
@@ -176,11 +161,11 @@ export default function Order() {
           }
         }
       } catch (error) {
-        console.error("Error fetching member data:", error);
+        console.error("Error fetching recent addresses:", error);
       }
     };
     
-    fetchMemberData();
+    fetchRecentAddresses();
   }, []);
 
   useEffect(() => {

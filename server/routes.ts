@@ -1273,19 +1273,10 @@ export async function registerRoutes(
         return res.status(400).json({ success: false, error: "유효한 금액을 입력해주세요." });
       }
       
-      const member = await storage.updateMemberPoints(req.params.id, amount);
+      const member = await storage.updateMemberPoints(req.params.id, amount, reason);
       if (!member) {
         return res.status(404).json({ success: false, error: "회원을 찾을 수 없습니다." });
       }
-      
-      // Create point transaction record
-      await storage.createPointTransaction({
-        memberId: req.params.id,
-        type: amount >= 0 ? "admin_add" : "admin_subtract",
-        amount: amount,
-        balanceAfter: member.pointBalance || 0,
-        description: reason || (amount >= 0 ? "관리자 포인트 지급" : "관리자 포인트 차감"),
-      });
       
       res.json({ success: true, data: member, message: `포인트가 ${amount >= 0 ? "지급" : "차감"}되었습니다.` });
     } catch (error) {
@@ -1304,19 +1295,10 @@ export async function registerRoutes(
       }
       
       const adjustedAmount = action === "subtract" ? -amount : amount;
-      const member = await storage.updateMemberPoints(memberId, adjustedAmount);
+      const member = await storage.updateMemberPoints(memberId, adjustedAmount, reason);
       if (!member) {
         return res.status(404).json({ success: false, error: "회원을 찾을 수 없습니다." });
       }
-      
-      // Create point transaction record
-      await storage.createPointTransaction({
-        memberId: memberId,
-        type: action === "add" ? "admin_add" : "admin_subtract",
-        amount: adjustedAmount,
-        balanceAfter: member.pointBalance || 0,
-        description: reason || (action === "add" ? "관리자 포인트 지급" : "관리자 포인트 차감"),
-      });
       
       res.json({ success: true, data: member, message: `포인트가 ${action === "add" ? "지급" : "차감"}되었습니다.` });
     } catch (error) {
