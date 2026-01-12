@@ -113,7 +113,39 @@ export async function registerRoutes(
   // ==================== STATIC FILE SERVING FOR UPLOADS ====================
   const express = await import("express");
   app.use("/uploads", express.default.static(path.join(process.cwd(), "uploads")));
-  app.use("/product-images", express.default.static(path.join(process.cwd(), "public", "product-images")));
+  
+  // Serve product images from Object Storage
+  const { objectStorageClient } = await import("./replit_integrations/object_storage/objectStorage");
+  const BUCKET_ID = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID || '';
+  
+  app.get("/product-images/:filename", async (req: Request, res: Response) => {
+    try {
+      const { filename } = req.params;
+      
+      if (!BUCKET_ID) {
+        return res.status(500).json({ error: "Object storage not configured" });
+      }
+      
+      const bucket = objectStorageClient.bucket(BUCKET_ID);
+      const file = bucket.file(`public/product-images/${filename}`);
+      
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ error: "Image not found" });
+      }
+      
+      const [metadata] = await file.getMetadata();
+      res.set({
+        "Content-Type": metadata.contentType || "image/jpeg",
+        "Cache-Control": "public, max-age=31536000",
+      });
+      
+      file.createReadStream().pipe(res);
+    } catch (error) {
+      console.error("Error serving product image:", error);
+      res.status(500).json({ error: "Failed to serve image" });
+    }
+  });
   
   // NOTE: WebSocket is handled in chatSocket.ts - do not create duplicate here
   

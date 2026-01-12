@@ -1,12 +1,7 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import * as crypto from 'crypto';
+import { objectStorageClient } from '../replit_integrations/object_storage/objectStorage';
 
-const IMAGES_DIR = path.join(process.cwd(), 'public', 'product-images');
-
-if (!fs.existsSync(IMAGES_DIR)) {
-  fs.mkdirSync(IMAGES_DIR, { recursive: true });
-}
+const BUCKET_ID = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID || '';
 
 export interface DownloadResult {
   success: boolean;
@@ -24,12 +19,23 @@ function generateFileName(url: string, index: number = 0): string {
 function getExtension(url: string): string {
   try {
     const urlPath = new URL(url).pathname;
-    const ext = path.extname(urlPath).toLowerCase();
-    if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) {
-      return ext;
+    const ext = urlPath.split('.').pop()?.toLowerCase();
+    if (ext && ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+      return `.${ext}`;
     }
   } catch {}
   return '.jpg';
+}
+
+function getContentType(ext: string): string {
+  const types: Record<string, string> = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+  };
+  return types[ext] || 'image/jpeg';
 }
 
 export async function downloadImage(imageUrl: string, index: number = 0): Promise<DownloadResult> {
@@ -42,12 +48,21 @@ export async function downloadImage(imageUrl: string, index: number = 0): Promis
       return { success: true, localPath: imageUrl, localUrl: imageUrl };
     }
 
+    if (!BUCKET_ID) {
+      console.error('[Image Downloader] DEFAULT_OBJECT_STORAGE_BUCKET_ID not set');
+      return { success: false, error: 'Object storage not configured' };
+    }
+
     const fileName = generateFileName(imageUrl, index);
-    const filePath = path.join(IMAGES_DIR, fileName);
+    const objectPath = `public/product-images/${fileName}`;
     const localUrl = `/product-images/${fileName}`;
 
-    if (fs.existsSync(filePath)) {
-      return { success: true, localPath: filePath, localUrl };
+    const bucket = objectStorageClient.bucket(BUCKET_ID);
+    const file = bucket.file(objectPath);
+
+    const [exists] = await file.exists();
+    if (exists) {
+      return { success: true, localPath: objectPath, localUrl };
     }
 
     const response = await fetch(imageUrl, {
@@ -64,10 +79,18 @@ export async function downloadImage(imageUrl: string, index: number = 0): Promis
     }
 
     const buffer = await response.arrayBuffer();
-    fs.writeFileSync(filePath, Buffer.from(buffer));
+    const ext = getExtension(imageUrl);
+    const contentType = getContentType(ext);
 
-    console.log(`[Image Downloader] Downloaded: ${fileName}`);
-    return { success: true, localPath: filePath, localUrl };
+    await file.save(Buffer.from(buffer), {
+      contentType,
+      metadata: {
+        cacheControl: 'public, max-age=31536000',
+      },
+    });
+
+    console.log(`[Image Downloader] Uploaded to Object Storage: ${objectPath}`);
+    return { success: true, localPath: objectPath, localUrl };
   } catch (error) {
     console.error(`[Image Downloader] Failed to download ${imageUrl}:`, error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
