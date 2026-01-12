@@ -272,16 +272,16 @@ export async function registerRoutes(
       // Get all orders for this member
       const orders = await storage.getOrdersByMember(session.memberId);
       
-      // Filter for delivered orders of this product
-      const deliveredOrders = orders.filter((o: any) => 
-        o.productId === req.params.id && o.status === "delivered"
+      // Filter for orders of this product (allow review immediately after order, not waiting for delivery)
+      const eligibleOrders = orders.filter((o: any) => 
+        o.productId === req.params.id && o.status !== "cancelled"
       );
       
       // Get existing reviews for this product
       const existingReviews = await storage.getReviewsByProduct(req.params.id);
       
       // Filter out orders that already have reviews
-      const reviewableOrders = deliveredOrders.filter((order: any) => 
+      const reviewableOrders = eligibleOrders.filter((order: any) => 
         !existingReviews.some((r: any) => r.orderId === order.id)
       );
       
@@ -1923,8 +1923,8 @@ export async function registerRoutes(
             return res.status(403).json({ success: false, error: "해당 주문을 찾을 수 없습니다." });
           }
           
-          if (order.status !== "delivered") {
-            return res.status(400).json({ success: false, error: "배송완료된 상품만 후기를 작성할 수 있습니다." });
+          if (order.status === "cancelled") {
+            return res.status(400).json({ success: false, error: "취소된 주문은 후기를 작성할 수 없습니다." });
           }
           
           // Check if review already exists for this order

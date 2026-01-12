@@ -448,10 +448,9 @@ export default function Profile() {
                 </div>
 
                 <Tabs value={activeProfileTab} onValueChange={setActiveProfileTab} className="w-full">
-                  <TabsList className="w-full grid grid-cols-7 h-auto gap-0">
+                  <TabsList className="w-full grid grid-cols-6 h-auto gap-0">
                     <TabsTrigger value="info" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">정보</TabsTrigger>
                     <TabsTrigger value="orders" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">주문</TabsTrigger>
-                    <TabsTrigger value="reviews" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2 text-amber-600 font-semibold">후기</TabsTrigger>
                     <TabsTrigger value="menu" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">메뉴</TabsTrigger>
                     <TabsTrigger value="deposit" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">충전</TabsTrigger>
                     <TabsTrigger value="withdraw" className="text-[8px] sm:text-xs md:text-sm py-1.5 sm:py-2 px-0 sm:px-1 md:px-2">환전</TabsTrigger>
@@ -581,7 +580,7 @@ export default function Profile() {
                                   order.status === "cancelled" ? "bg-red-100 text-red-700" :
                                   order.status === "processing" ? "bg-blue-100 text-blue-700" :
                                   "bg-gray-100 text-gray-700"
-                                }`}>
+                                }`} data-testid={`order-status-${order.id}`}>
                                   {order.status === "pending" && "대기중"}
                                   {order.status === "processing" && "처리중"}
                                   {order.status === "confirmed" && "확인됨"}
@@ -600,24 +599,6 @@ export default function Profile() {
                                   {order.paymentStatus === "refunded" && "환불됨"}
                                 </span>
                                 
-                                {order.status === "delivered" && !order.hasReview && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="ml-auto text-xs h-7 border-amber-400 text-amber-600 hover:bg-amber-50"
-                                    onClick={() => handleOpenReviewDialog(order)}
-                                    data-testid={`button-write-review-${order.id}`}
-                                  >
-                                    <Pencil className="w-3 h-3 mr-1" />
-                                    사용후기 작성
-                                  </Button>
-                                )}
-                                {order.hasReview && (
-                                  <span className="ml-auto text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
-                                    <Star className="w-3 h-3 inline mr-1" />
-                                    후기 작성완료
-                                  </span>
-                                )}
                               </div>
                             </div>
                           ))}
@@ -626,85 +607,6 @@ export default function Profile() {
                         <div className="text-center py-8 text-gray-500">
                           <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                           <p>주문 내역이 없습니다.</p>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="reviews" className="mt-4">
-                    <div className="space-y-4">
-                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Star className="w-5 h-5 text-amber-500" />
-                          <h3 className="font-bold text-amber-800">사용후기 작성 안내</h3>
-                        </div>
-                        <p className="text-sm text-amber-700">
-                          배송 완료된 상품에 대해 사용후기를 작성하실 수 있습니다.
-                        </p>
-                      </div>
-
-                      {memberOrders && memberOrders.filter(o => o.status === "delivered" && !o.hasReview).length > 0 ? (
-                        <div className="space-y-3">
-                          <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                            <Pencil className="w-4 h-4 text-amber-500" />
-                            후기 작성 가능한 주문
-                          </h4>
-                          {memberOrders.filter(o => o.status === "delivered" && !o.hasReview).map((order) => (
-                            <div key={order.id} className="p-4 bg-white border border-amber-200 rounded-lg shadow-sm">
-                              <div className="flex items-start gap-3">
-                                <div className="w-16 h-16 bg-amber-100 rounded-lg flex items-center justify-center">
-                                  <Package className="w-8 h-8 text-amber-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-gray-900 truncate">{order.productName}</p>
-                                  <p className="text-xs text-gray-500 mt-1">주문번호: {order.orderNumber}</p>
-                                  <p className="text-xs text-gray-500">
-                                    주문일: {new Date(order.createdAt).toLocaleDateString("ko-KR")}
-                                  </p>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  className="bg-amber-500 hover:bg-amber-600 text-white"
-                                  onClick={() => handleOpenReviewDialog(order)}
-                                  data-testid={`button-write-review-tab-${order.id}`}
-                                >
-                                  <Pencil className="w-3 h-3 mr-1" />
-                                  후기 작성
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 text-gray-500">
-                          <Star className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                          <p className="font-medium">후기 작성 가능한 주문이 없습니다.</p>
-                          <p className="text-sm mt-1">배송이 완료된 상품에 대해 후기를 작성하실 수 있습니다.</p>
-                        </div>
-                      )}
-
-                      {memberOrders && memberOrders.filter(o => o.hasReview).length > 0 && (
-                        <div className="space-y-3 mt-6">
-                          <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                            <Star className="w-4 h-4 text-purple-500" />
-                            내가 작성한 후기
-                          </h4>
-                          {memberOrders.filter(o => o.hasReview).map((order) => (
-                            <div key={order.id} className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                              <div className="flex items-start gap-3">
-                                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                  <Star className="w-6 h-6 text-purple-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-gray-900 truncate">{order.productName}</p>
-                                  <p className="text-xs text-gray-500 mt-1">주문번호: {order.orderNumber}</p>
-                                </div>
-                                <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
-                                  작성완료
-                                </span>
-                              </div>
-                            </div>
-                          ))}
                         </div>
                       )}
                     </div>
