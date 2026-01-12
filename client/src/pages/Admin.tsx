@@ -63,6 +63,7 @@ interface AdminDepositRequest {
   id: string;
   memberId: string;
   memberName: string;
+  memberNickname?: string;
   memberEmail: string;
   amount: number;
   bankName: string;
@@ -3936,7 +3937,9 @@ export default function Admin() {
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50 border-y border-gray-200">
                         <tr>
-                          <th className="px-3 py-2 text-left font-medium text-gray-600">회원</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">아이디</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">닉네임</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">이름</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-600">입금자</th>
                           <th className="px-3 py-2 text-right font-medium text-gray-600">금액</th>
                           <th className="px-3 py-2 text-center font-medium text-gray-600">상태</th>
@@ -3947,6 +3950,8 @@ export default function Admin() {
                       <tbody className="divide-y divide-gray-100">
                         {paginatedDeposits.map((request) => (
                           <tr key={request.id} className={`${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
+                            <td className="px-3 py-2 text-gray-600">{request.memberEmail || "-"}</td>
+                            <td className="px-3 py-2 text-gray-600">{request.memberNickname || "-"}</td>
                             <td className="px-3 py-2"><span className="font-medium">{request.memberName}</span></td>
                             <td className="px-3 py-2 text-gray-600">{request.depositorName}{request.bankName && request.bankName !== "카카오톡문의" && <span className="text-gray-400 text-xs ml-1">({request.bankName})</span>}</td>
                             <td className="px-3 py-2 text-right font-bold text-blue-600">{request.amount.toLocaleString()}원</td>

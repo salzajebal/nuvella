@@ -989,6 +989,7 @@ export async function registerRoutes(
       const request = await storage.createDepositRequest({
         memberId: member.id,
         memberName: member.name,
+        memberNickname: member.nickname || undefined,
         memberEmail: member.username,
         amount: parseInt(amount),
         bankName,
@@ -2230,7 +2231,7 @@ export async function registerRoutes(
         return res.status(401).json({ error: "로그인이 필요합니다." });
       }
       
-      const { memberId, memberName, memberEmail, amount, bankName, accountNumber, depositorName } = req.body;
+      const { memberId, memberName, memberNickname, memberEmail, amount, bankName, accountNumber, depositorName } = req.body;
       
       if (!amount || amount < 10000) {
         return res.status(400).json({ error: "최소 10,000원 이상 입금 가능합니다." });
@@ -2243,6 +2244,7 @@ export async function registerRoutes(
       const request = await storage.createDepositRequest({
         memberId,
         memberName,
+        memberNickname: memberNickname || undefined,
         memberEmail,
         amount,
         bankName: bankName || "",
