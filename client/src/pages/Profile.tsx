@@ -295,8 +295,14 @@ export default function Profile() {
       return;
     }
     
+    if (reviewContent.length < 50) {
+      toast({ title: "오류", description: "후기 내용은 50자 이상 입력해주세요.", variant: "destructive" });
+      return;
+    }
+    
     setReviewSubmitting(true);
     try {
+      const memberNickname = memberInfo?.nickname || memberInfo?.name || "회원";
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: {
@@ -308,7 +314,7 @@ export default function Profile() {
           orderId: selectedOrder.id,
           rating: reviewRating,
           content: reviewContent,
-          authorName: memberInfo?.name || "회원",
+          authorName: memberNickname,
         }),
       });
       
@@ -1089,21 +1095,31 @@ export default function Profile() {
             </div>
             
             <div>
-              <Label htmlFor="review-content" className="text-sm font-medium mb-2 block">
-                후기 내용
-              </Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="review-content" className="text-sm font-medium">
+                  후기 내용
+                </Label>
+                <span className={`text-xs ${reviewContent.length < 50 ? 'text-red-500' : 'text-green-600'}`}>
+                  {reviewContent.length}/50자 이상
+                </span>
+              </div>
               <Textarea
                 id="review-content"
-                placeholder="상품 사용 후기를 자유롭게 작성해주세요."
+                placeholder="상품 사용 후기를 자유롭게 작성해주세요. (최소 50자 이상)"
                 value={reviewContent}
                 onChange={(e) => setReviewContent(e.target.value)}
                 className="min-h-[120px]"
               />
+              {reviewContent.length > 0 && reviewContent.length < 50 && (
+                <p className="text-xs text-red-500 mt-1">
+                  {50 - reviewContent.length}자 더 입력해주세요
+                </p>
+              )}
             </div>
             
             <Button
               onClick={handleSubmitReview}
-              disabled={reviewSubmitting || !reviewContent.trim()}
+              disabled={reviewSubmitting || reviewContent.length < 50}
               className="w-full bg-amber-500 hover:bg-amber-600"
             >
               {reviewSubmitting ? "등록 중..." : "후기 등록하기"}

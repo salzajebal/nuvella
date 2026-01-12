@@ -36,6 +36,7 @@ export default function Login() {
         localStorage.setItem("memberId", data.member.id);
         localStorage.setItem("memberName", data.member.name);
         localStorage.setItem("memberUsername", data.member.username);
+        localStorage.setItem("memberNickname", data.member.nickname || data.member.name);
         toast({
           title: "로그인 성공",
           description: `${data.member.name}님, 환영합니다!`,

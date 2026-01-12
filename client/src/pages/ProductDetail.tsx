@@ -270,11 +270,20 @@ export default function ProductDetail() {
       });
       return;
     }
+    
+    if (reviewForm.content.length < 50) {
+      toast({
+        title: "입력 오류",
+        description: "후기 내용은 50자 이상 입력해주세요.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setSubmittingReview(true);
     try {
       const token = localStorage.getItem("memberToken");
-      const memberName = localStorage.getItem("memberName") || "회원";
+      const memberNickname = localStorage.getItem("memberNickname") || localStorage.getItem("memberName") || "회원";
       
       const res = await fetch("/api/reviews", {
         method: "POST",
@@ -285,7 +294,7 @@ export default function ProductDetail() {
         body: JSON.stringify({
           orderId: selectedOrderId,
           productId: id,
-          authorName: memberName,
+          authorName: memberNickname,
           rating: reviewForm.rating,
           title: reviewForm.title,
           content: reviewForm.content
@@ -762,16 +771,26 @@ export default function ProductDetail() {
             </div>
             
             <div>
-              <Label htmlFor="review-content">내용</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="review-content">내용</Label>
+                <span className={`text-xs ${reviewForm.content.length < 50 ? 'text-red-500' : 'text-green-600'}`}>
+                  {reviewForm.content.length}/50자 이상
+                </span>
+              </div>
               <Textarea
                 id="review-content"
                 value={reviewForm.content}
                 onChange={(e) => setReviewForm(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="상품 사용 후기를 작성해주세요"
+                placeholder="상품 사용 후기를 작성해주세요 (최소 50자 이상)"
                 className="mt-1"
                 rows={4}
                 data-testid="input-review-content"
               />
+              {reviewForm.content.length > 0 && reviewForm.content.length < 50 && (
+                <p className="text-xs text-red-500 mt-1">
+                  {50 - reviewForm.content.length}자 더 입력해주세요
+                </p>
+              )}
             </div>
           </div>
           
@@ -784,7 +803,7 @@ export default function ProductDetail() {
             </Button>
             <Button
               onClick={handleSubmitReview}
-              disabled={submittingReview}
+              disabled={submittingReview || reviewForm.content.length < 50}
               data-testid="button-submit-review"
             >
               {submittingReview ? "작성 중..." : "후기 등록"}
