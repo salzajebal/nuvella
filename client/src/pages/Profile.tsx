@@ -1368,6 +1368,31 @@ export default function Profile() {
                 </div>
               </div>
 
+              <div className="p-4 bg-amber-50 rounded-lg">
+                <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  주문자 정보
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">주문자명</span>
+                    <span className="text-gray-700">{memberInfo?.name || "-"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">닉네임</span>
+                    <span className="text-gray-700">{memberInfo?.nickname || "-"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">연락처</span>
+                    <span className="text-gray-700">{memberInfo?.phone || "-"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">이메일</span>
+                    <span className="text-gray-700">{memberInfo?.email || "-"}</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="p-4 bg-blue-50 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-bold text-gray-800 flex items-center gap-2">
