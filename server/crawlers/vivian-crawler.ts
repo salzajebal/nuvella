@@ -264,11 +264,27 @@ async function fetchProductDetail(sourceUrl: string): Promise<{
     
     const isValidDescriptionImage = (url: string): boolean => {
       if (!url) return false;
+      // Basic exclusions
       if (url.includes('icon') || url.includes('logo') || url.includes('button')) return false;
       if (url.includes('s_star') || url.includes('facebook') || url.includes('twitter')) return false;
       if (url.includes('/skin/') || url.includes('/theme/')) return false;
       if (url.includes('banner') || url.includes('event')) return false;
       if (url.length < 30) return false;
+      
+      // Vivian-specific exclusions - filter out common assets, banners, logos
+      if (url.includes('/data/common/')) return false;
+      if (url.includes('/common/')) return false;
+      if (url.includes('vivian') && !url.includes('/data/item/')) return false;
+      if (url.includes('vivian-mall') && !url.includes('/data/item/')) return false;
+      if (url.includes('/img/banner')) return false;
+      if (url.includes('/img/logo')) return false;
+      if (url.includes('/img/common')) return false;
+      if (url.includes('_logo') || url.includes('logo_')) return false;
+      if (url.includes('_banner') || url.includes('banner_')) return false;
+      if (url.includes('footer') || url.includes('header')) return false;
+      if (url.includes('delivery') || url.includes('shipping')) return false;
+      if (url.includes('notice') || url.includes('guide')) return false;
+      
       const validSources = [
         'pstatic.net', 'proxy-smartstore', 'godohosting.com', 
         'naver.net', 'cafe24.com', 'makeshop', 'imweb.me',
