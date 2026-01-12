@@ -2036,7 +2036,7 @@ export default function Admin() {
       )}
       
       <div className="flex min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50">
-        <aside className="w-72 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex-shrink-0 hidden lg:flex lg:flex-col shadow-2xl h-screen sticky top-0 overflow-y-auto relative">
+        <aside className="w-72 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex-shrink-0 hidden lg:flex lg:flex-col shadow-2xl h-screen sticky top-0">
           <div className="p-6 border-b border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30 ring-2 ring-amber-300/30">
@@ -2049,7 +2049,7 @@ export default function Admin() {
             </div>
           </div>
           
-          <nav className="p-4 space-y-1 pb-20 flex-1">
+          <nav className="p-4 space-y-1 flex-1 overflow-y-auto">
             <button
               data-testid="tab-dashboard"
               onClick={() => setActiveTab("dashboard")}
@@ -2249,7 +2249,7 @@ export default function Admin() {
             
           </nav>
           
-          <div className="absolute bottom-0 left-0 w-72 p-4 border-t border-amber-500/20 bg-gradient-to-r from-gray-900 to-gray-800">
+          <div className="flex-shrink-0 p-4 border-t border-amber-500/20 bg-gradient-to-r from-gray-900 to-gray-800">
             <Button 
               data-testid="button-logout"
               variant="ghost" 
