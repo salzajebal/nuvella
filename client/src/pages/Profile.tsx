@@ -646,7 +646,7 @@ export default function Profile() {
                                   <p className="text-sm text-gray-500">수량: {order.quantity}개</p>
                                 </div>
                                 <div className="text-right">
-                                  <p className="font-bold text-primary">{Number(order.totalAmount || 0).toLocaleString()}원</p>
+                                  <p className="font-bold text-primary">{parseInt(String(order.totalAmount || '0').replace(/,/g, '')).toLocaleString()}원</p>
                                 </div>
                               </div>
                               
@@ -1214,7 +1214,7 @@ export default function Profile() {
                 <p className="font-medium text-gray-900">{cancellingOrder.productName}</p>
                 <p className="text-xs text-gray-500">주문번호: {cancellingOrder.orderNumber}</p>
                 <p className="text-sm font-bold text-primary mt-2">
-                  환불 예정 금액: {Number(cancellingOrder.totalAmount || 0).toLocaleString()}원
+                  환불 예정 금액: {parseInt(String(cancellingOrder.totalAmount || '0').replace(/,/g, '')).toLocaleString()}원
                 </p>
               </div>
             )}
