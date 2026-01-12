@@ -2337,18 +2337,8 @@ export async function registerRoutes(
           const currentPoints = member.pointBalance || 0;
           
           if (currentPoints >= orderTotalAmount) {
-            // Deduct points and complete payment
-            const newBalance = currentPoints - orderTotalAmount;
-            await storage.updateMemberPoints(memberId, newBalance);
-            
-            // Record the point transaction
-            await storage.createPointTransaction({
-              memberId,
-              type: "use",
-              amount: orderTotalAmount,
-              balanceAfter: newBalance,
-              description: `주문결제: ${productName}`,
-            });
+            // Deduct points and complete payment - use negative amount
+            await storage.updateMemberPoints(memberId, -orderTotalAmount, `주문결제: ${productName}`);
             
             paymentStatus = "completed";
             orderStatus = "processing";
