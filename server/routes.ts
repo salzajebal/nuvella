@@ -28,7 +28,7 @@ const reviewImageUpload = multer({
 const ADMIN_USERNAME = "admin123";
 const ADMIN_PASSWORD = "admin123";
 
-const adminSessions = new Map<string, { expiresAt: Date }>();
+// Admin sessions now stored in database for persistence
 
 // Crawling progress tracking
 interface CrawlProgress {
@@ -86,22 +86,30 @@ function generateSessionToken(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
-function isValidSession(token: string): boolean {
-  const session = adminSessions.get(token);
+async function isValidSession(token: string): Promise<boolean> {
+  const session = await storage.getAdminSession(token);
   if (!session) return false;
-  if (new Date() > session.expiresAt) {
-    adminSessions.delete(token);
+  if (session.expiresAt && new Date() > new Date(session.expiresAt)) {
+    await storage.deleteAdminSession(token);
     return false;
   }
+  // Rolling session: extend expiry on each valid request (7 days from now)
+  const newExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  await storage.updateAdminSessionExpiry(token, newExpiry, new Date());
   return true;
 }
 
-function requireAdminAuth(req: Request, res: Response, next: Function) {
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  if (!token || !isValidSession(token)) {
-    return res.status(401).json({ success: false, error: "인증이 필요합니다." });
+async function requireAdminAuth(req: Request, res: Response, next: Function) {
+  try {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token || !(await isValidSession(token))) {
+      return res.status(401).json({ success: false, error: "인증이 필요합니다." });
+    }
+    next();
+  } catch (error) {
+    console.error("[admin-auth] Session validation error:", error);
+    return res.status(500).json({ success: false, error: "인증 확인 중 오류가 발생했습니다." });
   }
-  next();
 }
 
 
@@ -632,8 +640,8 @@ export async function registerRoutes(
       
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         const token = generateSessionToken();
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-        adminSessions.set(token, { expiresAt });
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days initial
+        await storage.createAdminSession({ token, username, expiresAt });
         
         res.json({ 
           success: true, 
@@ -655,14 +663,14 @@ export async function registerRoutes(
   app.post("/api/admin/logout", async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (token) {
-      adminSessions.delete(token);
+      await storage.deleteAdminSession(token);
     }
     res.json({ success: true, message: "로그아웃 성공" });
   });
   
   app.get("/api/admin/verify", async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace("Bearer ", "");
-    if (token && isValidSession(token)) {
+    if (token && await isValidSession(token)) {
       res.json({ success: true, authenticated: true });
     } else {
       res.status(401).json({ success: false, authenticated: false });

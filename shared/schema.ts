@@ -60,6 +60,19 @@ export const insertMemberSessionSchema = createInsertSchema(memberSessions);
 export type InsertMemberSession = z.infer<typeof insertMemberSessionSchema>;
 export type MemberSession = typeof memberSessions.$inferSelect;
 
+export const adminSessions = pgTable("admin_sessions", {
+  token: varchar("token").primaryKey(),
+  username: text("username").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  lastSeenAt: timestamp("last_seen_at").defaultNow(),
+});
+
+export const insertAdminSessionSchema = createInsertSchema(adminSessions);
+
+export type InsertAdminSession = z.infer<typeof insertAdminSessionSchema>;
+export type AdminSession = typeof adminSessions.$inferSelect;
+
 export const depositRequests = pgTable("deposit_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memberId: varchar("member_id").notNull(),

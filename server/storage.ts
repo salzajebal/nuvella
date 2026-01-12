@@ -4,6 +4,7 @@ import {
   type Category, type InsertCategory, categories,
   type Member, type InsertMember, members,
   type MemberSession, type InsertMemberSession, memberSessions,
+  type AdminSession, type InsertAdminSession, adminSessions,
   type ChatConversation, type InsertChatConversation, chatConversations,
   type ChatMessage, type InsertChatMessage, chatMessages,
   type Faq, type InsertFaq, faqs,
@@ -97,6 +98,12 @@ export interface IStorage {
   createMemberSession(session: InsertMemberSession): Promise<MemberSession>;
   deleteMemberSession(token: string): Promise<boolean>;
   deleteMemberSessionsByMemberId(memberId: string): Promise<void>;
+  
+  // Admin Sessions
+  getAdminSession(token: string): Promise<AdminSession | undefined>;
+  createAdminSession(session: InsertAdminSession): Promise<AdminSession>;
+  deleteAdminSession(token: string): Promise<boolean>;
+  updateAdminSessionExpiry(token: string, expiresAt: Date, lastSeenAt: Date): Promise<void>;
   
   // Chat
   getAllConversations(): Promise<ChatConversation[]>;
@@ -450,6 +457,28 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMemberSessionsByMemberId(memberId: string): Promise<void> {
     await db.delete(memberSessions).where(eq(memberSessions.memberId, memberId));
+  }
+
+  // Admin Sessions
+  async getAdminSession(token: string): Promise<AdminSession | undefined> {
+    const results = await db.select().from(adminSessions).where(eq(adminSessions.token, token));
+    return results[0];
+  }
+
+  async createAdminSession(session: InsertAdminSession): Promise<AdminSession> {
+    const results = await db.insert(adminSessions).values(session).returning();
+    return results[0];
+  }
+
+  async deleteAdminSession(token: string): Promise<boolean> {
+    const result = await db.delete(adminSessions).where(eq(adminSessions.token, token)).returning();
+    return result.length > 0;
+  }
+
+  async updateAdminSessionExpiry(token: string, expiresAt: Date, lastSeenAt: Date): Promise<void> {
+    await db.update(adminSessions)
+      .set({ expiresAt, lastSeenAt })
+      .where(eq(adminSessions.token, token));
   }
 
   // Chat Conversations
