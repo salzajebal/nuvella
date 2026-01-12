@@ -108,7 +108,7 @@ function MainHeroSection() {
 
   return (
     <div className="flex-1">
-      <Link href={`/products/${currentProduct.id}`}>
+      <Link href={`/product/${currentProduct.id}`}>
         <div className="bg-white border border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-shadow">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex-1">
@@ -152,7 +152,7 @@ function MainHeroSection() {
       
       <div className="grid grid-cols-2 gap-4 mt-4">
         {featuredProducts.slice(1, 3).map((product) => (
-          <Link key={product.id} href={`/products/${product.id}`}>
+          <Link key={product.id} href={`/product/${product.id}`}>
             <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition-shadow">
               <div className="w-20 h-20 bg-gray-50 rounded overflow-hidden flex-shrink-0">
                 <img 
@@ -229,7 +229,7 @@ function RightSidebar() {
         
         <div className="p-3 space-y-3">
           {products.map((product, idx) => (
-            <Link key={product.id} href={`/products/${product.id}`}>
+            <Link key={product.id} href={`/product/${product.id}`}>
               <div 
                 className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
                 data-testid={`card-ranking-${idx + 1}`}
@@ -309,7 +309,7 @@ function CategoryProductsSection() {
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {products.slice(0, 4).map((product) => (
-            <Link key={product.id} href={`/products/${product.id}`}>
+            <Link key={product.id} href={`/product/${product.id}`}>
               <div 
                 className="bg-white border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group"
                 data-testid={`card-category-product-${product.id}`}
@@ -394,7 +394,7 @@ function PopularProductsSection() {
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {products.map((product) => (
-            <Link key={product.id} href={`/products/${product.id}`}>
+            <Link key={product.id} href={`/product/${product.id}`}>
               <div 
                 className="flex-shrink-0 w-[200px] bg-white border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group"
                 data-testid={`card-popular-${product.id}`}
@@ -512,7 +512,7 @@ function ReviewsSection() {
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {reviews.map((review) => (
-            <Link key={review.id} href={`/products/${review.productId}`}>
+            <Link key={review.id} href={`/product/${review.productId}`}>
               <div 
                 className="flex-shrink-0 w-[180px] sm:w-[200px] cursor-pointer group"
                 data-testid={`card-review-${review.id}`}
