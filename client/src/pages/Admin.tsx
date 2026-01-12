@@ -226,8 +226,10 @@ export default function Admin() {
   const [editingOrder, setEditingOrder] = useState(false);
   const [orderEditData, setOrderEditData] = useState({
     memberName: "",
-    memberEmail: "",
     memberPhone: "",
+    memberZipcode: "",
+    memberAddress: "",
+    memberAddressDetail: "",
     shippingName: "",
     shippingPhone: "",
     shippingAddress: "",
@@ -648,8 +650,10 @@ export default function Admin() {
     setSelectedOrder(order);
     setOrderEditData({
       memberName: order.memberName || "",
-      memberEmail: order.memberEmail || "",
       memberPhone: order.memberPhone || "",
+      memberZipcode: (order as any).memberZipcode || "",
+      memberAddress: (order as any).memberAddress || "",
+      memberAddressDetail: (order as any).memberAddressDetail || "",
       shippingName: order.shippingName || "",
       shippingPhone: order.shippingPhone || "",
       shippingAddress: order.shippingAddress || "",
@@ -3633,25 +3637,41 @@ export default function Admin() {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">이메일</label>
-                            <Input
-                              value={orderEditData.memberEmail}
-                              onChange={(e) => setOrderEditData({ ...orderEditData, memberEmail: e.target.value })}
-                            />
-                          </div>
-                          <div className="md:col-span-2">
                             <label className="block text-xs font-medium text-gray-600 mb-1">연락처</label>
                             <Input
                               value={orderEditData.memberPhone}
                               onChange={(e) => setOrderEditData({ ...orderEditData, memberPhone: e.target.value })}
                             />
                           </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">우편번호</label>
+                            <Input
+                              value={orderEditData.memberZipcode}
+                              onChange={(e) => setOrderEditData({ ...orderEditData, memberZipcode: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">주소</label>
+                            <Input
+                              value={orderEditData.memberAddress}
+                              onChange={(e) => setOrderEditData({ ...orderEditData, memberAddress: e.target.value })}
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">상세주소</label>
+                            <Input
+                              value={orderEditData.memberAddressDetail}
+                              onChange={(e) => setOrderEditData({ ...orderEditData, memberAddressDetail: e.target.value })}
+                            />
+                          </div>
                         </div>
                       ) : (
                         <div className="text-sm space-y-1">
                           <p><strong>이름:</strong> {selectedOrder.memberName}</p>
-                          <p><strong>이메일:</strong> {selectedOrder.memberEmail}</p>
                           <p><strong>연락처:</strong> {selectedOrder.memberPhone}</p>
+                          <p><strong>우편번호:</strong> {(selectedOrder as any).memberZipcode || "-"}</p>
+                          <p><strong>주소:</strong> {(selectedOrder as any).memberAddress || "-"}</p>
+                          <p><strong>상세주소:</strong> {(selectedOrder as any).memberAddressDetail || "-"}</p>
                         </div>
                       )}
                     </div>

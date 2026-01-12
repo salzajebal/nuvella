@@ -537,10 +537,10 @@ export default function Profile() {
 
                   <TabsContent value="orders" className="mt-4">
                     <div className="space-y-4">
-                      <h3 className="font-bold text-gray-900">주문 내역</h3>
+                      <h3 className="font-bold text-gray-900">최근 주문 내역 (최대 10건)</h3>
                       {memberOrders && memberOrders.length > 0 ? (
                         <div className="space-y-3">
-                          {memberOrders.map((order) => (
+                          {memberOrders.slice(0, 10).map((order) => (
                             <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-4" data-testid={`order-item-${order.id}`}>
                               <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
                                 <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">주문번호: {order.orderNumber}</span>

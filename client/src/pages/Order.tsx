@@ -263,8 +263,10 @@ export default function Order() {
         body: JSON.stringify({
           memberId: memberId || null,
           memberName: formData.memberName,
-          memberEmail: formData.memberEmail,
           memberPhone: formData.memberPhone,
+          memberZipcode: formData.memberZipcode,
+          memberAddress: formData.memberAddress,
+          memberAddressDetail: formData.memberAddressDetail,
           shippingName: formData.shippingName,
           shippingPhone: formData.shippingPhone,
           shippingZipcode: formData.shippingZipcode,
