@@ -2,65 +2,62 @@ import { Link } from "wouter";
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-400 pt-8 sm:pt-12 md:pt-16 pb-6 sm:pb-8">
-      <div className="container-custom px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mb-8 sm:mb-12">
-          <div className="sm:col-span-2 md:col-span-2">
-            <Link href="/" className="inline-block mb-4 sm:mb-6">
-              <span 
-                className="text-xl sm:text-2xl text-white"
-                style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontWeight: 700 }}
-              >
-                Estella
-              </span>
-            </Link>
-            <p className="text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6 max-w-md">
-              에스텔라는 최고의 품질과 합리적인 가격으로 다양한 라이프스타일 제품을 제공합니다.
-              홈 인테리어, 뷰티, 가전, 생활용품 등 다양한 카테고리의 엄선된 상품을 만나보세요.
-            </p>
-            <div className="text-[10px] sm:text-xs space-y-0.5 sm:space-y-1 text-gray-500">
-              <p><span className="text-gray-400">상호:</span> 에스텔라 (Estella)</p>
-              <p><span className="text-gray-400">대표:</span> 김지애</p>
-              <p><span className="text-gray-400">사업자등록번호:</span> 504-19-23773</p>
-              <p><span className="text-gray-400">사업자등록일:</span> 2017-02-03</p>
-              <p><span className="text-gray-400">업태:</span> 도매 및 소매업</p>
-              <p><span className="text-gray-400">종목:</span> 전자상거래업</p>
-              <p><span className="text-gray-400">통신판매업번호:</span> 2017-대구북구-0090</p>
-              <p className="break-keep"><span className="text-gray-400">주소:</span> 대구광역시 북구 유통단지로 60, 1146호</p>
-              <p><span className="text-gray-400">전화:</span> 053-323-3694</p>
+    <footer className="bg-gray-100 text-gray-600 border-t border-gray-300">
+      <div className="border-b border-gray-300">
+        <div className="container-custom px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+              <a href="#" className="hover:text-gray-900 transition-colors">서비스이용약관</a>
+              <a href="#" className="hover:text-gray-900 transition-colors">개인정보처리방침</a>
+              <a href="#" className="hover:text-gray-900 transition-colors">이메일무단수집거부</a>
+            </div>
+            <div className="flex items-center gap-3 sm:gap-6">
+              <Link href="/support" className="hover:text-gray-900 transition-colors">FAQ</Link>
+              <Link href="/support" className="hover:text-gray-900 transition-colors">1:1문의</Link>
             </div>
           </div>
-
+        </div>
+      </div>
+      
+      <div className="container-custom px-4 py-6 sm:py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           <div>
-            <h4 className="text-white font-medium mb-3 sm:mb-4 text-xs sm:text-sm">카테고리</h4>
-            <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-              <li><Link href="/products/home_interior" className="hover:text-white transition-colors">홈 인테리어</Link></li>
-              <li><Link href="/products/beauty" className="hover:text-white transition-colors">뷰티</Link></li>
-              <li><Link href="/products/electronics" className="hover:text-white transition-colors">가전/디지털</Link></li>
-              <li><Link href="/products/living" className="hover:text-white transition-colors">생활용품</Link></li>
-              <li><Link href="/products/health" className="hover:text-white transition-colors">헬스/건강식품</Link></li>
-              <li><Link href="/products/luxury" className="hover:text-white transition-colors">럭셔리/명품</Link></li>
-            </ul>
+            <div className="mb-4">
+              <span 
+                className="text-lg sm:text-xl font-bold text-gray-800"
+                style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
+              >
+                ESTELLA
+              </span>
+            </div>
+            <div className="text-xs sm:text-sm space-y-1 text-gray-600">
+              <p><span className="text-gray-500">에스텔라</span> | 대표 : 김지애</p>
+              <p>사업자등록번호 : 504-19-23773</p>
+              <p>통신판매업 : 2017-대구북구-0090</p>
+              <p>주소 : 대구광역시 북구 유통단지로 60, 1146호</p>
+              <p>TEL : 053-323-3694 | FAX : </p>
+              <p>E-mail : support@estellamall.com</p>
+            </div>
           </div>
-
+          
           <div>
-            <h4 className="text-white font-medium mb-3 sm:mb-4 text-xs sm:text-sm">고객지원</h4>
-            <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-              <li><Link href="/support" className="hover:text-white transition-colors">고객센터</Link></li>
-              <li><Link href="/notices" className="hover:text-white transition-colors">공지사항</Link></li>
-              <li><Link href="/reviews" className="hover:text-white transition-colors">상품후기</Link></li>
-              <li><a href="#" className="hover:text-white transition-colors">이용약관</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">개인정보처리방침</a></li>
-            </ul>
+            <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-4">사이트 이용문의</h3>
+            <div className="text-xs sm:text-sm space-y-1 text-gray-600 mb-4">
+              <p>상담시간 : 평일 09:00 ~ 18:00 토요일 09:00 ~ 12:00</p>
+              <p>휴일안내 : 일요일 및 공휴일은 휴무</p>
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-gray-800">
+              T. 053-323-3694
+            </p>
           </div>
         </div>
-
-        <div className="pt-6 sm:pt-8 border-t border-gray-800 text-[10px] sm:text-xs text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
-          <p>Copyright © 2025 Estella. All rights reserved.</p>
-          <div className="flex gap-4">
-            <span className="text-gray-600">SSL 보안</span>
-            <span className="text-gray-600">안전결제</span>
-          </div>
+      </div>
+      
+      <div className="bg-gray-200 py-3">
+        <div className="container-custom px-4">
+          <p className="text-[10px] sm:text-xs text-gray-500 text-center">
+            Copyright © 2025 Estella. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
