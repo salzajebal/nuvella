@@ -3651,8 +3651,8 @@ export default function Admin() {
                           </td>
                           <td className="px-2 py-1.5 text-center">
                             <div className="flex items-center justify-center gap-1">
-                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openOrderDetail(order)} data-testid={`button-order-detail-${order.id}`}>
-                                <Eye className="w-3.5 h-3.5" />
+                              <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => openOrderDetail(order)} data-testid={`button-order-detail-${order.id}`}>
+                                수정
                               </Button>
                               <select className="h-6 px-1 text-xs border rounded" value={order.status || "pending"} onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}>
                                 <option value="pending">대기</option>
