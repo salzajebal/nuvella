@@ -3618,7 +3618,13 @@ export default function Admin() {
                           </td>
                           <td className="px-2 py-1.5 text-gray-600">{order.orderNumber}</td>
                           <td className="px-2 py-1.5">
-                            <span className="font-medium">{order.memberName}</span>
+                            <button
+                              className="font-medium text-amber-600 hover:text-amber-800 hover:underline cursor-pointer"
+                              onClick={() => setOrderSearch(order.memberName || "")}
+                              data-testid={`button-filter-member-${order.id}`}
+                            >
+                              {order.memberName}
+                            </button>
                             {(order as any).memberUsername && <span className="text-gray-400 ml-1">({(order as any).memberUsername})</span>}
                           </td>
                           <td className="px-2 py-1.5 text-right font-bold text-amber-600">{parseInt(String(order.totalAmount || '0').replace(/,/g, '')).toLocaleString()}원</td>
