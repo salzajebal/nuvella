@@ -7,6 +7,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { broadcastToAdmins } from "./chatSocket";
+import { downloadProductImages } from "./utils/image-downloader";
 
 // Use memory storage to persist images in database (not ephemeral filesystem)
 const reviewImageUpload = multer({
@@ -112,6 +113,7 @@ export async function registerRoutes(
   // ==================== STATIC FILE SERVING FOR UPLOADS ====================
   const express = await import("express");
   app.use("/uploads", express.default.static(path.join(process.cwd(), "uploads")));
+  app.use("/product-images", express.default.static(path.join(process.cwd(), "public", "product-images")));
   
   // NOTE: WebSocket is handled in chatSocket.ts - do not create duplicate here
   
@@ -2704,7 +2706,7 @@ export async function registerRoutes(
   // Batch crawl vivian-mall.com - automatic full crawling
   app.post("/api/admin/crawling/batch-vivian", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      const { productsPerCategory = 20, autoImport = true } = req.body;
+      const { productsPerCategory = 20, autoImport = true, downloadImages = true } = req.body;
       
       console.log("=== BATCH CRAWL VIVIAN-MALL STARTED ===");
       console.log("Products per category:", productsPerCategory);
@@ -2767,11 +2769,35 @@ export async function registerRoutes(
                 message: `등록 중: ${product.name?.substring(0, 20) || '상품'}...`
               });
               
-              const allImages = product.imageUrls && product.imageUrls.length > 0 
+              let allImages = product.imageUrls && product.imageUrls.length > 0 
                 ? product.imageUrls 
                 : (product.imageUrl ? [product.imageUrl] : []);
               
-              const descImages = product.descriptionImages || [];
+              let descImages = product.descriptionImages || [];
+              let mainImage = allImages[0] || product.imageUrl;
+              
+              // Download images to local storage if enabled
+              if (downloadImages) {
+                try {
+                  updateCrawlProgress({
+                    message: `이미지 다운로드 중: ${product.name?.substring(0, 15) || '상품'}...`
+                  });
+                  
+                  const downloadResult = await downloadProductImages(
+                    mainImage,
+                    allImages,
+                    descImages
+                  );
+                  
+                  mainImage = downloadResult.mainImage || mainImage;
+                  allImages = downloadResult.galleryImages;
+                  descImages = downloadResult.descriptionImages;
+                  
+                  console.log(`[Image Download] ${product.name?.substring(0, 20)}: ${downloadResult.stats.downloaded}/${downloadResult.stats.total} downloaded`);
+                } catch (imgErr) {
+                  console.error("Error downloading images:", imgErr);
+                }
+              }
               
               const productData = {
                 name: product.name || '상품명 없음',
@@ -2779,7 +2805,7 @@ export async function registerRoutes(
                 purity: '-',
                 price: product.price || '0',
                 originalPrice: product.originalPrice,
-                imageUrl: allImages[0] || product.imageUrl,
+                imageUrl: mainImage,
                 imageUrls: allImages,
                 descriptionImageUrls: descImages,
                 category: product.category,
@@ -2850,6 +2876,7 @@ export async function registerRoutes(
         categoryId, 
         limit = 0, 
         autoImport = true,
+        downloadImages = true,
         subcategory,  // Admin-selected subcategory (optional)
         targetCategory  // Admin-selected target Estella category (optional)
       } = req.body;
@@ -2865,7 +2892,7 @@ export async function registerRoutes(
         targetCategory: targetCategory || undefined
       };
       
-      console.log(`[Admin Crawl] Starting vivian category ${categoryId}, limit=${effectiveLimit}, subcategory=${subcategory || 'auto'}, targetCategory=${targetCategory || 'auto'}`);
+      console.log(`[Admin Crawl] Starting vivian category ${categoryId}, limit=${effectiveLimit}, subcategory=${subcategory || 'auto'}, targetCategory=${targetCategory || 'auto'}, downloadImages=${downloadImages}`);
       
       const result = await crawlVivianCategory(categoryId, effectiveLimit, crawlOptions);
       
@@ -2874,11 +2901,31 @@ export async function registerRoutes(
       if (autoImport && result.success && result.products.length > 0) {
         for (const product of result.products) {
           try {
-            const allImages = product.imageUrls && product.imageUrls.length > 0 
+            let allImages = product.imageUrls && product.imageUrls.length > 0 
               ? product.imageUrls 
               : (product.imageUrl ? [product.imageUrl] : []);
             
-            const descImages = product.descriptionImages || [];
+            let descImages = product.descriptionImages || [];
+            let mainImage = allImages[0] || product.imageUrl;
+            
+            // Download images to local storage if enabled
+            if (downloadImages) {
+              try {
+                const downloadResult = await downloadProductImages(
+                  mainImage,
+                  allImages,
+                  descImages
+                );
+                
+                mainImage = downloadResult.mainImage || mainImage;
+                allImages = downloadResult.galleryImages;
+                descImages = downloadResult.descriptionImages;
+                
+                console.log(`[Image Download] ${product.name?.substring(0, 20)}: ${downloadResult.stats.downloaded}/${downloadResult.stats.total} downloaded`);
+              } catch (imgErr) {
+                console.error("Error downloading images:", imgErr);
+              }
+            }
             
             const productData = {
               name: product.name || '상품명 없음',
@@ -2886,7 +2933,7 @@ export async function registerRoutes(
               purity: '-',
               price: product.price || '0',
               originalPrice: product.originalPrice,
-              imageUrl: allImages[0] || product.imageUrl,
+              imageUrl: mainImage,
               imageUrls: allImages,
               descriptionImageUrls: descImages,
               category: product.category,
