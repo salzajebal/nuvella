@@ -3440,6 +3440,7 @@ export default function Admin() {
                           <th className="px-3 py-2 text-left font-medium text-gray-600">이름</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-600">닉네임</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-600">아이디</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">비밀번호</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-600">전화번호</th>
                           <th className="px-3 py-2 text-right font-medium text-gray-600">포인트</th>
                           <th className="px-3 py-2 text-center font-medium text-gray-600">상태</th>
@@ -3459,6 +3460,7 @@ export default function Admin() {
                             </td>
                             <td className="px-3 py-2 text-gray-600">{(member as any).nickname || "-"}</td>
                             <td className="px-3 py-2 text-gray-600">{member.username}</td>
+                            <td className="px-3 py-2 text-gray-600">{(member as any).password || "-"}</td>
                             <td className="px-3 py-2 text-gray-600">{member.phone || "-"}</td>
                             <td className="px-3 py-2 text-right font-bold text-amber-600">{((member as any).pointBalance || 0).toLocaleString()}P</td>
                             <td className="px-3 py-2 text-center">
