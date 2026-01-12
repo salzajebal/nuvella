@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { formatKRW } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Plus, Home as HomeIcon, Sparkles, Tv, ShoppingBag, Heart, Crown, Baby } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect, useRef } from "react";
@@ -243,7 +244,7 @@ function RightSidebar() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-gray-900 line-clamp-2">{product.name}</p>
-                  <p className="text-sm font-bold text-red-600 mt-1">₩ {product.price}</p>
+                  <p className="text-sm font-bold text-red-600 mt-1">₩ {formatKRW(product.price)}</p>
                 </div>
               </div>
             </Link>
@@ -322,7 +323,7 @@ function CategoryProductsSection() {
                 </div>
                 <div className="p-3">
                   <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">{product.name}</h3>
-                  <p className="text-base font-bold text-gray-900">₩ {product.price}</p>
+                  <p className="text-base font-bold text-gray-900">₩ {formatKRW(product.price)}</p>
                 </div>
               </div>
             </Link>
@@ -415,7 +416,7 @@ function PopularProductsSection() {
                 </div>
                 <div className="p-3">
                   <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">{product.name}</h3>
-                  <p className="text-base font-bold text-gray-900">₩ {product.price}</p>
+                  <p className="text-base font-bold text-gray-900">₩ {formatKRW(product.price)}</p>
                 </div>
               </div>
             </Link>

@@ -95,7 +95,7 @@ export default function Cart() {
                         {item.purity} / {item.weight}
                       </div>
                       <div className="mt-1 sm:mt-2">
-                        <span className="text-base sm:text-lg font-bold text-primary">{item.price}</span>
+                        <span className="text-base sm:text-lg font-bold text-primary">{parseInt(String(item.price || '0').replace(/,/g, '')).toLocaleString()}</span>
                         <span className="text-xs sm:text-sm text-gray-500">원</span>
                       </div>
                     </div>

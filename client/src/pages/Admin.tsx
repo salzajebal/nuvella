@@ -2893,7 +2893,7 @@ export default function Admin() {
                         </td>
                         <td className="px-4 py-3 text-gray-600">{product.weight}</td>
                         <td className="px-4 py-3 text-gray-600">{product.purity}</td>
-                        <td className="px-4 py-3 text-yellow-600 font-bold">{product.price}원</td>
+                        <td className="px-4 py-3 text-yellow-600 font-bold">{parseInt(String(product.price || '0').replace(/,/g, '')).toLocaleString()}원</td>
                         <td className="px-4 py-3">
                           <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
                             {CATEGORY_OPTIONS.find(c => c.id === product.category)?.name || product.category}
