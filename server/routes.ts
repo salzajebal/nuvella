@@ -2535,6 +2535,53 @@ export async function registerRoutes(
     }
   });
 
+  // Update order shipping info (member only, not for shipped/delivered orders)
+  app.patch("/api/orders/:orderId/shipping", async (req: Request, res: Response) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ success: false, error: "인증이 필요합니다." });
+    }
+    
+    const session = await getMemberFromToken(token);
+    if (!session) {
+      return res.status(401).json({ success: false, error: "인증이 만료되었습니다. 다시 로그인해주세요." });
+    }
+    
+    try {
+      const { orderId } = req.params;
+      const { shippingName, shippingPhone, shippingAddress, shippingAddressDetail, shippingZipcode } = req.body;
+      
+      // Get the order and verify ownership and status
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ success: false, error: "주문을 찾을 수 없습니다." });
+      }
+      
+      if (order.memberId !== session.memberId) {
+        return res.status(403).json({ success: false, error: "권한이 없습니다." });
+      }
+      
+      // Cannot edit if shipped or delivered
+      if (order.status === "shipped" || order.status === "delivered") {
+        return res.status(400).json({ success: false, error: "배송중 또는 배송완료 상태에서는 수정이 불가능합니다." });
+      }
+      
+      // Update the shipping info
+      const updatedOrder = await storage.updateOrder(orderId, {
+        shippingName: shippingName ? String(shippingName).trim() : order.shippingName,
+        shippingPhone: shippingPhone ? String(shippingPhone).trim() : order.shippingPhone,
+        shippingAddress: shippingAddress ? String(shippingAddress).trim() : order.shippingAddress,
+        shippingAddressDetail: shippingAddressDetail ? String(shippingAddressDetail).trim() : order.shippingAddressDetail,
+        shippingZipcode: shippingZipcode ? String(shippingZipcode).trim() : order.shippingZipcode,
+      });
+      
+      res.json({ success: true, data: updatedOrder });
+    } catch (error) {
+      console.error("Error updating order shipping:", error);
+      res.status(500).json({ success: false, error: "배송 정보 수정 중 오류가 발생했습니다." });
+    }
+  });
+
   // Cancel order (member only, pending orders only)
   app.post("/api/orders/:orderId/cancel", async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace("Bearer ", "");

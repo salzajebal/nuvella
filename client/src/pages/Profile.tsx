@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Heart, LogOut, ChevronRight, Package, Wallet, Clock, CheckCircle, XCircle, AlertTriangle, Plus, Mail, Phone, MapPin, Building2, CreditCard, Info, Star, Pencil } from "lucide-react";
+import { User, Heart, LogOut, ChevronRight, Package, Wallet, Clock, CheckCircle, XCircle, AlertTriangle, Plus, Mail, Phone, MapPin, Building2, CreditCard, Info, Star, Pencil, Eye } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -714,24 +714,20 @@ export default function Profile() {
                                 </div>
                               </div>
                               
-                              {order.shippingAddress && (
-                                <div className="mt-3 p-3 bg-gray-50 rounded-lg text-sm">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <MapPin className="w-4 h-4 text-gray-400" />
-                                    <span className="font-medium text-gray-700">배송지 정보</span>
-                                  </div>
-                                  <div className="space-y-1 text-gray-600 pl-6">
-                                    <p><span className="font-medium">{order.shippingName}</span> {order.shippingPhone && `(${order.shippingPhone})`}</p>
-                                    <p>
-                                      {order.shippingZipcode && `[${order.shippingZipcode}] `}
-                                      {order.shippingAddress}
-                                      {order.shippingAddressDetail && ` ${order.shippingAddressDetail}`}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                              
                               <div className="flex flex-wrap gap-2 mt-3 items-center">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs h-7 border-gray-300 text-gray-600 hover:bg-gray-50"
+                                  onClick={() => handleOpenOrderDetail(order)}
+                                  data-testid={`button-order-detail-${order.id}`}
+                                >
+                                  <Eye className="w-3 h-3 mr-1" />
+                                  주문상세
+                                </Button>
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2 mt-2 items-center">
                                 <span className={`text-xs px-2 py-1 rounded-full ${
                                   order.status === "delivered" ? "bg-green-100 text-green-700" :
                                   order.status === "shipped" ? "bg-blue-100 text-blue-700" :
@@ -1313,6 +1309,210 @@ export default function Profile() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showOrderDetailDialog} onOpenChange={setShowOrderDetailDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-primary" />
+              주문 상세
+            </DialogTitle>
+          </DialogHeader>
+          {detailOrder && (
+            <div className="space-y-4 pt-2">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  상품 정보
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">주문번호</span>
+                    <span className="font-mono text-gray-700">{detailOrder.orderNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">상품명</span>
+                    <span className="font-medium text-gray-900">{detailOrder.productName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">수량</span>
+                    <span className="text-gray-700">{detailOrder.quantity}개</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">주문금액</span>
+                    <span className="font-bold text-primary">{parseInt(String(detailOrder.totalAmount || '0').replace(/,/g, '')).toLocaleString()}원</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">주문일시</span>
+                    <span className="text-gray-700">{new Date(detailOrder.createdAt).toLocaleString("ko-KR")}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">주문상태</span>
+                    <span className={`px-2 py-0.5 rounded text-xs ${
+                      detailOrder.status === "delivered" ? "bg-green-100 text-green-700" :
+                      detailOrder.status === "shipped" ? "bg-blue-100 text-blue-700" :
+                      detailOrder.status === "confirmed" ? "bg-yellow-100 text-yellow-700" :
+                      detailOrder.status === "cancelled" ? "bg-red-100 text-red-700" :
+                      "bg-gray-100 text-gray-700"
+                    }`}>
+                      {detailOrder.status === "pending" && "대기중"}
+                      {detailOrder.status === "processing" && "처리중"}
+                      {detailOrder.status === "confirmed" && "확인됨"}
+                      {detailOrder.status === "shipped" && "배송중"}
+                      {detailOrder.status === "delivered" && "배송완료"}
+                      {detailOrder.status === "cancelled" && "취소됨"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    배송지 정보
+                  </h4>
+                  {!isEditingShipping && detailOrder.status !== "shipped" && detailOrder.status !== "delivered" && detailOrder.status !== "cancelled" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-7"
+                      onClick={() => setIsEditingShipping(true)}
+                      data-testid="button-edit-shipping-detail"
+                    >
+                      <Pencil className="w-3 h-3 mr-1" />
+                      수정
+                    </Button>
+                  )}
+                  {(detailOrder.status === "shipped" || detailOrder.status === "delivered") && (
+                    <span className="text-xs text-gray-500">배송중/완료시 수정 불가</span>
+                  )}
+                </div>
+                
+                {!isEditingShipping ? (
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">받는분</span>
+                      <span className="text-gray-700">{detailOrder.shippingName || "-"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">연락처</span>
+                      <span className="text-gray-700">{detailOrder.shippingPhone || "-"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">우편번호</span>
+                      <span className="text-gray-700">{detailOrder.shippingZipcode || "-"}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">주소</span>
+                      <p className="text-gray-700 mt-1">
+                        {detailOrder.shippingAddress || "-"}
+                        {detailOrder.shippingAddressDetail && ` ${detailOrder.shippingAddressDetail}`}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label htmlFor="detail-shipping-name" className="text-xs">받는분</Label>
+                        <Input
+                          id="detail-shipping-name"
+                          value={detailShippingName}
+                          onChange={(e) => setDetailShippingName(e.target.value)}
+                          placeholder="이름"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="detail-shipping-phone" className="text-xs">연락처</Label>
+                        <Input
+                          id="detail-shipping-phone"
+                          value={detailShippingPhone}
+                          onChange={(e) => setDetailShippingPhone(e.target.value)}
+                          placeholder="010-0000-0000"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="detail-shipping-zipcode" className="text-xs">우편번호</Label>
+                      <Input
+                        id="detail-shipping-zipcode"
+                        value={detailShippingZipcode}
+                        onChange={(e) => setDetailShippingZipcode(e.target.value)}
+                        placeholder="우편번호"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="detail-shipping-address" className="text-xs">주소</Label>
+                      <Input
+                        id="detail-shipping-address"
+                        value={detailShippingAddress}
+                        onChange={(e) => setDetailShippingAddress(e.target.value)}
+                        placeholder="기본 주소"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="detail-shipping-address-detail" className="text-xs">상세주소</Label>
+                      <Input
+                        id="detail-shipping-address-detail"
+                        value={detailShippingAddressDetail}
+                        onChange={(e) => setDetailShippingAddressDetail(e.target.value)}
+                        placeholder="동/호수 등"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setIsEditingShipping(false);
+                          setDetailShippingName(detailOrder.shippingName || "");
+                          setDetailShippingPhone(detailOrder.shippingPhone || "");
+                          setDetailShippingZipcode(detailOrder.shippingZipcode || "");
+                          setDetailShippingAddress(detailOrder.shippingAddress || "");
+                          setDetailShippingAddressDetail(detailOrder.shippingAddressDetail || "");
+                        }}
+                      >
+                        취소
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-blue-500 hover:bg-blue-600"
+                        onClick={handleUpdateOrderShipping}
+                        disabled={detailUpdating}
+                      >
+                        {detailUpdating ? "저장 중..." : "저장"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {detailOrder.status === "pending" && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-red-400 text-red-600 hover:bg-red-50"
+                    onClick={() => {
+                      setShowOrderDetailDialog(false);
+                      handleOpenCancelDialog(detailOrder);
+                    }}
+                  >
+                    <XCircle className="w-4 h-4 mr-1" />
+                    주문 취소
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
