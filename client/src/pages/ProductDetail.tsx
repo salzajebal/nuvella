@@ -163,7 +163,7 @@ interface ReviewableOrder {
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -174,6 +174,7 @@ export default function ProductDetail() {
   const [canReview, setCanReview] = useState(false);
   const [reviewableOrders, setReviewableOrders] = useState<ReviewableOrder[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [autoOpenReview, setAutoOpenReview] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
   const [reviewForm, setReviewForm] = useState({
@@ -241,6 +242,24 @@ export default function ProductDetail() {
       checkCanReview();
     }
   }, [id]);
+
+  // Auto-open review modal when writeReview=1 query param is present
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("writeReview") === "1") {
+      setAutoOpenReview(true);
+    }
+  }, []);
+
+  // Open review modal when we have reviewable orders and autoOpenReview is true
+  useEffect(() => {
+    if (autoOpenReview && canReview && reviewableOrders.length > 0) {
+      setShowReviewModal(true);
+      setAutoOpenReview(false);
+      // Clean up the URL
+      window.history.replaceState({}, "", `/products/${id}`);
+    }
+  }, [autoOpenReview, canReview, reviewableOrders, id]);
 
   const handleSubmitReview = async () => {
     if (!selectedOrderId || !reviewForm.title || !reviewForm.content) {

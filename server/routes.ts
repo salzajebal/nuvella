@@ -2346,8 +2346,9 @@ export async function registerRoutes(
             // Deduct points and complete payment - use negative amount
             await storage.updateMemberPoints(memberId, -orderTotalAmount, `주문결제: ${productName}`);
             
+            // 결제완료, 배송대기 상태로 설정
             paymentStatus = "completed";
-            orderStatus = "processing";
+            orderStatus = "pending";
           } else {
             return res.status(400).json({ 
               success: false, 
