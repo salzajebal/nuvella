@@ -1388,6 +1388,42 @@ export default function Admin() {
     }
   };
 
+  const [isDownloadingImages, setIsDownloadingImages] = useState(false);
+
+  const handleDownloadExistingImages = async () => {
+    const confirmMessage = `기존 상품(${products.length}개)의 이미지를 로컬에 다운로드하시겠습니까?\n\n외부 URL 이미지를 서버에 저장하여 원본 사이트가 다운되어도 이미지가 표시됩니다.\n\n이 작업은 시간이 걸릴 수 있습니다.`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+    
+    setIsDownloadingImages(true);
+    
+    try {
+      const res = await fetchWithAuth("/api/admin/products/download-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all: true })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        toast({ 
+          title: "성공", 
+          description: `${data.data.processed}개 상품, ${data.data.totalDownloaded}개 이미지 다운로드 완료` 
+        });
+        fetchProducts();
+      } else {
+        toast({ title: "오류", description: data.error || "이미지 다운로드에 실패했습니다.", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Download images error:", error);
+      toast({ title: "오류", description: "이미지 다운로드에 실패했습니다.", variant: "destructive" });
+    } finally {
+      setIsDownloadingImages(false);
+    }
+  };
+
   const startEdit = (product: Product) => {
     setEditingId(product.id);
     const existingUrls = product.imageUrls || [];
@@ -2579,6 +2615,16 @@ export default function Admin() {
                 <Button variant="outline" onClick={fetchProducts}>
                   <RefreshCw className="w-4 h-4 mr-2" />
                   새로고침
+                </Button>
+                <Button 
+                  data-testid="button-download-images"
+                  variant="outline"
+                  onClick={handleDownloadExistingImages}
+                  disabled={isDownloadingImages}
+                  className="border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {isDownloadingImages ? "다운로드 중..." : "이미지 저장"}
                 </Button>
                 <Button 
                   data-testid="button-delete-all-products"

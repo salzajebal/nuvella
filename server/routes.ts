@@ -2992,5 +2992,78 @@ export async function registerRoutes(
     }
   });
 
+  // Download images for existing products (migrate external URLs to local storage)
+  app.post("/api/admin/products/download-images", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { productIds, all = false } = req.body;
+      
+      let products;
+      if (all) {
+        products = await storage.getAllProducts();
+      } else if (productIds && Array.isArray(productIds)) {
+        products = [];
+        for (const id of productIds) {
+          const product = await storage.getProduct(id);
+          if (product) products.push(product);
+        }
+      } else {
+        return res.status(400).json({ success: false, error: "productIds 또는 all 옵션을 지정해주세요." });
+      }
+      
+      // Filter products that have external images (not already local)
+      const productsToProcess = products.filter(p => {
+        const hasExternalMain = p.imageUrl && !p.imageUrl.startsWith('/product-images/');
+        const hasExternalGallery = p.imageUrls?.some(url => !url.startsWith('/product-images/'));
+        const hasExternalDesc = p.descriptionImageUrls?.some(url => !url.startsWith('/product-images/'));
+        return hasExternalMain || hasExternalGallery || hasExternalDesc;
+      });
+      
+      console.log(`[Image Migration] Processing ${productsToProcess.length} products with external images`);
+      
+      let processed = 0;
+      let totalDownloaded = 0;
+      const errors: string[] = [];
+      
+      for (const product of productsToProcess) {
+        try {
+          const downloadResult = await downloadProductImages(
+            product.imageUrl || '',
+            product.imageUrls || [],
+            product.descriptionImageUrls || []
+          );
+          
+          // Update product with local image paths
+          await storage.updateProduct(product.id, {
+            imageUrl: downloadResult.mainImage || product.imageUrl,
+            imageUrls: downloadResult.galleryImages,
+            descriptionImageUrls: downloadResult.descriptionImages
+          });
+          
+          processed++;
+          totalDownloaded += downloadResult.stats.downloaded;
+          console.log(`[Image Migration] ${product.id}: ${product.name?.substring(0, 20)} - ${downloadResult.stats.downloaded} images downloaded`);
+        } catch (e) {
+          const errMsg = `Product ${product.id}: ${e instanceof Error ? e.message : 'Unknown error'}`;
+          errors.push(errMsg);
+          console.error(`[Image Migration Error] ${errMsg}`);
+        }
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          totalProducts: products.length,
+          productsWithExternalImages: productsToProcess.length,
+          processed,
+          totalDownloaded,
+          errors: errors.length > 0 ? errors.slice(0, 10) : undefined
+        }
+      });
+    } catch (error) {
+      console.error("Image download error:", error);
+      res.status(500).json({ success: false, error: "이미지 다운로드 중 오류가 발생했습니다." });
+    }
+  });
+
   return httpServer;
 }
