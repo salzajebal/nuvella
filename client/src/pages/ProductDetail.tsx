@@ -257,7 +257,7 @@ export default function ProductDetail() {
       setShowReviewModal(true);
       setAutoOpenReview(false);
       // Clean up the URL
-      window.history.replaceState({}, "", `/products/${id}`);
+      window.history.replaceState({}, "", `/product/${id}`);
     }
   }, [autoOpenReview, canReview, reviewableOrders, id]);
 

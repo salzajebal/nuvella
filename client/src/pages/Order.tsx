@@ -348,7 +348,7 @@ export default function Order() {
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
                 <Button
-                  onClick={() => setLocation(`/products/${product.id}?writeReview=1`)}
+                  onClick={() => setLocation(`/product/${product.id}?writeReview=1`)}
                   className="sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-8 text-lg"
                   data-testid="link-write-review"
                 >
