@@ -223,19 +223,19 @@ export function Header() {
             </Button>
           </Link>
 
-          <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
+          <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 flex-nowrap">
             {memberName ? (
-              <>
-                <Link href="/profile" className="hover:text-gray-900 flex items-center gap-1">
-                  <User className="w-4 h-4" />
-                  {memberName}님
+              <div className="flex items-center gap-2 flex-nowrap whitespace-nowrap">
+                <Link href="/profile" className="hover:text-gray-900 flex items-center gap-1 whitespace-nowrap">
+                  <User className="w-4 h-4 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{memberName}님</span>
                 </Link>
-                <span className="text-gray-300">|</span>
-                <button onClick={handleLogout} className="hover:text-gray-900 flex items-center gap-1">
-                  <LogOut className="w-4 h-4" />
-                  로그아웃
+                <span className="text-gray-300 flex-shrink-0">|</span>
+                <button onClick={handleLogout} className="hover:text-gray-900 flex items-center gap-1 whitespace-nowrap">
+                  <LogOut className="w-4 h-4 flex-shrink-0" />
+                  <span className="whitespace-nowrap">로그아웃</span>
                 </button>
-              </>
+              </div>
             ) : (
               <div className="flex flex-row items-center gap-2 flex-nowrap">
                 <Link href="/login" className="hover:text-gray-900 whitespace-nowrap inline-block" data-testid="link-login">로그인</Link>
