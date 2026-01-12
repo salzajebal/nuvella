@@ -4059,7 +4059,7 @@ export default function Admin() {
                       {paginatedWithdrawals.map((request) => (
                         <tbody key={request.id}>
                           <tr className={`border-t border-gray-200 ${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
-                            <td className="px-2 py-1.5 text-xs text-gray-600">{request.memberId || "-"}</td>
+                            <td className="px-2 py-1.5 text-xs text-gray-600">{request.memberEmail || "-"}</td>
                             <td className="px-2 py-1.5 text-xs text-gray-600">{request.memberNickname || "-"}</td>
                             <td className="px-2 py-1.5 text-xs font-medium">{request.memberName}</td>
                             <td className="px-2 py-1.5 text-xs text-gray-600">
