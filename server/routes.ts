@@ -2337,7 +2337,7 @@ export async function registerRoutes(
       }
       
       const orderNumber = `ORD${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-      const orderTotalAmount = parseInt(totalAmount) || 0;
+      const orderTotalAmount = parseInt(String(totalAmount).replace(/,/g, '')) || 0;
       
       let paymentStatus = "pending";
       let orderStatus = "pending";
