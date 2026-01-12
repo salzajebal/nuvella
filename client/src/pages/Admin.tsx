@@ -2599,6 +2599,60 @@ export default function Admin() {
 
         {activeTab === "products" && (
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            {/* 인기상품 선택 섹션 */}
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-4 mb-6 border border-amber-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+                  <h3 className="font-bold text-gray-900">인기상품 선택</h3>
+                  <span className="text-sm text-gray-500">
+                    (홈페이지에 표시되는 {products.filter(p => p.isBest).length}/4개)
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {products.filter(p => p.isBest).slice(0, 4).map((product) => (
+                  <div key={product.id} className="relative bg-white rounded-lg p-2 border border-amber-200 shadow-sm">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const token = localStorage.getItem("adminToken");
+                          const res = await fetch(`/api/admin/products/${product.id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                            body: JSON.stringify({ isBest: false }),
+                          });
+                          if (res.ok) {
+                            toast({ title: "해제됨", description: "인기상품에서 해제되었습니다." });
+                            fetchProducts();
+                          }
+                        } catch (err) {
+                          toast({ title: "오류", description: "처리 중 오류가 발생했습니다.", variant: "destructive" });
+                        }
+                      }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                    <img
+                      src={product.imageUrl || product.imageUrls?.[0] || "https://via.placeholder.com/100"}
+                      alt={product.name}
+                      className="w-full h-16 object-cover rounded mb-1"
+                    />
+                    <p className="text-xs font-medium text-gray-700 truncate">{product.name}</p>
+                  </div>
+                ))}
+                {Array(Math.max(0, 4 - products.filter(p => p.isBest).length)).fill(null).map((_, i) => (
+                  <div key={`empty-${i}`} className="bg-white/50 rounded-lg p-2 border-2 border-dashed border-amber-200 flex items-center justify-center min-h-[90px]">
+                    <span className="text-sm text-gray-400">비어있음</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                아래 상품 목록에서 ⭐ 버튼을 클릭하여 인기상품을 선택/해제할 수 있습니다.
+              </p>
+            </div>
+            
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">상품 관리</h2>
@@ -2850,6 +2904,34 @@ export default function Admin() {
                           {product.isNew && <span className="bg-red-600 text-white px-2 py-0.5 rounded text-[10px]">New</span>}
                         </td>
                         <td className="px-4 py-3 text-right">
+                          <Button
+                            data-testid={`button-toggle-best-${product.id}`}
+                            variant="ghost"
+                            size="icon"
+                            onClick={async () => {
+                              try {
+                                const token = localStorage.getItem("adminToken");
+                                const res = await fetch(`/api/admin/products/${product.id}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                                  body: JSON.stringify({ isBest: !product.isBest }),
+                                });
+                                if (res.ok) {
+                                  toast({ 
+                                    title: product.isBest ? "해제됨" : "선택됨", 
+                                    description: product.isBest ? "인기상품에서 해제되었습니다." : "인기상품으로 선택되었습니다." 
+                                  });
+                                  fetchProducts();
+                                }
+                              } catch (err) {
+                                toast({ title: "오류", description: "처리 중 오류가 발생했습니다.", variant: "destructive" });
+                              }
+                            }}
+                            className={`mr-1 ${product.isBest ? "text-amber-500" : "text-gray-400 hover:text-amber-500"}`}
+                            title={product.isBest ? "인기상품 해제" : "인기상품 선택"}
+                          >
+                            <Star className={`w-4 h-4 ${product.isBest ? "fill-amber-500" : ""}`} />
+                          </Button>
                           <Button 
                             data-testid={`button-edit-product-${product.id}`}
                             size="icon" 
