@@ -51,7 +51,7 @@ function CategorySidebar() {
           {CATEGORIES.map((cat) => {
             const IconComponent = cat.icon;
             return (
-              <Link key={cat.id} href={`/products?category=${cat.id}`}>
+              <Link key={cat.id} href={`/products/${cat.id}`}>
                 <div 
                   className="bg-white p-3 flex flex-col items-center gap-2 hover:bg-gray-50 transition-colors cursor-pointer"
                   data-testid={`category-link-${cat.id}`}
@@ -554,7 +554,7 @@ function MobileCategoryBar() {
         {CATEGORIES.map((cat) => {
           const IconComponent = cat.icon;
           return (
-            <Link key={cat.id} href={`/products?category=${cat.id}`}>
+            <Link key={cat.id} href={`/products/${cat.id}`}>
               <div 
                 className="flex flex-col items-center gap-1 min-w-[60px]"
                 data-testid={`mobile-category-${cat.id}`}
