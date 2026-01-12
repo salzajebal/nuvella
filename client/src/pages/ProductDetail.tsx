@@ -526,7 +526,19 @@ export default function ProductDetail() {
             
             {product.descriptionImageUrls && product.descriptionImageUrls.length > 0 && (
               <div className="mb-12 space-y-2">
-                {product.descriptionImageUrls.map((imgUrl, index) => (
+                {product.descriptionImageUrls
+                  .filter((imgUrl) => {
+                    const lowerUrl = imgUrl.toLowerCase();
+                    return !lowerUrl.includes('vivian-mall.com/data/common/') && 
+                           !lowerUrl.includes('logo') && 
+                           !lowerUrl.includes('banner') &&
+                           !lowerUrl.includes('top_') &&
+                           !lowerUrl.includes('header') &&
+                           !lowerUrl.includes('thumb-') &&
+                           !lowerUrl.includes('_60x60') &&
+                           !lowerUrl.includes('_160x160');
+                  })
+                  .map((imgUrl, index) => (
                   <img 
                     key={index}
                     src={imgUrl}
