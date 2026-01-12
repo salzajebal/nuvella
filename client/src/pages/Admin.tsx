@@ -2000,7 +2000,7 @@ export default function Admin() {
       )}
       
       <div className="flex min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50">
-        <aside className="w-72 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex-shrink-0 hidden lg:block shadow-2xl">
+        <aside className="w-72 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex-shrink-0 hidden lg:flex lg:flex-col shadow-2xl h-screen sticky top-0 overflow-y-auto">
           <div className="p-6 border-b border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30 ring-2 ring-amber-300/30">
