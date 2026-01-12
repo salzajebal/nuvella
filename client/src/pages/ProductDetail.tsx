@@ -529,14 +529,20 @@ export default function ProductDetail() {
                 {product.descriptionImageUrls
                   .filter((imgUrl) => {
                     const lowerUrl = imgUrl.toLowerCase();
-                    return !lowerUrl.includes('vivian-mall.com/data/common/') && 
-                           !lowerUrl.includes('logo') && 
-                           !lowerUrl.includes('banner') &&
-                           !lowerUrl.includes('top_') &&
-                           !lowerUrl.includes('header') &&
-                           !lowerUrl.includes('thumb-') &&
-                           !lowerUrl.includes('_60x60') &&
-                           !lowerUrl.includes('_160x160');
+                    if (lowerUrl.includes('vivian-mall.com/data/common/')) return false;
+                    if (lowerUrl.includes('vivian-mall.com/data/item/') && 
+                        (lowerUrl.includes('thumb-') || lowerUrl.includes('_60x60') || 
+                         lowerUrl.includes('_150x150') || lowerUrl.includes('_160x160'))) return false;
+                    if (lowerUrl.includes('clois-shop.com/data/common/')) return false;
+                    if (lowerUrl.includes('logo')) return false;
+                    if (lowerUrl.includes('banner')) return false;
+                    if (lowerUrl.includes('top_')) return false;
+                    if (lowerUrl.includes('header')) return false;
+                    if (lowerUrl.includes('tit_proinfo')) return false;
+                    if (lowerUrl.includes('keyvisual')) return false;
+                    if (lowerUrl.includes('danawa.com')) return false;
+                    if (lowerUrl.match(/\/\d+\.(jpg|png|gif|webp)$/)) return false;
+                    return true;
                   })
                   .map((imgUrl, index) => (
                   <img 
