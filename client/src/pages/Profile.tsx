@@ -98,6 +98,16 @@ export default function Profile() {
   const [cancellingOrder, setCancellingOrder] = useState<Order | null>(null);
   const [orderCancelling, setOrderCancelling] = useState(false);
   
+  const [showOrderDetailDialog, setShowOrderDetailDialog] = useState(false);
+  const [detailOrder, setDetailOrder] = useState<Order | null>(null);
+  const [isEditingShipping, setIsEditingShipping] = useState(false);
+  const [detailShippingName, setDetailShippingName] = useState("");
+  const [detailShippingPhone, setDetailShippingPhone] = useState("");
+  const [detailShippingZipcode, setDetailShippingZipcode] = useState("");
+  const [detailShippingAddress, setDetailShippingAddress] = useState("");
+  const [detailShippingAddressDetail, setDetailShippingAddressDetail] = useState("");
+  const [detailUpdating, setDetailUpdating] = useState(false);
+  
   const { data: memberInfo, refetch: refetchMember, isLoggedIn, memberToken } = useMemberInfo();
 
   const { data: depositRequests } = useQuery<DepositRequest[]>({
@@ -408,6 +418,60 @@ export default function Profile() {
       toast({ title: "오류", description: "주문 취소 중 오류가 발생했습니다.", variant: "destructive" });
     } finally {
       setOrderCancelling(false);
+    }
+  };
+
+  const handleOpenOrderDetail = (order: Order) => {
+    setDetailOrder(order);
+    setDetailShippingName(order.shippingName || "");
+    setDetailShippingPhone(order.shippingPhone || "");
+    setDetailShippingZipcode(order.shippingZipcode || "");
+    setDetailShippingAddress(order.shippingAddress || "");
+    setDetailShippingAddressDetail(order.shippingAddressDetail || "");
+    setIsEditingShipping(false);
+    setShowOrderDetailDialog(true);
+  };
+
+  const handleUpdateOrderShipping = async () => {
+    if (!detailOrder) return;
+    
+    setDetailUpdating(true);
+    try {
+      const res = await fetch(`/api/orders/${detailOrder.id}/shipping`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${memberToken}`,
+        },
+        body: JSON.stringify({
+          shippingName: detailShippingName,
+          shippingPhone: detailShippingPhone,
+          shippingZipcode: detailShippingZipcode,
+          shippingAddress: detailShippingAddress,
+          shippingAddressDetail: detailShippingAddressDetail,
+        }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "성공", description: "배송 정보가 수정되었습니다." });
+        setIsEditingShipping(false);
+        queryClient.invalidateQueries({ queryKey: ["member-orders"] });
+        setDetailOrder({
+          ...detailOrder,
+          shippingName: detailShippingName,
+          shippingPhone: detailShippingPhone,
+          shippingZipcode: detailShippingZipcode,
+          shippingAddress: detailShippingAddress,
+          shippingAddressDetail: detailShippingAddressDetail,
+        });
+      } else {
+        toast({ title: "오류", description: data.error || "배송 정보 수정에 실패했습니다.", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "배송 정보 수정 중 오류가 발생했습니다.", variant: "destructive" });
+    } finally {
+      setDetailUpdating(false);
     }
   };
 
