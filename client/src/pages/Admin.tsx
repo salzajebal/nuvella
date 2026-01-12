@@ -3663,7 +3663,7 @@ export default function Admin() {
                         </tr>
                         <tr className={`${order.status === "pending" ? "bg-yellow-50/50" : ""}`}>
                           <td colSpan={7} className="px-2 py-1 text-gray-500 border-b border-gray-100">
-                            <span className="text-gray-400">배송:</span> {order.shippingName} ({order.shippingPhone}) | {order.quantity}개 | {order.shippingAddress?.substring(0, 30)}...
+                            <span className="text-gray-400">배송:</span> {order.shippingName} ({order.shippingPhone}) | {order.quantity}개 | {order.shippingAddress} {order.shippingAddressDetail || ""}
                           </td>
                         </tr>
                       </React.Fragment>
