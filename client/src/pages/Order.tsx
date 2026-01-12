@@ -230,7 +230,7 @@ export default function Order() {
     
     if (!product) return;
     
-    if (!formData.memberName || !formData.memberEmail || !formData.memberPhone) {
+    if (!formData.memberName || !formData.memberPhone) {
       toast({
         title: "입력 오류",
         description: "주문자 정보를 모두 입력해주세요.",
@@ -448,18 +448,6 @@ export default function Order() {
                     placeholder="010-0000-0000"
                     required
                     data-testid="input-member-phone"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor="memberEmail">이메일 (선택)</Label>
-                  <Input
-                    id="memberEmail"
-                    name="memberEmail"
-                    type="email"
-                    value={formData.memberEmail}
-                    onChange={handleInputChange}
-                    placeholder="example@email.com"
-                    data-testid="input-member-email"
                   />
                 </div>
                 <div className="sm:col-span-2">

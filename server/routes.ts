@@ -2314,7 +2314,7 @@ export async function registerRoutes(
         totalAmount,
       } = req.body;
       
-      if (!memberName || !memberEmail || !memberPhone) {
+      if (!memberName || !memberPhone) {
         return res.status(400).json({ success: false, error: "주문자 정보를 입력해주세요." });
       }
       
@@ -2366,7 +2366,7 @@ export async function registerRoutes(
         memberId: memberId || null,
         memberUsername: memberUsername,
         memberName: String(memberName).trim(),
-        memberEmail: String(memberEmail).trim(),
+        memberEmail: memberEmail ? String(memberEmail).trim() : null,
         memberPhone: String(memberPhone).trim(),
         shippingName: String(shippingName).trim(),
         shippingPhone: String(shippingPhone).trim(),
