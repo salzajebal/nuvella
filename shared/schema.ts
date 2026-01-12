@@ -103,6 +103,7 @@ export const withdrawalRequests = pgTable("withdrawal_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memberId: varchar("member_id").notNull(),
   memberName: text("member_name").notNull(),
+  memberNickname: text("member_nickname"),
   memberEmail: text("member_email").notNull(),
   amount: integer("amount").notNull(),
   bankName: text("bank_name"),

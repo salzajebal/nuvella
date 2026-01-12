@@ -1080,6 +1080,7 @@ export async function registerRoutes(
       const request = await storage.createWithdrawalRequest({
         memberId: member.id,
         memberName: member.name,
+        memberNickname: member.nickname || undefined,
         memberEmail: member.username,
         amount,
         bankName: rawBankName,

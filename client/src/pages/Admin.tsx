@@ -78,6 +78,7 @@ interface AdminWithdrawalRequest {
   id: string;
   memberId: string;
   memberName: string;
+  memberNickname?: string;
   memberEmail: string;
   amount: number;
   bankName: string;
@@ -4046,6 +4047,7 @@ export default function Admin() {
                       <thead className="bg-gray-50 border-y border-gray-200">
                         <tr>
                           <th className="px-2 py-2 text-left font-medium text-gray-600 text-xs">아이디</th>
+                          <th className="px-2 py-2 text-left font-medium text-gray-600 text-xs">닉네임</th>
                           <th className="px-2 py-2 text-left font-medium text-gray-600 text-xs">이름</th>
                           <th className="px-2 py-2 text-left font-medium text-gray-600 text-xs">계좌정보 (은행/계좌/예금주/생년월일)</th>
                           <th className="px-2 py-2 text-right font-medium text-gray-600 text-xs">금액</th>
@@ -4058,6 +4060,7 @@ export default function Admin() {
                         <tbody key={request.id}>
                           <tr className={`border-t border-gray-200 ${request.status === "pending" ? "bg-yellow-50" : request.status === "approved" ? "bg-green-50/50" : "bg-red-50/50"}`}>
                             <td className="px-2 py-1.5 text-xs text-gray-600">{request.memberId || "-"}</td>
+                            <td className="px-2 py-1.5 text-xs text-gray-600">{request.memberNickname || "-"}</td>
                             <td className="px-2 py-1.5 text-xs font-medium">{request.memberName}</td>
                             <td className="px-2 py-1.5 text-xs text-gray-600">
                               {request.bankName || "-"} / {request.accountNumber || "-"} / {request.accountHolder || "-"} / {request.birthdate || "-"}
