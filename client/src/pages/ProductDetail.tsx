@@ -175,6 +175,7 @@ export default function ProductDetail() {
   const [reviewableOrders, setReviewableOrders] = useState<ReviewableOrder[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [autoOpenReview, setAutoOpenReview] = useState(false);
+  const [detailTab, setDetailTab] = useState<"product" | "reviews">("product");
   const [submittingReview, setSubmittingReview] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
   const [reviewForm, setReviewForm] = useState({
@@ -547,10 +548,34 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          <div className="mt-16 border-t border-gray-200 pt-12">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b-2 border-gray-900 inline-block">
-              상품 상세 정보
-            </h2>
+          <div className="mt-16 border-t border-gray-200 pt-8">
+            <div className="flex border-b border-gray-200 mb-8">
+              <button
+                onClick={() => setDetailTab("product")}
+                className={`flex-1 py-4 text-center font-bold text-lg transition-all ${
+                  detailTab === "product"
+                    ? "text-gray-900 border-b-2 border-gray-900"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+                data-testid="tab-product-details"
+              >
+                상품 상세 정보
+              </button>
+              <button
+                onClick={() => setDetailTab("reviews")}
+                className={`flex-1 py-4 text-center font-bold text-lg transition-all ${
+                  detailTab === "reviews"
+                    ? "text-gray-900 border-b-2 border-gray-900"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+                data-testid="tab-reviews"
+              >
+                사용후기 ({reviews.length})
+              </button>
+            </div>
+
+            {detailTab === "product" && (
+            <div>
             
             {product.descriptionImageUrls && product.descriptionImageUrls.length > 0 && (
               <div className="mb-12 space-y-2">
@@ -623,8 +648,11 @@ export default function ProductDetail() {
               <h3 className="font-bold text-gray-900 mb-2">배송 및 교환/반품 안내</h3>
               <p className="text-gray-600 text-sm">상세페이지 참조</p>
             </div>
+            </div>
+            )}
 
-            <div className="mt-12 border-t border-gray-200 pt-8">
+            {detailTab === "reviews" && (
+            <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
                   사용후기 ({reviews.length})
@@ -690,6 +718,7 @@ export default function ProductDetail() {
                 </div>
               )}
             </div>
+            )}
           </div>
 
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-40 p-4">
