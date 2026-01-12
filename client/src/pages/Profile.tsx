@@ -87,6 +87,17 @@ export default function Profile() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState("info");
   
+  const [showAddressEditDialog, setShowAddressEditDialog] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [editShippingZipcode, setEditShippingZipcode] = useState("");
+  const [editShippingAddress, setEditShippingAddress] = useState("");
+  const [editShippingAddressDetail, setEditShippingAddressDetail] = useState("");
+  const [addressUpdating, setAddressUpdating] = useState(false);
+  
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancellingOrder, setCancellingOrder] = useState<Order | null>(null);
+  const [orderCancelling, setOrderCancelling] = useState(false);
+  
   const { data: memberInfo, refetch: refetchMember, isLoggedIn, memberToken } = useMemberInfo();
 
   const { data: depositRequests } = useQuery<DepositRequest[]>({
@@ -313,6 +324,84 @@ export default function Profile() {
       toast({ title: "오류", description: "후기 등록 중 오류가 발생했습니다.", variant: "destructive" });
     } finally {
       setReviewSubmitting(false);
+    }
+  };
+
+  const handleOpenAddressEdit = (order: Order) => {
+    setEditingOrder(order);
+    setEditShippingZipcode(order.shippingZipcode || "");
+    setEditShippingAddress(order.shippingAddress || "");
+    setEditShippingAddressDetail(order.shippingAddressDetail || "");
+    setShowAddressEditDialog(true);
+  };
+
+  const handleUpdateAddress = async () => {
+    if (!editingOrder || !editShippingAddress.trim()) {
+      toast({ title: "오류", description: "주소를 입력해주세요.", variant: "destructive" });
+      return;
+    }
+    
+    setAddressUpdating(true);
+    try {
+      const res = await fetch(`/api/orders/${editingOrder.id}/address`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${memberToken}`,
+        },
+        body: JSON.stringify({
+          shippingZipcode: editShippingZipcode,
+          shippingAddress: editShippingAddress,
+          shippingAddressDetail: editShippingAddressDetail,
+        }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "성공", description: "배송 주소가 수정되었습니다." });
+        setShowAddressEditDialog(false);
+        queryClient.invalidateQueries({ queryKey: ["member-orders"] });
+      } else {
+        toast({ title: "오류", description: data.error || "주소 수정에 실패했습니다.", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "주소 수정 중 오류가 발생했습니다.", variant: "destructive" });
+    } finally {
+      setAddressUpdating(false);
+    }
+  };
+
+  const handleOpenCancelDialog = (order: Order) => {
+    setCancellingOrder(order);
+    setShowCancelDialog(true);
+  };
+
+  const handleCancelOrder = async () => {
+    if (!cancellingOrder) return;
+    
+    setOrderCancelling(true);
+    try {
+      const res = await fetch(`/api/orders/${cancellingOrder.id}/cancel`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${memberToken}`,
+        },
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "성공", description: "주문이 취소되었습니다. 포인트가 환불되었습니다." });
+        setShowCancelDialog(false);
+        queryClient.invalidateQueries({ queryKey: ["member-orders"] });
+        refetchMember();
+      } else {
+        toast({ title: "오류", description: data.error || "주문 취소에 실패했습니다.", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "주문 취소 중 오류가 발생했습니다.", variant: "destructive" });
+    } finally {
+      setOrderCancelling(false);
     }
   };
 
@@ -599,6 +688,30 @@ export default function Profile() {
                                   {order.paymentStatus === "refunded" && "환불됨"}
                                 </span>
                                 
+                                {order.status === "pending" && (
+                                  <div className="flex gap-2 ml-auto">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-xs h-7 border-blue-400 text-blue-600 hover:bg-blue-50"
+                                      onClick={() => handleOpenAddressEdit(order)}
+                                      data-testid={`button-edit-address-${order.id}`}
+                                    >
+                                      <MapPin className="w-3 h-3 mr-1" />
+                                      주소 수정
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-xs h-7 border-red-400 text-red-600 hover:bg-red-50"
+                                      onClick={() => handleOpenCancelDialog(order)}
+                                      data-testid={`button-cancel-order-${order.id}`}
+                                    >
+                                      <XCircle className="w-3 h-3 mr-1" />
+                                      주문 취소
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -995,6 +1108,130 @@ export default function Profile() {
             >
               {reviewSubmitting ? "등록 중..." : "후기 등록하기"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAddressEditDialog} onOpenChange={setShowAddressEditDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-blue-500" />
+              배송 주소 수정
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            {editingOrder && (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="font-medium text-gray-900">{editingOrder.productName}</p>
+                <p className="text-xs text-gray-500">주문번호: {editingOrder.orderNumber}</p>
+              </div>
+            )}
+            
+            <div>
+              <Label htmlFor="edit-zipcode" className="text-sm font-medium mb-2 block">
+                우편번호
+              </Label>
+              <Input
+                id="edit-zipcode"
+                placeholder="우편번호"
+                value={editShippingZipcode}
+                onChange={(e) => setEditShippingZipcode(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="edit-address" className="text-sm font-medium mb-2 block">
+                주소 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="edit-address"
+                placeholder="기본 주소"
+                value={editShippingAddress}
+                onChange={(e) => setEditShippingAddress(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="edit-address-detail" className="text-sm font-medium mb-2 block">
+                상세 주소
+              </Label>
+              <Input
+                id="edit-address-detail"
+                placeholder="상세 주소 (동/호수 등)"
+                value={editShippingAddressDetail}
+                onChange={(e) => setEditShippingAddressDetail(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddressEditDialog(false)}
+                className="flex-1"
+              >
+                취소
+              </Button>
+              <Button
+                onClick={handleUpdateAddress}
+                disabled={addressUpdating || !editShippingAddress.trim()}
+                className="flex-1 bg-blue-500 hover:bg-blue-600"
+              >
+                {addressUpdating ? "수정 중..." : "주소 수정"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <XCircle className="w-5 h-5" />
+              주문 취소
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            {cancellingOrder && (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="font-medium text-gray-900">{cancellingOrder.productName}</p>
+                <p className="text-xs text-gray-500">주문번호: {cancellingOrder.orderNumber}</p>
+                <p className="text-sm font-bold text-primary mt-2">
+                  환불 예정 금액: {Number(cancellingOrder.totalAmount || 0).toLocaleString()}원
+                </p>
+              </div>
+            )}
+            
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-amber-700">
+                  <p className="font-medium mb-1">주문 취소 안내</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>주문 취소 시 결제하신 포인트가 전액 환불됩니다.</li>
+                    <li>취소된 주문은 복구할 수 없습니다.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowCancelDialog(false)}
+                className="flex-1"
+              >
+                돌아가기
+              </Button>
+              <Button
+                onClick={handleCancelOrder}
+                disabled={orderCancelling}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+              >
+                {orderCancelling ? "취소 처리 중..." : "주문 취소하기"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

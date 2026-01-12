@@ -2479,6 +2479,108 @@ export async function registerRoutes(
     }
   });
 
+  // Update order shipping address (member only, pending orders only)
+  app.patch("/api/orders/:orderId/address", async (req: Request, res: Response) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ success: false, error: "인증이 필요합니다." });
+    }
+    
+    const session = await getMemberFromToken(token);
+    if (!session) {
+      return res.status(401).json({ success: false, error: "인증이 만료되었습니다. 다시 로그인해주세요." });
+    }
+    
+    try {
+      const { orderId } = req.params;
+      const { shippingAddress, shippingAddressDetail, shippingZipcode } = req.body;
+      
+      if (!shippingAddress) {
+        return res.status(400).json({ success: false, error: "배송 주소를 입력해주세요." });
+      }
+      
+      // Get the order and verify ownership and status
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ success: false, error: "주문을 찾을 수 없습니다." });
+      }
+      
+      if (order.memberId !== session.memberId) {
+        return res.status(403).json({ success: false, error: "권한이 없습니다." });
+      }
+      
+      if (order.status !== "pending") {
+        return res.status(400).json({ success: false, error: "배송 대기 상태의 주문만 주소 수정이 가능합니다." });
+      }
+      
+      // Update the shipping address
+      const updatedOrder = await storage.updateOrder(orderId, {
+        shippingAddress: String(shippingAddress).trim(),
+        shippingAddressDetail: shippingAddressDetail ? String(shippingAddressDetail).trim() : null,
+        shippingZipcode: shippingZipcode ? String(shippingZipcode).trim() : null,
+      });
+      
+      res.json({ success: true, data: updatedOrder });
+    } catch (error) {
+      console.error("Error updating order address:", error);
+      res.status(500).json({ success: false, error: "주소 수정 중 오류가 발생했습니다." });
+    }
+  });
+
+  // Cancel order (member only, pending orders only)
+  app.post("/api/orders/:orderId/cancel", async (req: Request, res: Response) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ success: false, error: "인증이 필요합니다." });
+    }
+    
+    const session = await getMemberFromToken(token);
+    if (!session) {
+      return res.status(401).json({ success: false, error: "인증이 만료되었습니다. 다시 로그인해주세요." });
+    }
+    
+    try {
+      const { orderId } = req.params;
+      
+      // Get the order and verify ownership and status
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({ success: false, error: "주문을 찾을 수 없습니다." });
+      }
+      
+      if (order.memberId !== session.memberId) {
+        return res.status(403).json({ success: false, error: "권한이 없습니다." });
+      }
+      
+      if (order.status !== "pending") {
+        return res.status(400).json({ success: false, error: "배송 대기 상태의 주문만 취소가 가능합니다." });
+      }
+      
+      // Calculate refund amount
+      const refundAmount = parseInt(order.totalAmount) || 0;
+      
+      // Refund points to member
+      if (order.memberId && refundAmount > 0) {
+        await storage.updateMemberPoints(
+          order.memberId, 
+          refundAmount, 
+          `주문취소 환불: ${order.productName}`
+        );
+      }
+      
+      // Update order status
+      const updatedOrder = await storage.updateOrder(orderId, {
+        status: "cancelled",
+        paymentStatus: "refunded",
+      });
+      
+      res.json({ success: true, data: updatedOrder });
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      res.status(500).json({ success: false, error: "주문 취소 중 오류가 발생했습니다." });
+    }
+  });
+
   // ==================== CRAWLING API ====================
   const { getCrawlSources, startCrawl, getCrawlSession, getCrawlResults, deleteCrawlSession } = await import("./crawlers");
 
