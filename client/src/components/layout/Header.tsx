@@ -110,7 +110,7 @@ export function Header() {
           />
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-1 xl:gap-2 relative" ref={dropdownRef}>
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2" ref={dropdownRef}>
           {CATEGORIES.map((category) => (
             <div
               key={category.id}
@@ -132,39 +132,39 @@ export function Header() {
                   activeCategory === category.id && "rotate-180"
                 )} />
               </Link>
+              
+              {isDropdownOpen && activeCategory === category.id && (
+                <div 
+                  className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[200px] z-50"
+                  onMouseEnter={handleDropdownEnter}
+                  onMouseLeave={handleCategoryLeave}
+                >
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <Link 
+                      href={`/products/${category.id}`}
+                      className="text-sm font-semibold text-gray-900 hover:text-blue-600"
+                      onClick={() => setIsDropdownOpen(false)}
+                      data-testid={`dropdown-${category.id}-all`}
+                    >
+                      {category.name} 전체보기
+                    </Link>
+                  </div>
+                  {category.subcategories.map((sub) => (
+                    <Link
+                      key={sub.id}
+                      href={`/products/${category.id}?subcategory=${sub.id}`}
+                      className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                      onClick={() => setIsDropdownOpen(false)}
+                      data-testid={`dropdown-${category.id}-${sub.id}`}
+                    >
+                      {sub.name}
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
-
-          {isDropdownOpen && activeCategoryData && (
-            <div 
-              className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[200px] z-50"
-              onMouseEnter={handleDropdownEnter}
-              onMouseLeave={handleCategoryLeave}
-            >
-              <div className="px-4 py-2 border-b border-gray-100">
-                <Link 
-                  href={`/products/${activeCategoryData.id}`}
-                  className="text-sm font-semibold text-gray-900 hover:text-blue-600"
-                  onClick={() => setIsDropdownOpen(false)}
-                  data-testid={`dropdown-${activeCategoryData.id}-all`}
-                >
-                  {activeCategoryData.name} 전체보기
-                </Link>
-              </div>
-              {activeCategoryData.subcategories.map((sub) => (
-                <Link
-                  key={sub.id}
-                  href={`/products/${activeCategoryData.id}?subcategory=${sub.id}`}
-                  className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                  onClick={() => setIsDropdownOpen(false)}
-                  data-testid={`dropdown-${activeCategoryData.id}-${sub.id}`}
-                >
-                  {sub.name}
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </Link>
-              ))}
-            </div>
-          )}
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
