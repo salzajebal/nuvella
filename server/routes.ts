@@ -850,7 +850,11 @@ export async function registerRoutes(
       }
       
       const member = await storage.createMember({ username, password, name, nickname, email: email || null });
-      res.status(201).json({ success: true, message: "회원가입이 완료되었습니다." });
+      
+      // Give signup bonus of 1,000 points
+      await storage.updateMemberPoints(member.id, 1000, "가입축하금 지급");
+      
+      res.status(201).json({ success: true, message: "회원가입이 완료되었습니다. 가입축하금 1,000P가 지급되었습니다!" });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ success: false, error: error.errors });
