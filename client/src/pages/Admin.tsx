@@ -2368,7 +2368,7 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-amber-600 group-hover:text-amber-700">{adminOrders.filter(o => o.status === "pending").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "pending").reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "pending").reduce((sum, o) => sum + (parseInt(String(o.totalAmount || '0').replace(/,/g, '')) || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
@@ -2385,7 +2385,7 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-blue-600 group-hover:text-blue-700">{adminOrders.filter(o => o.status === "confirmed").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "confirmed").reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "confirmed").reduce((sum, o) => sum + (parseInt(String(o.totalAmount || '0').replace(/,/g, '')) || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
@@ -2402,7 +2402,7 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-green-600 group-hover:text-green-700">{adminOrders.filter(o => o.status === "shipped").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "shipped").reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "shipped").reduce((sum, o) => sum + (parseInt(String(o.totalAmount || '0').replace(/,/g, '')) || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
@@ -2419,7 +2419,7 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-purple-600 group-hover:text-purple-700">{adminOrders.filter(o => o.status === "delivered").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "delivered").reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "delivered").reduce((sum, o) => sum + (parseInt(String(o.totalAmount || '0').replace(/,/g, '')) || 0), 0).toLocaleString()}원</p>
               </button>
               
               <button
@@ -2436,7 +2436,7 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-red-600 group-hover:text-red-700">{adminOrders.filter(o => o.status === "cancelled").length}</p>
-                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "cancelled").reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">{adminOrders.filter(o => o.status === "cancelled").reduce((sum, o) => sum + (parseInt(String(o.totalAmount || '0').replace(/,/g, '')) || 0), 0).toLocaleString()}원</p>
               </button>
             </div>
 
@@ -3621,7 +3621,7 @@ export default function Admin() {
                             <span className="font-medium">{order.memberName}</span>
                             {(order as any).memberUsername && <span className="text-gray-400 ml-1">({(order as any).memberUsername})</span>}
                           </td>
-                          <td className="px-2 py-1.5 text-right font-bold text-amber-600">{(Number(order.totalAmount) || 0).toLocaleString()}원</td>
+                          <td className="px-2 py-1.5 text-right font-bold text-amber-600">{parseInt(String(order.totalAmount || '0').replace(/,/g, '')).toLocaleString()}원</td>
                           <td className="px-2 py-1.5 text-center text-gray-500">
                             {order.createdAt ? new Date(order.createdAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "-"}
                           </td>
@@ -3700,7 +3700,7 @@ export default function Admin() {
                         <p><strong>상품명:</strong> {selectedOrder.productName}</p>
                         <p><strong>수량:</strong> {selectedOrder.quantity}개</p>
                         <p><strong>단가:</strong> {(Number(selectedOrder.productPrice) || 0).toLocaleString()}원</p>
-                        <p><strong>총액:</strong> <span className="text-lg font-bold text-amber-600">{(Number(selectedOrder.totalAmount) || 0).toLocaleString()}원</span></p>
+                        <p><strong>총액:</strong> <span className="text-lg font-bold text-amber-600">{parseInt(String(selectedOrder.totalAmount || '0').replace(/,/g, '')).toLocaleString()}원</span></p>
                       </div>
                     </div>
 
