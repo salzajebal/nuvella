@@ -151,56 +151,60 @@ export async function registerRoutes(
   
   // ==================== PRODUCTS API ====================
   
-  // Get all products
+  // Get all products (paginated)
   app.get("/api/products", async (req: Request, res: Response) => {
     try {
-      const { category, subcategory, isBest, isNew } = req.query;
-      let productList;
+      const { category, subcategory, isBest, isNew, page, limit } = req.query;
       
-      if (category && category !== "all") {
-        productList = await storage.getProductsByCategory(category as string);
-        if (subcategory) {
-          productList = productList.filter(p => p.subcategory === subcategory);
+      const result = await storage.getProductsPaginated({
+        category: category as string,
+        subcategory: subcategory as string,
+        isBest: isBest === "true" ? true : undefined,
+        isNew: isNew === "true" ? true : undefined,
+        page: page ? parseInt(page as string) : 1,
+        limit: limit ? parseInt(limit as string) : 50,
+      });
+      
+      res.json({ 
+        success: true, 
+        data: result.products,
+        pagination: {
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
         }
-      } else {
-        productList = await storage.getAllProducts();
-      }
-      
-      // Filter by isBest flag
-      if (isBest === "true") {
-        productList = productList.filter(p => p.isBest === true);
-      }
-      
-      // Filter by isNew flag
-      if (isNew === "true") {
-        productList = productList.filter(p => p.isNew === true);
-      }
-      
-      res.json({ success: true, data: productList });
+      });
     } catch (error) {
       console.error("Error fetching products:", error);
       res.status(500).json({ success: false, error: "Failed to fetch products" });
     }
   });
   
-  // Search products
+  // Search products (paginated with database query)
   app.get("/api/products/search", async (req: Request, res: Response) => {
     try {
-      const { q } = req.query;
+      const { q, page, limit } = req.query;
       if (!q || typeof q !== "string") {
-        return res.json({ success: true, data: [] });
+        return res.json({ success: true, data: [], pagination: { total: 0, page: 1, limit: 20, totalPages: 0 } });
       }
       
-      const allProducts = await storage.getAllProducts();
-      const searchQuery = q.toLowerCase().trim();
-      
-      const results = allProducts.filter(product => {
-        const name = (product.name || "").toLowerCase();
-        const description = (product.description || "").toLowerCase();
-        return name.includes(searchQuery) || description.includes(searchQuery);
+      const result = await storage.getProductsPaginated({
+        search: q.trim(),
+        page: page ? parseInt(page as string) : 1,
+        limit: limit ? parseInt(limit as string) : 50,
       });
       
-      res.json({ success: true, data: results });
+      res.json({ 
+        success: true, 
+        data: result.products,
+        pagination: {
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
+        }
+      });
     } catch (error) {
       console.error("Error searching products:", error);
       res.status(500).json({ success: false, error: "검색에 실패했습니다." });

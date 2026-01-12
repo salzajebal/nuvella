@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, decimal, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -153,7 +153,13 @@ export const products = pgTable("products", {
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("products_category_idx").on(table.category),
+  index("products_created_at_idx").on(table.createdAt),
+  index("products_is_best_idx").on(table.isBest),
+  index("products_is_new_idx").on(table.isNew),
+  index("products_name_idx").on(table.name),
+]);
 
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,

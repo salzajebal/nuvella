@@ -37,6 +37,26 @@ export interface PointSearchFilters {
   dateTo?: string;
 }
 
+export interface ProductListOptions {
+  category?: string;
+  subcategory?: string;
+  isBest?: boolean;
+  isNew?: boolean;
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export interface ProductListResult {
+  products: Product[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export type ProductListItem = Omit<Product, 'imageUrls' | 'descriptionImageUrls' | 'description'>;
+
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
@@ -46,11 +66,13 @@ export interface IStorage {
   // Products
   getAllProducts(): Promise<Product[]>;
   getProductsByCategory(category: string): Promise<Product[]>;
+  getProductsPaginated(options: ProductListOptions): Promise<ProductListResult>;
   getProduct(id: string): Promise<Product | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product | undefined>;
   deleteProduct(id: string): Promise<boolean>;
   deleteAllProducts(): Promise<number>;
+  getProductCount(): Promise<number>;
   
   // Categories
   getAllCategories(): Promise<Category[]>;
@@ -225,6 +247,65 @@ export class DatabaseStorage implements IStorage {
     await db.delete(productImages);
     const result = await db.delete(products).returning();
     return result.length;
+  }
+
+  async getProductCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(products);
+    return Number(result[0]?.count || 0);
+  }
+
+  async getProductsPaginated(options: ProductListOptions): Promise<ProductListResult> {
+    const page = options.page || 1;
+    const limit = options.limit || 20;
+    const offset = (page - 1) * limit;
+    
+    const conditions: any[] = [];
+    
+    if (options.category && options.category !== "all") {
+      conditions.push(eq(products.category, options.category));
+    }
+    if (options.subcategory) {
+      conditions.push(eq(products.subcategory, options.subcategory));
+    }
+    if (options.isBest !== undefined) {
+      conditions.push(eq(products.isBest, options.isBest));
+    }
+    if (options.isNew !== undefined) {
+      conditions.push(eq(products.isNew, options.isNew));
+    }
+    if (options.search) {
+      conditions.push(
+        or(
+          ilike(products.name, `%${options.search}%`),
+          ilike(products.description, `%${options.search}%`)
+        )
+      );
+    }
+    
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(products)
+      .where(whereClause);
+    
+    const total = Number(countResult?.count || 0);
+    
+    const productList = await db
+      .select()
+      .from(products)
+      .where(whereClause)
+      .orderBy(desc(products.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      products: productList as Product[],
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   // Categories
