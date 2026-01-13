@@ -66,7 +66,31 @@ export function serveStatic(app: Express) {
     
     try {
       if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
+        // Read and modify HTML to include absolute OpenGraph URLs
+        let html = fs.readFileSync(indexPath, 'utf-8');
+        
+        // Get the host from the request
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const host = req.headers.host || req.headers['x-forwarded-host'];
+        
+        if (host) {
+          const baseUrl = `${protocol}://${host}`;
+          const cacheBuster = Date.now();
+          const imageUrl = `${baseUrl}/opengraph.jpg?v=${cacheBuster}`;
+          
+          // Replace relative og:image with absolute URL
+          html = html.replace(
+            /<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/gi,
+            `<meta property="og:image" content="${imageUrl}" />`
+          );
+          html = html.replace(
+            /<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/gi,
+            `<meta name="twitter:image" content="${imageUrl}" />`
+          );
+        }
+        
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
       } else {
         res.status(500).json({ error: 'Application not found' });
       }
