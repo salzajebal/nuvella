@@ -477,7 +477,7 @@ function ReviewsSection() {
       <div className="container-custom">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-gray-900">사용자 리뷰</h2>
+            <h2 className="text-lg font-bold text-gray-900">상품후기</h2>
             <div className="w-8 h-0.5 bg-red-500 ml-2"></div>
           </div>
           <div className="flex items-center gap-2">
