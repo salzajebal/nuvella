@@ -3666,6 +3666,7 @@ export default function Admin() {
                               <select className="h-6 px-1 text-xs border rounded" value={order.paymentStatus || "pending"} onChange={(e) => handleUpdatePaymentStatus(order.id, e.target.value)}>
                                 <option value="pending">미결</option>
                                 <option value="paid">결제</option>
+                                <option value="completed">결제</option>
                                 <option value="refunded">환불</option>
                               </select>
                             </div>
