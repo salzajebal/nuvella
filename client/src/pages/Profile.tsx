@@ -1411,10 +1411,7 @@ export default function Profile() {
                       수정
                     </Button>
                   )}
-                  {(detailOrder.status === "shipped" || detailOrder.status === "delivered") && (
-                    <span className="text-xs text-gray-500">배송중/완료시 수정 불가</span>
-                  )}
-                </div>
+                                  </div>
                 
                 {!isEditingShipping ? (
                   <div className="space-y-2 text-sm">
