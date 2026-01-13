@@ -1648,7 +1648,7 @@ export async function registerRoutes(
     }
     
     try {
-      const conversation = await storage.getOrCreateConversationForMember(session.memberId, session.name);
+      const conversation = await storage.getOrCreateConversationForMember(session.memberId, session.name, session.username);
       const messages = await storage.getMessagesByConversation(conversation.id);
       res.json({ success: true, data: { conversation, messages } });
     } catch (error) {
@@ -1671,7 +1671,7 @@ export async function registerRoutes(
         return res.status(400).json({ success: false, error: "메시지를 입력해주세요." });
       }
       
-      const conversation = await storage.getOrCreateConversationForMember(session.memberId, session.name);
+      const conversation = await storage.getOrCreateConversationForMember(session.memberId, session.name, session.username);
       const chatMessage = await storage.createMessage({
         conversationId: conversation.id,
         senderType: 'user',

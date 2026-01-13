@@ -110,7 +110,7 @@ export interface IStorage {
   getAllChatConversations(): Promise<ChatConversation[]>;
   getConversation(id: string): Promise<ChatConversation | undefined>;
   getConversationByMemberId(memberId: string): Promise<ChatConversation | undefined>;
-  getOrCreateConversationForMember(memberId: string, memberName: string): Promise<ChatConversation>;
+  getOrCreateConversationForMember(memberId: string, memberName: string, memberUsername?: string): Promise<ChatConversation>;
   createConversation(conversation: InsertChatConversation): Promise<ChatConversation>;
   updateConversationStatus(id: string, status: string): Promise<ChatConversation | undefined>;
   updateChatConversation(id: string, data: Partial<InsertChatConversation> & { updatedAt?: Date }): Promise<ChatConversation | undefined>;
@@ -499,13 +499,14 @@ export class DatabaseStorage implements IStorage {
     return conversation;
   }
 
-  async getOrCreateConversationForMember(memberId: string, memberName: string): Promise<ChatConversation> {
+  async getOrCreateConversationForMember(memberId: string, memberName: string, memberUsername?: string): Promise<ChatConversation> {
     const existing = await this.getConversationByMemberId(memberId);
     if (existing) {
       return existing;
     }
     return this.createConversation({
       memberId,
+      memberUsername,
       subject: `${memberName}님의 1:1 상담`,
       status: 'open',
     });

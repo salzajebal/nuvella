@@ -5031,7 +5031,7 @@ export default function Admin() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-gray-900 truncate">
-                                  {conv.guestName || conv.memberId || "익명"}
+                                  {conv.guestName || (conv as any).memberUsername || "익명"}
                                 </span>
                                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                                   conv.status === "open" 
@@ -5061,7 +5061,7 @@ export default function Admin() {
                       <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                         <div>
                           <h4 className="font-semibold text-gray-900">
-                            {selectedConversation.guestName || selectedConversation.memberId || "익명"}
+                            {selectedConversation.guestName || (selectedConversation as any).memberUsername || "익명"}
                           </h4>
                           <p className="text-sm text-gray-600">{selectedConversation.subject}</p>
                         </div>

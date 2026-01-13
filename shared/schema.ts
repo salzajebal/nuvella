@@ -202,6 +202,7 @@ export type Category = typeof categories.$inferSelect;
 export const chatConversations = pgTable("chat_conversations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   memberId: varchar("member_id"),
+  memberUsername: text("member_username"),
   guestName: text("guest_name"),
   guestEmail: text("guest_email"),
   subject: text("subject").notNull(),
