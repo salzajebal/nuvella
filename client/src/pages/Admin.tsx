@@ -4571,6 +4571,7 @@ export default function Admin() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b">
                   <tr>
+                    <th className="px-4 py-3 text-left font-medium">상품</th>
                     <th className="px-4 py-3 text-left font-medium">작성자</th>
                     <th className="px-4 py-3 text-left font-medium">제목</th>
                     <th className="px-4 py-3 text-left font-medium">내용</th>
@@ -4586,6 +4587,24 @@ export default function Admin() {
                     <tr key={review.id} className="hover:bg-gray-50">
                       {editingReviewId === review.id ? (
                         <>
+                          <td className="px-4 py-3">
+                            {(() => {
+                              const product = products.find(p => p.id === review.productId);
+                              return product ? (
+                                <div className="flex items-center gap-2">
+                                  <img 
+                                    src={product.imageUrl || product.imageUrls?.[0] || '/placeholder.jpg'} 
+                                    alt={product.name}
+                                    className="w-10 h-10 object-cover rounded"
+                                    onError={(e) => (e.currentTarget.src = '/placeholder.jpg')}
+                                  />
+                                  <span className="text-xs text-gray-600 line-clamp-2 max-w-[100px]">{product.name}</span>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-gray-400">{review.productName || '-'}</span>
+                              );
+                            })()}
+                          </td>
                           <td className="px-4 py-3">
                             <Input
                               value={reviewFormData.authorName}
@@ -4664,6 +4683,24 @@ export default function Admin() {
                         </>
                       ) : (
                         <>
+                          <td className="px-4 py-3">
+                            {(() => {
+                              const product = products.find(p => p.id === review.productId);
+                              return product ? (
+                                <div className="flex items-center gap-2">
+                                  <img 
+                                    src={product.imageUrl || product.imageUrls?.[0] || '/placeholder.jpg'} 
+                                    alt={product.name}
+                                    className="w-10 h-10 object-cover rounded"
+                                    onError={(e) => (e.currentTarget.src = '/placeholder.jpg')}
+                                  />
+                                  <span className="text-xs text-gray-600 line-clamp-2 max-w-[100px]">{product.name}</span>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-gray-400">{review.productName || '-'}</span>
+                              );
+                            })()}
+                          </td>
                           <td className="px-4 py-3 font-medium">{review.authorName}</td>
                           <td className="px-4 py-3">{review.title}</td>
                           <td className="px-4 py-3 max-w-[200px]">
