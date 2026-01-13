@@ -764,7 +764,7 @@ export default function Profile() {
                                       data-testid={`button-edit-address-${order.id}`}
                                     >
                                       <MapPin className="w-3 h-3 mr-1" />
-                                      주소 수정
+                                      주문 수정
                                     </Button>
                                     <Button
                                       size="sm"
