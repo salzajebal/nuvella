@@ -36,7 +36,8 @@ export function metaImagesPlugin(): Plugin {
         return html;
       }
 
-      const imageUrl = `${baseUrl}/opengraph.${imageExt}`;
+      const cacheBuster = Date.now();
+      const imageUrl = `${baseUrl}/opengraph.${imageExt}?v=${cacheBuster}`;
 
       log('[meta-images] updating meta image tags to:', imageUrl);
 
