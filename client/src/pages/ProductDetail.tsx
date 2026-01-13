@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ShoppingCart, Heart, ChevronRight, Truck, Shield, Award, RotateCcw, ShoppingBag, Star, Edit3 } from "lucide-react";
+import { ShoppingCart, Heart, ChevronRight, Truck, Shield, Award, RotateCcw, ShoppingBag, Star, Edit3, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Product, Review } from "@shared/schema";
 
@@ -183,6 +183,14 @@ export default function ProductDetail() {
     title: "",
     content: ""
   });
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [showEditReviewModal, setShowEditReviewModal] = useState(false);
+  const [editReviewForm, setEditReviewForm] = useState({
+    rating: 5,
+    title: "",
+    content: ""
+  });
+  const currentMemberId = localStorage.getItem("memberId");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -330,6 +338,114 @@ export default function ProductDetail() {
       });
     } finally {
       setSubmittingReview(false);
+    }
+  };
+
+  const handleOpenEditReview = (review: Review) => {
+    setEditingReview(review);
+    setEditReviewForm({
+      rating: review.rating || 5,
+      title: review.title,
+      content: review.content
+    });
+    setShowEditReviewModal(true);
+  };
+
+  const handleUpdateReview = async () => {
+    if (!editingReview || !editReviewForm.title || !editReviewForm.content) {
+      toast({
+        title: "입력 오류",
+        description: "제목과 내용을 모두 입력해주세요.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (editReviewForm.content.length < 50) {
+      toast({
+        title: "입력 오류",
+        description: "후기 내용은 50자 이상 입력해주세요.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("memberToken");
+      const res = await fetch(`/api/member/reviews/${editingReview.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          rating: editReviewForm.rating,
+          title: editReviewForm.title,
+          content: editReviewForm.content
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast({
+          title: "수정 완료",
+          description: "후기가 수정되었습니다."
+        });
+        setShowEditReviewModal(false);
+        setEditingReview(null);
+        
+        // Refresh reviews
+        const reviewsRes = await fetch(`/api/products/${id}/reviews`);
+        const reviewsData = await reviewsRes.json();
+        if (reviewsData.success) {
+          setReviews(reviewsData.data);
+        }
+      } else {
+        throw new Error(data.error || "후기 수정에 실패했습니다.");
+      }
+    } catch (error: any) {
+      toast({
+        title: "오류",
+        description: error.message || "후기 수정에 실패했습니다.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm("정말 후기를 삭제하시겠습니까?")) return;
+
+    try {
+      const token = localStorage.getItem("memberToken");
+      const res = await fetch(`/api/member/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast({
+          title: "삭제 완료",
+          description: "후기가 삭제되었습니다."
+        });
+        
+        // Refresh reviews
+        const reviewsRes = await fetch(`/api/products/${id}/reviews`);
+        const reviewsData = await reviewsRes.json();
+        if (reviewsData.success) {
+          setReviews(reviewsData.data);
+        }
+      } else {
+        throw new Error(data.error || "후기 삭제에 실패했습니다.");
+      }
+    } catch (error: any) {
+      toast({
+        title: "오류",
+        description: error.message || "후기 삭제에 실패했습니다.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -702,14 +818,38 @@ export default function ProductDetail() {
                             ))}
                           </div>
                         </div>
-                        <span className="text-sm text-gray-400">
-                          {review.displayDate 
-                            ? new Date(review.displayDate).toLocaleDateString("ko-KR")
-                            : review.createdAt 
-                              ? new Date(review.createdAt).toLocaleDateString("ko-KR")
-                              : ""
-                          }
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-400">
+                            {review.displayDate 
+                              ? new Date(review.displayDate).toLocaleDateString("ko-KR")
+                              : review.createdAt 
+                                ? new Date(review.createdAt).toLocaleDateString("ko-KR")
+                                : ""
+                            }
+                          </span>
+                          {currentMemberId && (review as any).memberId === currentMemberId && (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-gray-500 hover:text-blue-600"
+                                onClick={() => handleOpenEditReview(review)}
+                                data-testid={`button-edit-review-${review.id}`}
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-gray-500 hover:text-red-600"
+                                onClick={() => handleDeleteReview(review.id)}
+                                data-testid={`button-delete-review-${review.id}`}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <h4 className="font-medium text-gray-900 mb-2">{review.title}</h4>
                       <p className="text-gray-600 text-sm leading-relaxed">{review.content}</p>
@@ -836,6 +976,89 @@ export default function ProductDetail() {
               data-testid="button-submit-review"
             >
               {submittingReview ? "작성 중..." : "후기 등록"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showEditReviewModal} onOpenChange={setShowEditReviewModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>후기 수정</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <Label>별점</Label>
+              <div className="flex items-center gap-1 mt-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setEditReviewForm(prev => ({ ...prev, rating: star }))}
+                    className="p-1"
+                  >
+                    <Star
+                      className={`w-8 h-8 ${
+                        star <= editReviewForm.rating
+                          ? "text-yellow-400 fill-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="edit-review-title">제목</Label>
+              <Input
+                id="edit-review-title"
+                value={editReviewForm.title}
+                onChange={(e) => setEditReviewForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="후기 제목을 입력하세요"
+                className="mt-1"
+                data-testid="input-edit-review-title"
+              />
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="edit-review-content">내용</Label>
+                <span className={`text-xs ${editReviewForm.content.length < 50 ? 'text-red-500' : 'text-green-600'}`}>
+                  {editReviewForm.content.length}/50자 이상
+                </span>
+              </div>
+              <Textarea
+                id="edit-review-content"
+                value={editReviewForm.content}
+                onChange={(e) => setEditReviewForm(prev => ({ ...prev, content: e.target.value }))}
+                placeholder="상품 사용 후기를 작성해주세요 (최소 50자 이상)"
+                className="mt-1"
+                rows={4}
+                data-testid="input-edit-review-content"
+              />
+              {editReviewForm.content.length > 0 && editReviewForm.content.length < 50 && (
+                <p className="text-xs text-red-500 mt-1">
+                  {50 - editReviewForm.content.length}자 더 입력해주세요
+                </p>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => { setShowEditReviewModal(false); setEditingReview(null); }}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleUpdateReview}
+              disabled={editReviewForm.content.length < 50}
+              data-testid="button-update-review"
+            >
+              수정 완료
             </Button>
           </div>
         </DialogContent>

@@ -1944,9 +1944,10 @@ export async function registerRoutes(
             return res.status(400).json({ success: false, error: "이미 후기를 작성하셨습니다." });
           }
           
-          // Add orderId and productName to the review data
+          // Add orderId, productName, and memberId to the review data
           reviewData.orderId = orderId;
           reviewData.productName = order.productName;
+          reviewData.memberId = session.memberId;
         }
       }
       
@@ -1959,6 +1960,73 @@ export async function registerRoutes(
       }
       console.error("Error creating review:", error);
       res.status(500).json({ success: false, error: "후기 생성에 실패했습니다." });
+    }
+  });
+
+  // Update review (member can update their own review)
+  app.put("/api/member/reviews/:id", async (req: Request, res: Response) => {
+    try {
+      const token = req.headers.authorization?.replace("Bearer ", "");
+      if (!token) {
+        return res.status(401).json({ success: false, error: "로그인이 필요합니다." });
+      }
+      
+      const session = await getMemberFromToken(token);
+      if (!session) {
+        return res.status(401).json({ success: false, error: "유효하지 않은 세션입니다." });
+      }
+      
+      const review = await storage.getReview(req.params.id);
+      if (!review) {
+        return res.status(404).json({ success: false, error: "후기를 찾을 수 없습니다." });
+      }
+      
+      // Check if the review belongs to the member
+      if (review.memberId !== session.memberId) {
+        return res.status(403).json({ success: false, error: "본인의 후기만 수정할 수 있습니다." });
+      }
+      
+      const updateData: any = {};
+      if (req.body.rating !== undefined) updateData.rating = Number(req.body.rating);
+      if (req.body.title !== undefined) updateData.title = req.body.title;
+      if (req.body.content !== undefined) updateData.content = req.body.content;
+      
+      const updatedReview = await storage.updateReview(req.params.id, updateData);
+      res.json({ success: true, data: updatedReview });
+    } catch (error) {
+      console.error("Error updating review:", error);
+      res.status(500).json({ success: false, error: "후기 수정에 실패했습니다." });
+    }
+  });
+
+  // Delete review (member can delete their own review)
+  app.delete("/api/member/reviews/:id", async (req: Request, res: Response) => {
+    try {
+      const token = req.headers.authorization?.replace("Bearer ", "");
+      if (!token) {
+        return res.status(401).json({ success: false, error: "로그인이 필요합니다." });
+      }
+      
+      const session = await getMemberFromToken(token);
+      if (!session) {
+        return res.status(401).json({ success: false, error: "유효하지 않은 세션입니다." });
+      }
+      
+      const review = await storage.getReview(req.params.id);
+      if (!review) {
+        return res.status(404).json({ success: false, error: "후기를 찾을 수 없습니다." });
+      }
+      
+      // Check if the review belongs to the member
+      if (review.memberId !== session.memberId) {
+        return res.status(403).json({ success: false, error: "본인의 후기만 삭제할 수 있습니다." });
+      }
+      
+      await storage.deleteReview(req.params.id);
+      res.json({ success: true, message: "후기가 삭제되었습니다." });
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      res.status(500).json({ success: false, error: "후기 삭제에 실패했습니다." });
     }
   });
 

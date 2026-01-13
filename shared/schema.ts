@@ -258,6 +258,7 @@ export type Faq = typeof faqs.$inferSelect;
 
 export const reviews = pgTable("reviews", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memberId: varchar("member_id"),
   authorName: text("author_name").notNull(),
   productId: varchar("product_id"),
   productName: text("product_name"),
