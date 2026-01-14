@@ -525,6 +525,35 @@ export default function Order() {
                 {recentAddresses.length > 0 && (
                   <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Apply most recent address directly
+                      const mostRecent = recentAddresses[0];
+                      if (mostRecent) {
+                        setFormData(prev => ({
+                          ...prev,
+                          sameAsOrderer: false,
+                          shippingName: mostRecent.name,
+                          shippingPhone: mostRecent.phone,
+                          shippingZipcode: mostRecent.zipcode,
+                          shippingAddress: mostRecent.address,
+                          shippingAddressDetail: mostRecent.addressDetail || "",
+                        }));
+                        setShowRecentAddresses(false);
+                        setAddressMode("recent");
+                      }
+                    }}
+                    className="flex items-center gap-2"
+                    data-testid="button-apply-recent-address"
+                  >
+                    <Clock className="w-4 h-4" />
+                    최근배송지
+                  </Button>
+                )}
+                {recentAddresses.length > 0 && (
+                  <Button
+                    type="button"
                     variant={showRecentAddresses ? "default" : "outline"}
                     size="sm"
                     onClick={() => {
@@ -536,8 +565,8 @@ export default function Order() {
                     className="flex items-center gap-2"
                     data-testid="button-toggle-recent-addresses"
                   >
-                    <Clock className="w-4 h-4" />
-                    최근 배송지
+                    <MapPin className="w-4 h-4" />
+                    주소지목록
                     {showRecentAddresses ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </Button>
                 )}
@@ -568,7 +597,7 @@ export default function Order() {
 
               {recentAddresses.length > 0 && showRecentAddresses && (
                 <div className="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">최근 배송지 선택</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">주소지 선택</p>
                   {recentAddresses.map((addr) => (
                     <button
                       key={addr.id}
