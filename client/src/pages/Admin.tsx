@@ -4737,28 +4737,28 @@ export default function Admin() {
                         </>
                       ) : (
                         <>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 min-w-[200px]">
                             {(() => {
                               const product = products.find(p => p.id === review.productId);
                               return product ? (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-start gap-2">
                                   <img 
                                     src={product.imageUrl || product.imageUrls?.[0] || '/placeholder.jpg'} 
                                     alt={product.name}
-                                    className="w-10 h-10 object-cover rounded flex-shrink-0"
+                                    className="w-12 h-12 object-cover rounded flex-shrink-0"
                                     onError={(e) => (e.currentTarget.src = '/placeholder.jpg')}
                                   />
-                                  <div className="max-w-[180px] max-h-[80px] overflow-y-auto text-xs text-gray-600 scrollbar-thin">{product.name}</div>
+                                  <span className="text-sm text-gray-700 break-words">{product.name}</span>
                                 </div>
                               ) : (
-                                <span className="text-xs text-gray-400">{review.productName || '-'}</span>
+                                <span className="text-sm text-gray-400">{review.productName || '-'}</span>
                               );
                             })()}
                           </td>
-                          <td className="px-4 py-3 font-medium">{review.authorName}</td>
+                          <td className="px-4 py-3 font-medium whitespace-nowrap">{review.authorName}</td>
                           <td className="px-4 py-3">{review.title}</td>
-                          <td className="px-4 py-3 max-w-[250px]">
-                            <div className="max-h-[80px] overflow-y-auto text-sm text-gray-600 scrollbar-thin">{review.content}</div>
+                          <td className="px-4 py-3 min-w-[200px]">
+                            <div className="text-sm text-gray-600 break-words">{review.content}</div>
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex text-yellow-400">
