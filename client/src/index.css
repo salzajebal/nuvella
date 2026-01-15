@@ -180,3 +180,18 @@
     padding-right: 12px;
   }
 }
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.1);
+  }
+}
+
+.animate-blink {
+  animation: blink 0.8s ease-in-out infinite;
+}

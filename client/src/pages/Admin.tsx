@@ -814,6 +814,18 @@ export default function Admin() {
       fetchLoginLogs();
     }
   }, [isAuthenticated]);
+
+  // Real-time polling for deposit/withdrawal requests (every 5 seconds)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const pollInterval = setInterval(() => {
+      fetchDepositRequests();
+      fetchWithdrawalRequests();
+    }, 5000);
+    
+    return () => clearInterval(pollInterval);
+  }, [isAuthenticated]);
   
   const fetchSiteSettings = async () => {
     try {
@@ -2311,7 +2323,7 @@ export default function Admin() {
                 <Wallet className="w-5 h-5" />
                 포인트충전관리
                 {depositRequests.filter(d => d.status === "pending").length > 0 && (
-                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full ml-1">{depositRequests.filter(d => d.status === "pending").length}</span>
+                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-2 animate-blink font-bold shadow-lg">{depositRequests.filter(d => d.status === "pending").length}</span>
                 )}
               </button>
               <button
@@ -2321,7 +2333,7 @@ export default function Admin() {
                 <Wallet className="w-5 h-5" />
                 포인트출금관리
                 {withdrawalRequests.filter(w => w.status === "pending").length > 0 && (
-                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full ml-1">{withdrawalRequests.filter(w => w.status === "pending").length}</span>
+                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-2 animate-blink font-bold shadow-lg">{withdrawalRequests.filter(w => w.status === "pending").length}</span>
                 )}
               </button>
               <span className="text-gray-300">|</span>
