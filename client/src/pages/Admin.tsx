@@ -388,10 +388,14 @@ export default function Admin() {
   };
 
   const handleTabClick = (tabName: string, refreshFn?: () => void) => {
+    const wasAlreadyActive = activeTab === tabName;
     setActiveTab(tabName as any);
     window.location.hash = tabName;
     if (refreshFn) {
       refreshFn();
+      if (wasAlreadyActive) {
+        toast({ title: "새로고침", description: "데이터를 다시 불러왔습니다." });
+      }
     }
   };
 
