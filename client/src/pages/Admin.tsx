@@ -4780,6 +4780,8 @@ export default function Admin() {
                           <td className="px-4 py-3">
                             {review.isApproved ? (
                               <span className="text-green-600 text-sm font-medium">승인됨</span>
+                            ) : reviewSettings.instantApproval ? (
+                              <span className="text-blue-500 text-sm font-medium">자동승인</span>
                             ) : (
                               <Button 
                                 size="sm" 

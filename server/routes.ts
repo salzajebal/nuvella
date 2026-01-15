@@ -2019,6 +2019,16 @@ export async function registerRoutes(
         }
       }
       
+      // Check if instant approval mode is enabled
+      const instantApprovalSetting = await storage.getSiteSetting("review_instant_approval");
+      const isInstantApproval = instantApprovalSetting?.value === "true";
+      
+      // If instant approval is enabled, auto-approve the review
+      if (isInstantApproval) {
+        reviewData.isApproved = true;
+        reviewData.isVisible = true;
+      }
+      
       const validatedData = insertReviewSchema.parse(reviewData);
       const review = await storage.createReview(validatedData);
       res.status(201).json({ success: true, data: review });
