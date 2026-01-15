@@ -102,16 +102,15 @@ export default function Admin() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   
   // Get initial tab from URL hash
-  const getInitialTab = () => {
+  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings" | "crawling" | "loginLogs">(() => {
+    if (typeof window === 'undefined') return "dashboard";
     const hash = window.location.hash.replace('#', '');
     const validTabs = ["dashboard", "products", "members", "orders", "deposits", "withdrawals", "points", "reviews", "notices", "chat", "settings", "crawling", "loginLogs"];
     if (validTabs.includes(hash)) {
-      return hash as typeof activeTab;
+      return hash as "dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings" | "crawling" | "loginLogs";
     }
     return "dashboard";
-  };
-  
-  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings" | "crawling" | "loginLogs">(getInitialTab);
+  });
   const [stats, setStats] = useState<AdminStats | null>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
