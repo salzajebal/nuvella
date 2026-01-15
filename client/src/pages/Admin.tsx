@@ -4731,10 +4731,10 @@ export default function Admin() {
                                   <img 
                                     src={product.imageUrl || product.imageUrls?.[0] || '/placeholder.jpg'} 
                                     alt={product.name}
-                                    className="w-10 h-10 object-cover rounded"
+                                    className="w-10 h-10 object-cover rounded flex-shrink-0"
                                     onError={(e) => (e.currentTarget.src = '/placeholder.jpg')}
                                   />
-                                  <span className="text-xs text-gray-600 line-clamp-2 max-w-[100px]">{product.name}</span>
+                                  <div className="max-w-[180px] max-h-[80px] overflow-y-auto text-xs text-gray-600 scrollbar-thin">{product.name}</div>
                                 </div>
                               ) : (
                                 <span className="text-xs text-gray-400">{review.productName || '-'}</span>
@@ -4743,8 +4743,8 @@ export default function Admin() {
                           </td>
                           <td className="px-4 py-3 font-medium">{review.authorName}</td>
                           <td className="px-4 py-3">{review.title}</td>
-                          <td className="px-4 py-3 max-w-[200px]">
-                            <p className="text-sm text-gray-600 line-clamp-2">{review.content}</p>
+                          <td className="px-4 py-3 max-w-[250px]">
+                            <div className="max-h-[80px] overflow-y-auto text-sm text-gray-600 scrollbar-thin">{review.content}</div>
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex text-yellow-400">
