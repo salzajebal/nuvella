@@ -101,7 +101,17 @@ export default function Admin() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings" | "crawling" | "loginLogs">("dashboard");
+  // Get initial tab from URL hash
+  const getInitialTab = () => {
+    const hash = window.location.hash.replace('#', '');
+    const validTabs = ["dashboard", "products", "members", "orders", "deposits", "withdrawals", "points", "reviews", "notices", "chat", "settings", "crawling", "loginLogs"];
+    if (validTabs.includes(hash)) {
+      return hash as typeof activeTab;
+    }
+    return "dashboard";
+  };
+  
+  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings" | "crawling" | "loginLogs">(getInitialTab);
   const [stats, setStats] = useState<AdminStats | null>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -826,6 +836,11 @@ export default function Admin() {
     
     return () => clearInterval(pollInterval);
   }, [isAuthenticated]);
+
+  // Update URL hash when activeTab changes to persist tab state on refresh
+  useEffect(() => {
+    window.location.hash = activeTab;
+  }, [activeTab]);
   
   const fetchSiteSettings = async () => {
     try {

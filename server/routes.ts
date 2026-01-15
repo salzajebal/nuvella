@@ -985,6 +985,45 @@ export async function registerRoutes(
     }
   });
 
+  // Member account deletion (회원탈퇴)
+  app.delete("/api/members/me", async (req: Request, res: Response) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    const session = await getMemberFromToken(token);
+    if (!session) {
+      return res.status(401).json({ success: false, error: "인증이 필요합니다. 다시 로그인해주세요." });
+    }
+    
+    try {
+      const member = await storage.getMember(session.memberId);
+      if (!member) {
+        return res.status(404).json({ success: false, error: "회원을 찾을 수 없습니다." });
+      }
+      
+      // Check if member has remaining points
+      if (member.pointBalance && member.pointBalance > 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: `잔여 포인트 ${member.pointBalance.toLocaleString()}P가 있습니다. 포인트를 모두 사용하거나 출금 후 탈퇴해주세요.` 
+        });
+      }
+      
+      // Delete all member sessions
+      await storage.deleteMemberSessionsByMemberId(session.memberId);
+      
+      // Delete the member account
+      const deleted = await storage.deleteMember(session.memberId);
+      
+      if (deleted) {
+        res.json({ success: true, message: "회원 탈퇴가 완료되었습니다." });
+      } else {
+        res.status(500).json({ success: false, error: "회원 탈퇴 처리 중 오류가 발생했습니다." });
+      }
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      res.status(500).json({ success: false, error: "회원 탈퇴 처리 중 오류가 발생했습니다." });
+    }
+  });
+
   // ==================== DEPOSIT REQUESTS (Member) ====================
   
   // Create deposit request

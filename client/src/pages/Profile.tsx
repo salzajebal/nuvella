@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Heart, LogOut, ChevronRight, Package, Wallet, Clock, CheckCircle, XCircle, AlertTriangle, Plus, Mail, Phone, MapPin, Building2, CreditCard, Info, Star, Pencil, Eye } from "lucide-react";
+import { User, Heart, LogOut, ChevronRight, Package, Wallet, Clock, CheckCircle, XCircle, AlertTriangle, Plus, Mail, Phone, MapPin, Building2, CreditCard, Info, Star, Pencil, Eye, UserX } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -238,6 +239,33 @@ export default function Profile() {
     localStorage.removeItem("memberEmail");
     localStorage.removeItem("memberId");
     window.location.reload();
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!memberToken) return;
+    
+    try {
+      const res = await fetch("/api/members/me", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${memberToken}`,
+        },
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        alert("회원 탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.");
+        localStorage.removeItem("memberToken");
+        localStorage.removeItem("memberName");
+        localStorage.removeItem("memberEmail");
+        localStorage.removeItem("memberId");
+        window.location.href = "/";
+      } else {
+        alert(data.error || "회원 탈퇴 처리 중 오류가 발생했습니다.");
+      }
+    } catch (error) {
+      alert("회원 탈퇴 처리 중 오류가 발생했습니다.");
+    }
   };
 
   const handleDepositSubmit = () => {
@@ -825,6 +853,40 @@ export default function Profile() {
                           <span className="text-red-500">로그아웃</span>
                         </div>
                       </button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            className="w-full flex items-center justify-between p-4 hover:bg-red-50 rounded-lg cursor-pointer transition-colors text-left border-t border-gray-100 mt-2"
+                            data-testid="button-delete-account"
+                          >
+                            <div className="flex items-center gap-3">
+                              <UserX className="w-5 h-5 text-gray-400" />
+                              <span className="text-gray-500">회원탈퇴</span>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-gray-400" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>회원 탈퇴</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              정말로 탈퇴하시겠습니까?<br />
+                              탈퇴 시 모든 회원 정보와 주문 내역이 삭제됩니다.<br />
+                              이 작업은 되돌릴 수 없습니다.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>취소</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={handleDeleteAccount}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              탈퇴하기
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </TabsContent>
 
