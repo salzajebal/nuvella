@@ -2120,22 +2120,6 @@ export default function Admin() {
             </button>
             
             <div className="pt-4">
-              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">환경설정</p>
-              <button
-                data-testid="tab-settings"
-                onClick={() => handleTabClick("settings")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === "settings" 
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Settings className="w-5 h-5" />
-                환경설정
-              </button>
-            </div>
-            
-            <div className="pt-4">
               <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">회원관리</p>
               <button
                 data-testid="tab-members"
@@ -2164,101 +2148,7 @@ export default function Admin() {
             </div>
 
             <div className="pt-4">
-              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">게시판관리</p>
-              <button
-                data-testid="tab-notices"
-                onClick={() => handleTabClick("notices", fetchNotices)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === "notices" 
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Bell className="w-5 h-5" />
-                공지 관리
-              </button>
-              <button
-                data-testid="tab-reviews"
-                onClick={() => handleTabClick("reviews", fetchReviews)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === "reviews" 
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Star className="w-5 h-5" />
-                후기 관리
-              </button>
-            </div>
-            
-            <div className="pt-4">
-              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">쇼핑몰관리</p>
-              <button
-                data-testid="tab-products"
-                onClick={() => handleTabClick("products", fetchProducts)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === "products" 
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Package className="w-5 h-5" />
-                상품 관리
-              </button>
-              <button
-                data-testid="tab-orders"
-                onClick={() => handleTabClick("orders", fetchOrders)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === "orders" 
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <ShoppingCart className="w-5 h-5" />
-                  주문 관리
-                </div>
-                {adminOrders.filter(o => o.status === "pending").length > 0 && (
-                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                    {adminOrders.filter(o => o.status === "pending").length}
-                  </span>
-                )}
-              </button>
-              <button
-                data-testid="tab-crawling"
-                onClick={() => handleTabClick("crawling")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === "crawling" 
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Download className="w-5 h-5" />
-                상품 크롤링
-              </button>
-            </div>
-
-            <div className="pt-4">
-              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">쇼핑몰현황</p>
-              <button
-                data-testid="tab-chat"
-                onClick={() => handleTabClick("chat", fetchChatConversations)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === "chat" 
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <MessageCircle className="w-5 h-5" />
-                  1:1 문의
-                </div>
-                {chatConversations.filter(c => c.status === "open").length > 0 && (
-                  <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                    {chatConversations.filter(c => c.status === "open").length}
-                  </span>
-                )}
-              </button>
+              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">포인트관리</p>
               <button
                 data-testid="tab-deposits"
                 onClick={() => { handleTabClick("deposits", fetchDepositRequests); setFlashDeposit(false); }}
@@ -2311,7 +2201,125 @@ export default function Admin() {
                 }`}
               >
                 <Zap className="w-5 h-5" />
-                포인트관리
+                포인트내역
+              </button>
+            </div>
+
+            <div className="pt-4">
+              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">주문관리</p>
+              <button
+                data-testid="tab-orders"
+                onClick={() => handleTabClick("orders", fetchOrders)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === "orders" 
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <ShoppingCart className="w-5 h-5" />
+                  주문 관리
+                </div>
+                {adminOrders.filter(o => o.status === "pending").length > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                    {adminOrders.filter(o => o.status === "pending").length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            <div className="pt-4">
+              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">후기관리</p>
+              <button
+                data-testid="tab-reviews"
+                onClick={() => handleTabClick("reviews", fetchReviews)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === "reviews" 
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Star className="w-5 h-5" />
+                후기 관리
+              </button>
+            </div>
+
+            <div className="pt-4">
+              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">1:1문의</p>
+              <button
+                data-testid="tab-chat"
+                onClick={() => handleTabClick("chat", fetchChatConversations)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === "chat" 
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <MessageCircle className="w-5 h-5" />
+                  1:1 문의
+                </div>
+                {chatConversations.filter(c => c.status === "open").length > 0 && (
+                  <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                    {chatConversations.filter(c => c.status === "open").length}
+                  </span>
+                )}
+              </button>
+            </div>
+            
+            <div className="pt-4">
+              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">환경설정</p>
+              <button
+                data-testid="tab-settings"
+                onClick={() => handleTabClick("settings")}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === "settings" 
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Settings className="w-5 h-5" />
+                환경설정
+              </button>
+              <button
+                data-testid="tab-notices"
+                onClick={() => handleTabClick("notices", fetchNotices)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === "notices" 
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Bell className="w-5 h-5" />
+                공지 관리
+              </button>
+            </div>
+            
+            <div className="pt-4">
+              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">상품관리</p>
+              <button
+                data-testid="tab-products"
+                onClick={() => handleTabClick("products", fetchProducts)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === "products" 
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Package className="w-5 h-5" />
+                상품 관리
+              </button>
+              <button
+                data-testid="tab-crawling"
+                onClick={() => handleTabClick("crawling")}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === "crawling" 
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Download className="w-5 h-5" />
+                상품 크롤링
               </button>
             </div>
             
