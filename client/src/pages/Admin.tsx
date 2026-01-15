@@ -387,6 +387,14 @@ export default function Admin() {
     toast({ title: "로그아웃", description: "로그아웃되었습니다." });
   };
 
+  const handleTabClick = (tabName: string, refreshFn?: () => void) => {
+    setActiveTab(tabName as any);
+    window.location.hash = tabName;
+    if (refreshFn) {
+      refreshFn();
+    }
+  };
+
   const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
     return fetch(url, {
       ...options,
@@ -2100,7 +2108,7 @@ export default function Admin() {
           <nav className="p-4 space-y-1 flex-1 overflow-y-auto">
             <button
               data-testid="tab-dashboard"
-              onClick={() => setActiveTab("dashboard")}
+              onClick={() => handleTabClick("dashboard", fetchStats)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                 activeTab === "dashboard" 
                   ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2115,7 +2123,7 @@ export default function Admin() {
               <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">환경설정</p>
               <button
                 data-testid="tab-settings"
-                onClick={() => setActiveTab("settings")}
+                onClick={() => handleTabClick("settings")}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "settings" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2131,7 +2139,7 @@ export default function Admin() {
               <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">회원관리</p>
               <button
                 data-testid="tab-members"
-                onClick={() => setActiveTab("members")}
+                onClick={() => handleTabClick("members", () => fetchMembers())}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "members" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2143,7 +2151,7 @@ export default function Admin() {
               </button>
               <button
                 data-testid="tab-login-logs"
-                onClick={() => setActiveTab("loginLogs")}
+                onClick={() => handleTabClick("loginLogs", fetchLoginLogs)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "loginLogs" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2159,7 +2167,7 @@ export default function Admin() {
               <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">게시판관리</p>
               <button
                 data-testid="tab-notices"
-                onClick={() => setActiveTab("notices")}
+                onClick={() => handleTabClick("notices", fetchNotices)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "notices" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2171,7 +2179,7 @@ export default function Admin() {
               </button>
               <button
                 data-testid="tab-reviews"
-                onClick={() => setActiveTab("reviews")}
+                onClick={() => handleTabClick("reviews", fetchReviews)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "reviews" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2187,7 +2195,7 @@ export default function Admin() {
               <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">쇼핑몰관리</p>
               <button
                 data-testid="tab-products"
-                onClick={() => setActiveTab("products")}
+                onClick={() => handleTabClick("products", fetchProducts)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "products" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2199,7 +2207,7 @@ export default function Admin() {
               </button>
               <button
                 data-testid="tab-orders"
-                onClick={() => setActiveTab("orders")}
+                onClick={() => handleTabClick("orders", fetchOrders)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "orders" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2218,7 +2226,7 @@ export default function Admin() {
               </button>
               <button
                 data-testid="tab-crawling"
-                onClick={() => setActiveTab("crawling")}
+                onClick={() => handleTabClick("crawling")}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "crawling" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2234,7 +2242,7 @@ export default function Admin() {
               <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">쇼핑몰현황</p>
               <button
                 data-testid="tab-chat"
-                onClick={() => setActiveTab("chat")}
+                onClick={() => handleTabClick("chat", fetchChatConversations)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "chat" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2253,7 +2261,7 @@ export default function Admin() {
               </button>
               <button
                 data-testid="tab-deposits"
-                onClick={() => { setActiveTab("deposits"); setFlashDeposit(false); }}
+                onClick={() => { handleTabClick("deposits", fetchDepositRequests); setFlashDeposit(false); }}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "deposits" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2274,7 +2282,7 @@ export default function Admin() {
               </button>
               <button
                 data-testid="tab-withdrawals"
-                onClick={() => { setActiveTab("withdrawals"); setFlashWithdrawal(false); }}
+                onClick={() => { handleTabClick("withdrawals", fetchWithdrawalRequests); setFlashWithdrawal(false); }}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "withdrawals" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
@@ -2295,7 +2303,7 @@ export default function Admin() {
               </button>
               <button
                 data-testid="tab-points"
-                onClick={() => setActiveTab("points")}
+                onClick={() => handleTabClick("points", () => fetchPointTransactions())}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === "points" 
                     ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
