@@ -101,7 +101,7 @@ export default function Admin() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings" | "crawling">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings" | "crawling" | "loginLogs">("dashboard");
   const [stats, setStats] = useState<AdminStats | null>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -161,6 +161,9 @@ export default function Admin() {
   const [showEditMemberModal, setShowEditMemberModal] = useState(false);
 
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [loginLogs, setLoginLogs] = useState<{id: string; memberId: string; memberUsername: string; memberName: string; memberNickname?: string; loginAt: string | null; ipAddress?: string | null; userAgent?: string | null}[]>([]);
+  const [loginLogPage, setLoginLogPage] = useState(0);
+  const [loginLogSearch, setLoginLogSearch] = useState("");
   const [reviewFormData, setReviewFormData] = useState({
     authorName: "",
     productName: "",
@@ -773,6 +776,18 @@ export default function Admin() {
     }
   };
 
+  const fetchLoginLogs = async () => {
+    try {
+      const res = await fetchWithAuth("/api/admin/login-logs");
+      const data = await res.json();
+      if (data.success) {
+        setLoginLogs(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching login logs:", error);
+    }
+  };
+
   const fetchNotices = async () => {
     try {
       const res = await fetchWithAuth("/api/admin/notices");
@@ -796,6 +811,7 @@ export default function Admin() {
       fetchNotices();
       fetchSiteSettings();
       fetchPointTransactions();
+      fetchLoginLogs();
     }
   }, [isAuthenticated]);
   
@@ -2098,6 +2114,18 @@ export default function Admin() {
               >
                 <Users className="w-5 h-5" />
                 회원 관리
+              </button>
+              <button
+                data-testid="tab-login-logs"
+                onClick={() => setActiveTab("loginLogs")}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === "loginLogs" 
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Clock className="w-5 h-5" />
+                로그인 기록
               </button>
             </div>
 
@@ -4757,6 +4785,124 @@ export default function Admin() {
                   <p>등록된 후기가 없습니다</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "loginLogs" && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">로그인 기록</h2>
+                <p className="text-sm text-gray-500">회원들의 로그인 기록을 확인할 수 있습니다</p>
+              </div>
+              <Button
+                data-testid="button-refresh-login-logs"
+                onClick={fetchLoginLogs}
+                variant="outline"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                새로고침
+              </Button>
+            </div>
+
+            <div className="mb-4">
+              <Input
+                placeholder="아이디, 이름, 닉네임으로 검색..."
+                value={loginLogSearch}
+                onChange={(e) => {
+                  setLoginLogSearch(e.target.value);
+                  setLoginLogPage(0);
+                }}
+                className="max-w-md"
+                data-testid="input-login-log-search"
+              />
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">아이디</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">닉네임</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">이름</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">접속시간</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP 주소</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {(() => {
+                    const searchTerm = loginLogSearch.toLowerCase().trim();
+                    const filteredLogs = loginLogs.filter(log => {
+                      if (!searchTerm) return true;
+                      return (
+                        log.memberUsername.toLowerCase().includes(searchTerm) ||
+                        log.memberName.toLowerCase().includes(searchTerm) ||
+                        (log.memberNickname && log.memberNickname.toLowerCase().includes(searchTerm))
+                      );
+                    });
+                    
+                    const logsPerPage = 20;
+                    const totalPages = Math.max(1, Math.ceil(filteredLogs.length / logsPerPage));
+                    const safePage = Math.min(loginLogPage, totalPages - 1);
+                    const paginatedLogs = filteredLogs.slice(safePage * logsPerPage, (safePage + 1) * logsPerPage);
+                    
+                    return (
+                      <>
+                        {paginatedLogs.map((log) => (
+                          <tr key={log.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm">{log.memberUsername}</td>
+                            <td className="px-4 py-3 text-sm">{log.memberNickname || "-"}</td>
+                            <td className="px-4 py-3 text-sm">{log.memberName}</td>
+                            <td className="px-4 py-3 text-sm">
+                              {log.loginAt ? new Date(log.loginAt).toLocaleString("ko-KR") : "-"}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500">{log.ipAddress || "-"}</td>
+                          </tr>
+                        ))}
+                        {paginatedLogs.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
+                              <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                              <p>로그인 기록이 없습니다</p>
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    );
+                  })()}
+                </tbody>
+              </table>
+              
+              {(() => {
+                const searchTerm = loginLogSearch.toLowerCase().trim();
+                const filteredLogs = loginLogs.filter(log => {
+                  if (!searchTerm) return true;
+                  return (
+                    log.memberUsername.toLowerCase().includes(searchTerm) ||
+                    log.memberName.toLowerCase().includes(searchTerm) ||
+                    (log.memberNickname && log.memberNickname.toLowerCase().includes(searchTerm))
+                  );
+                });
+                
+                const logsPerPage = 20;
+                const totalPages = Math.max(1, Math.ceil(filteredLogs.length / logsPerPage));
+                const safePage = Math.min(loginLogPage, totalPages - 1);
+                
+                if (totalPages > 1) {
+                  return (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                      <p className="text-sm text-gray-500">총 {filteredLogs.length}건</p>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" disabled={safePage === 0} onClick={() => setLoginLogPage(Math.max(0, safePage - 1))}>이전</Button>
+                        <span className="px-3 py-1 text-sm">{safePage + 1} / {totalPages}</span>
+                        <Button size="sm" variant="outline" disabled={safePage >= totalPages - 1} onClick={() => setLoginLogPage(Math.min(totalPages - 1, safePage + 1))}>다음</Button>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </div>
         )}

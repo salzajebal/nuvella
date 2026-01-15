@@ -677,6 +677,23 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== LOGIN LOGS API ====================
+  
+  app.get("/api/admin/login-logs", async (req: Request, res: Response) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token || !isValidSession(token)) {
+      return res.status(401).json({ success: false, error: "인증이 필요합니다." });
+    }
+    
+    try {
+      const logs = await storage.getAllLoginLogs();
+      res.json({ success: true, data: logs });
+    } catch (error) {
+      console.error("Error fetching login logs:", error);
+      res.status(500).json({ success: false, error: "로그인 기록을 불러올 수 없습니다." });
+    }
+  });
+
   // ==================== MEMBER MANAGEMENT API ====================
   
   app.get("/api/admin/members", async (req: Request, res: Response) => {
@@ -896,6 +913,18 @@ export async function registerRoutes(
         memberId: member.id,
         username: member.username,
         name: member.name
+      });
+      
+      // Record login log
+      const ipAddress = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || 'unknown';
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      await storage.createLoginLog({
+        memberId: member.id,
+        memberUsername: member.username,
+        memberName: member.name,
+        memberNickname: member.nickname || null,
+        ipAddress,
+        userAgent
       });
       
       res.json({ 

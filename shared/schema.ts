@@ -60,6 +60,25 @@ export const insertMemberSessionSchema = createInsertSchema(memberSessions);
 export type InsertMemberSession = z.infer<typeof insertMemberSessionSchema>;
 export type MemberSession = typeof memberSessions.$inferSelect;
 
+export const loginLogs = pgTable("login_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  memberId: varchar("member_id").notNull(),
+  memberUsername: text("member_username").notNull(),
+  memberName: text("member_name").notNull(),
+  memberNickname: text("member_nickname"),
+  loginAt: timestamp("login_at").defaultNow(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+});
+
+export const insertLoginLogSchema = createInsertSchema(loginLogs).omit({
+  id: true,
+  loginAt: true,
+});
+
+export type InsertLoginLog = z.infer<typeof insertLoginLogSchema>;
+export type LoginLog = typeof loginLogs.$inferSelect;
+
 export const adminSessions = pgTable("admin_sessions", {
   token: varchar("token").primaryKey(),
   username: text("username").notNull(),

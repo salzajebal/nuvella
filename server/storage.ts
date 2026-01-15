@@ -4,6 +4,7 @@ import {
   type Category, type InsertCategory, categories,
   type Member, type InsertMember, members,
   type MemberSession, type InsertMemberSession, memberSessions,
+  type LoginLog, type InsertLoginLog, loginLogs,
   type AdminSession, type InsertAdminSession, adminSessions,
   type ChatConversation, type InsertChatConversation, chatConversations,
   type ChatMessage, type InsertChatMessage, chatMessages,
@@ -98,6 +99,10 @@ export interface IStorage {
   createMemberSession(session: InsertMemberSession): Promise<MemberSession>;
   deleteMemberSession(token: string): Promise<boolean>;
   deleteMemberSessionsByMemberId(memberId: string): Promise<void>;
+  
+  // Login Logs
+  createLoginLog(log: InsertLoginLog): Promise<LoginLog>;
+  getAllLoginLogs(): Promise<LoginLog[]>;
   
   // Admin Sessions
   getAdminSession(token: string): Promise<AdminSession | undefined>;
@@ -457,6 +462,16 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMemberSessionsByMemberId(memberId: string): Promise<void> {
     await db.delete(memberSessions).where(eq(memberSessions.memberId, memberId));
+  }
+
+  // Login Logs
+  async createLoginLog(log: InsertLoginLog): Promise<LoginLog> {
+    const results = await db.insert(loginLogs).values(log).returning();
+    return results[0];
+  }
+
+  async getAllLoginLogs(): Promise<LoginLog[]> {
+    return db.select().from(loginLogs).orderBy(desc(loginLogs.loginAt));
   }
 
   // Admin Sessions
