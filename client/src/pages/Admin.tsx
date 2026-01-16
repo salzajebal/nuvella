@@ -235,6 +235,8 @@ export default function Admin() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orderFilter, setOrderFilter] = useState<"all" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled">("all");
   const [orderSearch, setOrderSearch] = useState("");
+  const [orderPage, setOrderPage] = useState(0);
+  const ordersPerPage = 15;
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState(false);
@@ -3641,7 +3643,7 @@ export default function Admin() {
                   <Input
                     placeholder="이름/아이디/주문번호 검색"
                     value={orderSearch}
-                    onChange={(e) => setOrderSearch(e.target.value)}
+                    onChange={(e) => { setOrderSearch(e.target.value); setOrderPage(0); }}
                     className="pl-9"
                     data-testid="input-order-search"
                   />
@@ -3649,7 +3651,7 @@ export default function Admin() {
                 <select
                   className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500"
                   value={orderFilter}
-                  onChange={(e) => setOrderFilter(e.target.value as typeof orderFilter)}
+                  onChange={(e) => { setOrderFilter(e.target.value as typeof orderFilter); setOrderPage(0); }}
                 >
                   <option value="all">전체 보기</option>
                   <option value="pending">대기중</option>
@@ -3684,16 +3686,20 @@ export default function Admin() {
                     </tr>
                   </thead>
                   <tbody>
-                    {adminOrders
-                      .filter(order => orderFilter === "all" || order.status === orderFilter)
-                      .filter(order => {
-                        if (!orderSearch.trim()) return true;
-                        const search = orderSearch.toLowerCase();
-                        return order.memberName?.toLowerCase().includes(search) || 
-                               order.orderNumber?.toLowerCase().includes(search) ||
-                               (order as any).memberUsername?.toLowerCase().includes(search);
-                      })
-                      .map((order) => (
+                    {(() => {
+                      const filteredOrders = adminOrders
+                        .filter(order => orderFilter === "all" || order.status === orderFilter)
+                        .filter(order => {
+                          if (!orderSearch.trim()) return true;
+                          const search = orderSearch.toLowerCase();
+                          return order.memberName?.toLowerCase().includes(search) || 
+                                 order.orderNumber?.toLowerCase().includes(search) ||
+                                 (order as any).memberUsername?.toLowerCase().includes(search);
+                        });
+                      const totalOrderPages = Math.ceil(filteredOrders.length / ordersPerPage);
+                      const safeOrderPage = Math.min(orderPage, Math.max(0, totalOrderPages - 1));
+                      const paginatedOrders = filteredOrders.slice(safeOrderPage * ordersPerPage, (safeOrderPage + 1) * ordersPerPage);
+                      return paginatedOrders.map((order) => (
                       <React.Fragment key={order.id}>
                         <tr className={`border-t border-gray-200 ${order.status === "pending" ? "bg-yellow-50/50" : ""}`}>
                           <td className="px-2 py-1.5 max-w-[150px]">
@@ -3757,9 +3763,49 @@ export default function Admin() {
                           </td>
                         </tr>
                       </React.Fragment>
-                    ))}
+                    ));
+                    })()}
                   </tbody>
                 </table>
+                
+                {(() => {
+                  const filteredOrders = adminOrders
+                    .filter(order => orderFilter === "all" || order.status === orderFilter)
+                    .filter(order => {
+                      if (!orderSearch.trim()) return true;
+                      const search = orderSearch.toLowerCase();
+                      return order.memberName?.toLowerCase().includes(search) || 
+                             order.orderNumber?.toLowerCase().includes(search) ||
+                             (order as any).memberUsername?.toLowerCase().includes(search);
+                    });
+                  const totalOrderPages = Math.ceil(filteredOrders.length / ordersPerPage);
+                  
+                  if (totalOrderPages <= 1) return null;
+                  
+                  return (
+                    <div className="flex items-center justify-center gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOrderPage(Math.max(0, orderPage - 1))}
+                        disabled={orderPage === 0}
+                      >
+                        이전
+                      </Button>
+                      <span className="text-sm text-gray-600">
+                        {orderPage + 1} / {totalOrderPages} 페이지 (총 {filteredOrders.length}건)
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOrderPage(Math.min(totalOrderPages - 1, orderPage + 1))}
+                        disabled={orderPage >= totalOrderPages - 1}
+                      >
+                        다음
+                      </Button>
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
