@@ -400,10 +400,13 @@ export default function Admin() {
   };
 
   const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    return fetch(url, {
+    const separator = url.includes('?') ? '&' : '?';
+    const urlWithCacheBust = `${url}${separator}_t=${Date.now()}`;
+    return fetch(urlWithCacheBust, {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
         ...options.headers,
         Authorization: `Bearer ${authToken}`,
       }
@@ -424,7 +427,9 @@ export default function Admin() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch("/api/products");
+      const res = await fetch(`/api/products?_t=${Date.now()}`, {
+        headers: { "Cache-Control": "no-cache" }
+      });
       const data = await res.json();
       if (data.success) {
         setProducts(data.data);
