@@ -4318,60 +4318,6 @@ export default function Admin() {
               </Button>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-lg">회원별 포인트 현황</h3>
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="이름/아이디 검색"
-                    value={pointMemberListSearch}
-                    onChange={(e) => setPointMemberListSearch(e.target.value)}
-                    className="pl-9 h-9"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
-                {members
-                  .filter(m => !pointMemberListSearch || m.name.toLowerCase().includes(pointMemberListSearch.toLowerCase()) || m.username.toLowerCase().includes(pointMemberListSearch.toLowerCase()))
-                  .map((member) => (
-                  <div 
-                    key={member.id} 
-                    onClick={() => {
-                      if (selectedMemberForHistory === member.id) {
-                        setSelectedMemberForHistory(null);
-                      } else {
-                        setSelectedMemberForHistory(member.id);
-                      }
-                      setPointPage(0);
-                    }}
-                    className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all ${selectedMemberForHistory === member.id ? 'bg-amber-100 border-amber-400 ring-2 ring-amber-200' : 'bg-gray-50 hover:bg-gray-100'}`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User className="w-4 h-4 text-yellow-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">{member.name}</p>
-                        <p className="text-xs text-gray-500 truncate">{member.username}</p>
-                      </div>
-                    </div>
-                    <p className="font-bold text-amber-600 text-sm flex-shrink-0">{(member.pointBalance || 0).toLocaleString()}P</p>
-                  </div>
-                ))}
-              </div>
-              {selectedMemberForHistory && (
-                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
-                  <span className="text-sm text-amber-800">
-                    <strong>{members.find(m => m.id === selectedMemberForHistory)?.name}</strong> 님의 내역만 표시 중
-                  </span>
-                  <Button size="sm" variant="ghost" className="h-7 text-amber-600" onClick={() => { setSelectedMemberForHistory(null); setPointPage(0); }}>
-                    필터 해제
-                  </Button>
-                </div>
-              )}
-            </div>
-
             <div className="mt-8">
               <h3 className="font-bold text-lg mb-4">포인트 내역</h3>
               
