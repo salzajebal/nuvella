@@ -388,9 +388,19 @@ export async function registerRoutes(
   });
   
   // ==================== SEED DATA ====================
+  // WARNING: These endpoints are disabled in production to prevent data loss
   
-  // Reset and seed comprehensive product data (Admin - Protected)
+  // Reset and seed comprehensive product data (Admin - Protected) - DISABLED
   app.post("/api/seed-full", requireAdminAuth, async (req: Request, res: Response) => {
+    // DISABLED: This endpoint was causing production data loss
+    // To re-enable, set ALLOW_SEED_ENDPOINTS=true in environment variables
+    if (process.env.ALLOW_SEED_ENDPOINTS !== "true") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "시드 기능이 비활성화되어 있습니다. 프로덕션 데이터 보호를 위해 이 기능은 사용할 수 없습니다." 
+      });
+    }
+    
     try {
       // Delete all existing products first
       const existingProducts = await storage.getAllProducts();
@@ -526,8 +536,17 @@ export async function registerRoutes(
     }
   });
 
-  // Seed initial data (Admin - Protected)
+  // Seed initial data (Admin - Protected) - DISABLED
   app.post("/api/seed", requireAdminAuth, async (req: Request, res: Response) => {
+    // DISABLED: This endpoint was causing production data loss
+    // To re-enable, set ALLOW_SEED_ENDPOINTS=true in environment variables
+    if (process.env.ALLOW_SEED_ENDPOINTS !== "true") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "시드 기능이 비활성화되어 있습니다. 프로덕션 데이터 보호를 위해 이 기능은 사용할 수 없습니다." 
+      });
+    }
+    
     try {
       // Seed categories - Estella lifestyle mall categories (6 main + subcategories)
       const categoryData = [
