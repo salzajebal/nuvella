@@ -2576,15 +2576,35 @@ export async function registerRoutes(
   app.put("/api/admin/orders/:id", requireAdminAuth, async (req: Request, res: Response) => {
     try {
       const { status, paymentStatus, adminNote } = req.body;
-      const order = await storage.updateOrder(req.params.id, {
-        ...(status && { status }),
-        ...(paymentStatus && { paymentStatus }),
-        ...(adminNote !== undefined && { adminNote }),
-      });
       
-      if (!order) {
+      // Get current order to check if we need to refund points
+      const currentOrder = await storage.getOrder(req.params.id);
+      if (!currentOrder) {
         return res.status(404).json({ success: false, error: "주문을 찾을 수 없습니다." });
       }
+      
+      // Check if order is being cancelled and was previously paid
+      const isBeingCancelled = status === "cancelled" && currentOrder.status !== "cancelled";
+      const wasPaid = currentOrder.paymentStatus === "paid" || currentOrder.paymentStatus === "completed";
+      
+      // Refund points if order is being cancelled and was paid
+      if (isBeingCancelled && wasPaid && currentOrder.memberId) {
+        const refundAmount = parseInt(String(currentOrder.totalAmount).replace(/,/g, '')) || 0;
+        if (refundAmount > 0) {
+          await storage.updateMemberPoints(
+            currentOrder.memberId,
+            refundAmount,
+            `주문취소 환불: ${currentOrder.productName}`
+          );
+        }
+      }
+      
+      const order = await storage.updateOrder(req.params.id, {
+        ...(status && { status }),
+        // Auto-set paymentStatus to refunded when cancelling a paid order
+        ...(isBeingCancelled && wasPaid ? { paymentStatus: "refunded" } : (paymentStatus && { paymentStatus })),
+        ...(adminNote !== undefined && { adminNote }),
+      });
       
       res.json({ success: true, data: order });
     } catch (error) {
