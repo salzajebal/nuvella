@@ -2812,8 +2812,8 @@ export async function registerRoutes(
         return res.status(400).json({ success: false, error: "배송 대기 상태의 주문만 취소가 가능합니다." });
       }
       
-      // Calculate refund amount
-      const refundAmount = parseInt(order.totalAmount) || 0;
+      // Calculate refund amount (handle comma-formatted amounts like "49,000")
+      const refundAmount = parseInt(String(order.totalAmount || '0').replace(/,/g, '')) || 0;
       
       // Refund points to member
       if (order.memberId && refundAmount > 0) {
