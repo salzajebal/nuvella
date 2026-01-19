@@ -867,7 +867,9 @@ export async function registerRoutes(
   // Public member signup
   app.post("/api/members/signup", async (req: Request, res: Response) => {
     try {
-      const { username, password, name, nickname, email } = req.body;
+      const { password, name, email } = req.body;
+      const username = (req.body.username || "").trim();
+      const nickname = (req.body.nickname || "").trim();
       
       if (!username || !password || !name || !nickname) {
         return res.status(400).json({ success: false, error: "필수 항목을 모두 입력해주세요." });
@@ -911,7 +913,8 @@ export async function registerRoutes(
   // Member login - uses database-based sessions for persistence
   app.post("/api/members/login", async (req: Request, res: Response) => {
     try {
-      const { username, password } = req.body;
+      const username = (req.body.username || "").trim();
+      const password = req.body.password;
       
       if (!username || !password) {
         return res.status(400).json({ success: false, error: "아이디와 비밀번호를 입력해주세요." });
