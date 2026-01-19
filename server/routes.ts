@@ -927,11 +927,13 @@ export async function registerRoutes(
       }
       
       const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+      const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000); // 12 hours from now
       await storage.createMemberSession({
         token,
         memberId: member.id,
         username: member.username,
-        name: member.name
+        name: member.name,
+        expiresAt
       });
       
       // Record login log
@@ -969,6 +971,14 @@ export async function registerRoutes(
     if (!token) return null;
     const session = await storage.getMemberSession(token);
     if (!session) return null;
+    
+    // Check if session has expired (12 hours)
+    if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+      // Delete expired session
+      await storage.deleteMemberSession(token);
+      return null;
+    }
+    
     return { memberId: session.memberId, username: session.username, name: session.name };
   }
 
