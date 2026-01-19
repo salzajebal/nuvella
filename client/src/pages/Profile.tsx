@@ -158,22 +158,26 @@ export default function Profile() {
 
   const memberId = memberInfo?.id || localStorage.getItem("memberId");
   
-  const { data: memberOrders } = useQuery<Order[]>({
-    queryKey: ["member-orders", memberId],
+  const { data: memberOrders, refetch: refetchOrders } = useQuery<Order[]>({
+    queryKey: ["member-orders", memberToken],
     queryFn: async () => {
+      const currentMemberId = memberInfo?.id || localStorage.getItem("memberId");
       const params = new URLSearchParams();
-      if (memberId) params.append("memberId", memberId);
+      if (currentMemberId) params.append("memberId", currentMemberId);
       
-      const res = await fetch(`/api/members/orders?${params.toString()}`, {
+      const res = await fetch(`/api/members/orders?${params.toString()}&_t=${Date.now()}`, {
         headers: {
           Authorization: `Bearer ${memberToken}`,
+          "Cache-Control": "no-cache",
         },
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       return data.data;
     },
-    enabled: isLoggedIn && !!memberId,
+    enabled: isLoggedIn,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const depositMutation = useMutation({
