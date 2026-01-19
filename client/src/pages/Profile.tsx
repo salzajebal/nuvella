@@ -156,7 +156,7 @@ export default function Profile() {
     enabled: isLoggedIn,
   });
 
-  const memberId = localStorage.getItem("memberId");
+  const memberId = memberInfo?.id || localStorage.getItem("memberId");
   
   const { data: memberOrders } = useQuery<Order[]>({
     queryKey: ["member-orders", memberId],
