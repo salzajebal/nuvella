@@ -42,6 +42,7 @@ export default function ProductList() {
   
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortOption, setSortOption] = useState("신상품순");
   const { toggleItem, isInWishlist } = useWishlist();
   const { toast } = useToast();
   
@@ -111,6 +112,27 @@ export default function ProductList() {
     return numPrice.toLocaleString();
   };
 
+  const parsePrice = (price: string | number | null | undefined): number => {
+    if (price == null) return 0;
+    const priceStr = String(price);
+    const numPrice = parseInt(priceStr.replace(/,/g, ''), 10);
+    return isNaN(numPrice) ? 0 : numPrice;
+  };
+
+  const sortedProducts = [...products].sort((a, b) => {
+    switch (sortOption) {
+      case "높은가격순":
+        return parsePrice(b.price) - parsePrice(a.price);
+      case "낮은가격순":
+        return parsePrice(a.price) - parsePrice(b.price);
+      case "인기상품순":
+        return (b.isBest ? 1 : 0) - (a.isBest ? 1 : 0);
+      case "신상품순":
+      default:
+        return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
+    }
+  });
+
   return (
     <div className="min-h-screen bg-white font-sans">
       <Header />
@@ -174,11 +196,16 @@ export default function ProductList() {
             총 <span className="font-bold text-gray-900" data-testid="text-product-count">{products.length}</span>개의 상품
           </div>
           <div className="flex gap-2 text-xs sm:text-sm">
-            <select className="border border-gray-200 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:border-gray-900 rounded">
-              <option>신상품순</option>
-              <option>낮은가격순</option>
-              <option>높은가격순</option>
-              <option>인기상품순</option>
+            <select 
+              className="border border-gray-200 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:border-gray-900 rounded"
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              data-testid="select-sort"
+            >
+              <option value="신상품순">신상품순</option>
+              <option value="낮은가격순">낮은가격순</option>
+              <option value="높은가격순">높은가격순</option>
+              <option value="인기상품순">인기상품순</option>
             </select>
           </div>
         </div>
@@ -187,9 +214,9 @@ export default function ProductList() {
           <div className="py-20 text-center">
             <p className="text-gray-500">상품을 불러오는 중...</p>
           </div>
-        ) : products.length > 0 ? (
+        ) : sortedProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {products.map((product) => (
+            {sortedProducts.map((product) => (
               <Link 
                 key={product.id}
                 href={`/product/${product.id}`}
