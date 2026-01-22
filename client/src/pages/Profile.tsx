@@ -344,7 +344,7 @@ export default function Profile() {
     
     setReviewSubmitting(true);
     try {
-      const memberNickname = memberInfo?.nickname || memberInfo?.name || "회원";
+      const memberNickname = memberInfo?.nickname || localStorage.getItem("memberNickname") || memberInfo?.name || "회원";
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: {
