@@ -10,37 +10,14 @@ import {
   Lock, User, Mail, Phone, CheckCircle, XCircle,
   Star, FileText, Bell, Calendar, Search,
   Wallet, Clock, Snowflake, Unlock, Settings, Link2, Upload,
-  MessageCircle, Send, Circle, Volume2, Zap, Download, Loader2
+  Zap, Download, Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Product, Category, Member, Review, Notice, ChatConversation, ChatMessage, Order } from "@shared/schema";
+import type { Product, Category, Member, Review, Notice, Order } from "@shared/schema";
 import { ShoppingCart } from "lucide-react";
-import { useRef, useCallback } from "react";
+import { useRef } from "react";
 import { AdminSearchPanel } from "@/components/admin/AdminSearchPanel";
 import { PointSearchPanel } from "@/components/admin/PointSearchPanel";
-
-const playNotificationSound = () => {
-  try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-    oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.4);
-  } catch (e) {
-    console.log("Audio notification not supported");
-  }
-};
 
 const CATEGORY_OPTIONS = [
   { id: "home_interior", name: "홈 인테리어" },
@@ -102,12 +79,12 @@ export default function Admin() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   
   // Get initial tab from URL hash
-  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings" | "crawling" | "loginLogs">(() => {
+  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "settings" | "crawling" | "loginLogs">(() => {
     if (typeof window === 'undefined') return "dashboard";
     const hash = window.location.hash.replace('#', '');
-    const validTabs = ["dashboard", "products", "members", "orders", "deposits", "withdrawals", "points", "reviews", "notices", "chat", "settings", "crawling", "loginLogs"];
+    const validTabs = ["dashboard", "products", "members", "orders", "deposits", "withdrawals", "points", "reviews", "notices", "settings", "crawling", "loginLogs"];
     if (validTabs.includes(hash)) {
-      return hash as "dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "chat" | "settings" | "crawling" | "loginLogs";
+      return hash as "dashboard" | "products" | "members" | "orders" | "deposits" | "withdrawals" | "points" | "reviews" | "notices" | "settings" | "crawling" | "loginLogs";
     }
     return "dashboard";
   });
@@ -255,15 +232,6 @@ export default function Admin() {
     adminNote: "",
   });
 
-  const [chatConversations, setChatConversations] = useState<ChatConversation[]>([]);
-  const [chatNotification, setChatNotification] = useState<{show: boolean; memberName: string; message: string; conversationId: string} | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null);
-  const [newMessage, setNewMessage] = useState("");
-  const [chatSocket, setChatSocket] = useState<WebSocket | null>(null);
-  const [isChatConnected, setIsChatConnected] = useState(false);
-  const chatMessagesEndRef = useRef<HTMLDivElement>(null);
-  const chatSocketRef = useRef<WebSocket | null>(null);
   const [selectedMemberForAction, setSelectedMemberForAction] = useState<string | null>(null);
   const [actionType, setActionType] = useState<"adjust" | "freeze" | null>(null);
   
@@ -1003,199 +971,13 @@ export default function Admin() {
   }, [orderFilter, activeTab, isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated && !chatSocketRef.current) {
-      connectChatWebSocket();
-      fetchChatConversations();
-    }
-    
-    return () => {
-      if (chatSocketRef.current && !isAuthenticated) {
-        chatSocketRef.current.close();
-        chatSocketRef.current = null;
-        setChatSocket(null);
-        setIsChatConnected(false);
-      }
-    };
-  }, [isAuthenticated]);
-  
-  useEffect(() => {
-    if (isAuthenticated && activeTab === "chat") {
-      fetchChatConversations();
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
     if (isAuthenticated && activeTab === "settings") {
       fetchSiteSettings();
     }
   }, [activeTab, isAuthenticated]);
 
-  useEffect(() => {
-    if (chatMessagesEndRef.current) {
-      chatMessagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [chatMessages]);
-
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
-
-  const connectChatWebSocket = useCallback(() => {
-    if (chatSocketRef.current) {
-      chatSocketRef.current.close();
-      chatSocketRef.current = null;
-    }
-    
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/chat`);
-    chatSocketRef.current = ws;
-
-    ws.onopen = () => {
-      setIsChatConnected(true);
-      ws.send(JSON.stringify({
-        type: "join",
-        senderType: "admin",
-        senderName: "관리자",
-      }));
-    };
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      
-      switch (data.type) {
-        case "conversations":
-          setChatConversations(data.data);
-          break;
-        case "history":
-          setChatMessages(data.data);
-          break;
-        case "message":
-          setChatMessages(prev => [...prev, data.data]);
-          fetchChatConversations();
-          if (data.data.senderType === "user" || data.data.senderType === "member") {
-            playNotificationSound();
-            setChatNotification({
-              show: true,
-              memberName: data.data.senderName || "고객",
-              message: data.data.message,
-              conversationId: data.data.conversationId,
-            });
-            setTimeout(() => setChatNotification(null), 5000);
-          }
-          break;
-        case "new_message":
-          fetchChatConversations();
-          if (data.data && (data.data.senderType === "user" || data.data.senderType === "member")) {
-            playNotificationSound();
-            setChatNotification({
-              show: true,
-              memberName: data.data.senderName || "고객",
-              message: data.data.message || "새 메시지가 도착했습니다.",
-              conversationId: data.data.conversationId,
-            });
-            setTimeout(() => setChatNotification(null), 5000);
-          }
-          break;
-        case "read":
-          break;
-        case "new_deposit":
-          playNotificationSound();
-          setFlashDeposit(true);
-          fetchDepositRequests();
-          setTimeout(() => setFlashDeposit(false), 5000);
-          break;
-        case "new_withdrawal":
-          playNotificationSound();
-          setFlashWithdrawal(true);
-          fetchWithdrawalRequests();
-          setTimeout(() => setFlashWithdrawal(false), 5000);
-          break;
-      }
-    };
-
-    ws.onclose = () => {
-      setIsChatConnected(false);
-      if (chatSocketRef.current === ws) {
-        chatSocketRef.current = null;
-        setTimeout(() => {
-          if (isAuthenticated) {
-            connectChatWebSocket();
-          }
-        }, 3000);
-      }
-    };
-
-    ws.onerror = () => {
-      setIsChatConnected(false);
-    };
-
-    setChatSocket(ws);
-  }, []);
-
-  const fetchChatConversations = async () => {
-    try {
-      const res = await fetchWithAuth("/api/chat/conversations");
-      const data = await res.json();
-      if (data.success) {
-        setChatConversations(data.data);
-      }
-    } catch (error) {
-      console.error("Error fetching conversations:", error);
-    }
-  };
-
-  const selectConversation = (conversation: ChatConversation) => {
-    setSelectedConversation(conversation);
-    setChatMessages([]);
-    
-    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-      chatSocket.send(JSON.stringify({
-        type: "join",
-        conversationId: conversation.id,
-        senderType: "admin",
-        senderName: "관리자",
-      }));
-      
-      chatSocket.send(JSON.stringify({
-        type: "read",
-        conversationId: conversation.id,
-      }));
-    }
-  };
-
-  const sendChatMessage = () => {
-    if (!newMessage.trim() || !selectedConversation || !chatSocket) return;
-
-    if (chatSocket.readyState === WebSocket.OPEN) {
-      chatSocket.send(JSON.stringify({
-        type: "message",
-        conversationId: selectedConversation.id,
-        senderType: "admin",
-        senderName: "관리자",
-        message: newMessage.trim(),
-      }));
-      setNewMessage("");
-    }
-  };
-
-  const closeConversation = async (conversationId: string) => {
-    try {
-      const res = await fetchWithAuth(`/api/chat/conversations/${conversationId}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ status: "closed" }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast({ title: "성공", description: "상담이 종료되었습니다." });
-        fetchChatConversations();
-        if (selectedConversation?.id === conversationId) {
-          setSelectedConversation(null);
-          setChatMessages([]);
-        }
-      }
-    } catch (error) {
-      toast({ title: "오류", description: "상담 종료에 실패했습니다.", variant: "destructive" });
-    }
-  };
 
   const handleSeedData = async () => {
     try {
@@ -2058,50 +1840,8 @@ export default function Admin() {
     );
   }
 
-  const handleNotificationClick = (conversationId: string) => {
-    setActiveTab("chat");
-    const conversation = chatConversations.find(c => c.id === conversationId);
-    if (conversation) {
-      selectConversation(conversation);
-    }
-    setChatNotification(null);
-  };
-
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-      {chatNotification && chatNotification.show && (
-        <div 
-          className="fixed top-4 right-4 z-[200] animate-in slide-in-from-right duration-300 cursor-pointer"
-          onClick={() => handleNotificationClick(chatNotification.conversationId)}
-        >
-          <div className="bg-white rounded-xl shadow-2xl border-l-4 border-yellow-500 p-4 max-w-sm">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <p className="font-bold text-gray-900 text-sm">새 채팅 메시지</p>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setChatNotification(null); }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-xs text-yellow-600 font-medium mb-1">{chatNotification.memberName}님</p>
-                <p className="text-sm text-gray-600 truncate">{chatNotification.message}</p>
-                <p className="text-xs text-gray-400 mt-2">클릭하여 확인하기</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
-              <Volume2 className="w-3 h-3" />
-              <span>알림음 재생됨</span>
-            </div>
-          </div>
-        </div>
-      )}
-      
       <div className="flex min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50">
         <aside className="w-72 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white flex-shrink-0 hidden lg:flex lg:flex-col shadow-2xl h-screen sticky top-0">
           <div className="p-6 border-b border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent">
@@ -2256,29 +1996,6 @@ export default function Admin() {
             </div>
 
             <div className="pt-4">
-              <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">1:1문의</p>
-              <button
-                data-testid="tab-chat"
-                onClick={() => handleTabClick("chat", fetchChatConversations)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  activeTab === "chat" 
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 shadow-lg shadow-amber-500/30" 
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <MessageCircle className="w-5 h-5" />
-                  1:1 문의
-                </div>
-                {chatConversations.filter(c => c.status === "open").length > 0 && (
-                  <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                    {chatConversations.filter(c => c.status === "open").length}
-                  </span>
-                )}
-              </button>
-            </div>
-            
-            <div className="pt-4">
               <p className="text-xs text-amber-500/70 uppercase tracking-wider px-4 py-2 font-semibold">환경설정</p>
               <button
                 data-testid="tab-settings"
@@ -2413,7 +2130,6 @@ export default function Admin() {
                 { id: "withdrawals", icon: Wallet, label: "환급" },
                 { id: "reviews", icon: Star, label: "후기" },
                 { id: "notices", icon: Bell, label: "공지" },
-                { id: "chat", icon: MessageCircle, label: "문의" },
                 { id: "settings", icon: Settings, label: "설정" },
               ].map((tab) => (
                 <button
@@ -2542,53 +2258,10 @@ export default function Admin() {
                     <span className="text-sm text-gray-600">카테고리</span>
                     <span className="font-bold text-amber-600">{stats?.totalCategories || 0}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div className="flex justify-between items-center py-2">
                     <span className="text-sm text-gray-600">총 주문수</span>
                     <span className="font-bold text-amber-600">{adminOrders.length}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-gray-600">대기중 문의</span>
-                    <span className="font-bold text-green-600">{chatConversations.filter(c => c.status === "open").length}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-amber-100">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5 text-amber-500" />
-                    1:1문의
-                  </h3>
-                  <button onClick={() => setActiveTab("chat")} className="text-xs text-amber-600 hover:text-amber-700 font-medium">
-                    ▶ 전체보기
-                  </button>
-                </div>
-                <div className="space-y-3 max-h-[220px] overflow-y-auto">
-                  {chatConversations.length === 0 ? (
-                    <p className="text-sm text-gray-400 text-center py-4">문의가 없습니다.</p>
-                  ) : (
-                    chatConversations.slice(0, 5).map((chat) => (
-                      <button
-                        key={chat.id}
-                        onClick={() => { setActiveTab("chat"); }}
-                        className="w-full flex items-start gap-3 p-3 bg-gray-50 hover:bg-amber-50 rounded-lg transition-colors text-left"
-                      >
-                        <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="w-4 h-4 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm text-gray-800">{(chat as any).memberName || "회원"}</span>
-                            {chat.status === "open" && (
-                              <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full">대기</span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-500 mt-0.5">{chat.subject || "문의"}</p>
-                        </div>
-                        <span className="text-xs text-gray-400">{new Date(chat.createdAt || "").toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}</span>
-                      </button>
-                    ))
-                  )}
                 </div>
               </div>
 
@@ -5210,167 +4883,6 @@ export default function Admin() {
                   <p>등록된 공지사항이 없습니다</p>
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === "chat" && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-4 md:p-6 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold flex items-center gap-2">
-                      <MessageCircle className="w-5 h-5 text-yellow-600" />
-                      실시간 1:1 상담
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">고객과 실시간으로 상담하세요.</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Circle className={`w-3 h-3 ${isChatConnected ? "text-green-500 fill-green-500" : "text-red-500 fill-red-500"}`} />
-                    <span className="text-sm text-gray-600">
-                      {isChatConnected ? "연결됨" : "연결 끊김"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col md:flex-row" style={{ height: "calc(100vh - 350px)", minHeight: "500px" }}>
-                <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-gray-200 overflow-y-auto">
-                  <div className="p-3 bg-gray-50 border-b border-gray-200">
-                    <h4 className="font-semibold text-sm text-gray-700">상담 목록</h4>
-                  </div>
-                  {chatConversations.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      <MessageCircle className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-                      <p className="text-sm">아직 상담 요청이 없습니다</p>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-gray-100">
-                      {chatConversations.map((conv) => (
-                        <div
-                          key={conv.id}
-                          data-testid={`chat-conversation-${conv.id}`}
-                          onClick={() => selectConversation(conv)}
-                          className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            selectedConversation?.id === conv.id ? "bg-yellow-50 border-l-4 border-yellow-500" : ""
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-gray-900 truncate">
-                                  {conv.guestName || (conv as any).memberUsername || "익명"}
-                                </span>
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                  conv.status === "open" 
-                                    ? "bg-green-100 text-green-700" 
-                                    : conv.status === "pending"
-                                    ? "bg-yellow-100 text-yellow-700"
-                                    : "bg-gray-100 text-gray-600"
-                                }`}>
-                                  {conv.status === "open" ? "진행중" : conv.status === "pending" ? "대기중" : "종료"}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-600 truncate mt-1">{conv.subject}</p>
-                              <p className="text-xs text-gray-400 mt-1">
-                                {conv.updatedAt ? new Date(conv.updatedAt).toLocaleString("ko-KR") : ""}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex-1 flex flex-col">
-                  {selectedConversation ? (
-                    <>
-                      <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">
-                            {selectedConversation.guestName || (selectedConversation as any).memberUsername || "익명"}
-                          </h4>
-                          <p className="text-sm text-gray-600">{selectedConversation.subject}</p>
-                        </div>
-                        {selectedConversation.status !== "closed" && (
-                          <Button
-                            data-testid="button-close-conversation"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => closeConversation(selectedConversation.id)}
-                            className="text-red-600 border-red-200 hover:bg-red-50"
-                          >
-                            <X className="w-4 h-4 mr-1" />
-                            상담 종료
-                          </Button>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-100">
-                        {chatMessages.map((msg) => (
-                          <div
-                            key={msg.id}
-                            data-testid={`chat-message-${msg.id}`}
-                            className={`flex ${msg.senderType === "admin" ? "justify-end" : "justify-start"}`}
-                          >
-                            <div className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                              msg.senderType === "admin" 
-                                ? "bg-yellow-500 text-black" 
-                                : "bg-white text-gray-900 border border-gray-200"
-                            }`}>
-                              <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                              <p className={`text-xs mt-1 ${
-                                msg.senderType === "admin" ? "text-yellow-900" : "text-gray-400"
-                              }`}>
-                                {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString("ko-KR") : ""}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                        <div ref={chatMessagesEndRef} />
-                      </div>
-                      
-                      {selectedConversation.status !== "closed" && (
-                        <div className="p-4 border-t border-gray-200 bg-white">
-                          <div className="flex gap-2">
-                            <Input
-                              data-testid="input-chat-message"
-                              value={newMessage}
-                              onChange={(e) => setNewMessage(e.target.value)}
-                              placeholder="메시지를 입력하세요..."
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
-                                  e.preventDefault();
-                                  sendChatMessage();
-                                }
-                              }}
-                              className="flex-1"
-                            />
-                            <Button
-                              data-testid="button-send-message"
-                              onClick={sendChatMessage}
-                              disabled={!newMessage.trim() || !isChatConnected}
-                              className="bg-yellow-500 hover:bg-yellow-600 text-black"
-                            >
-                              <Send className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="flex-1 flex items-center justify-center bg-gray-50">
-                      <div className="text-center text-gray-500">
-                        <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                        <p className="font-medium">상담을 선택하세요</p>
-                        <p className="text-sm mt-1">왼쪽 목록에서 상담을 클릭하여 대화를 시작하세요</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         )}
