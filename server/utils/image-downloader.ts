@@ -108,6 +108,7 @@ export async function downloadProductImages(
   stats: { total: number; downloaded: number; failed: number };
 }> {
   const stats = { total: 0, downloaded: 0, failed: 0 };
+  const seenLocalUrls = new Set<string>();
   
   let newMainImage = mainImage;
   if (mainImage) {
@@ -115,6 +116,7 @@ export async function downloadProductImages(
     const result = await downloadImage(mainImage, 0);
     if (result.success && result.localUrl) {
       newMainImage = result.localUrl;
+      seenLocalUrls.add(result.localUrl);
       stats.downloaded++;
     } else {
       stats.failed++;
@@ -126,7 +128,10 @@ export async function downloadProductImages(
     stats.total++;
     const result = await downloadImage(galleryImages[i], i + 100);
     if (result.success && result.localUrl) {
-      newGalleryImages.push(result.localUrl);
+      if (!seenLocalUrls.has(result.localUrl)) {
+        seenLocalUrls.add(result.localUrl);
+        newGalleryImages.push(result.localUrl);
+      }
       stats.downloaded++;
     } else {
       newGalleryImages.push(galleryImages[i]);
@@ -139,7 +144,10 @@ export async function downloadProductImages(
     stats.total++;
     const result = await downloadImage(descriptionImages[i], i + 1000);
     if (result.success && result.localUrl) {
-      newDescriptionImages.push(result.localUrl);
+      if (!seenLocalUrls.has(result.localUrl)) {
+        seenLocalUrls.add(result.localUrl);
+        newDescriptionImages.push(result.localUrl);
+      }
       stats.downloaded++;
     } else {
       newDescriptionImages.push(descriptionImages[i]);
