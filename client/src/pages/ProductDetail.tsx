@@ -720,6 +720,7 @@ export default function ProductDetail() {
                     alt={`${product.name} 상세이미지 ${index + 1}`}
                     className="w-full max-w-3xl mx-auto"
                     loading="lazy"
+                    style={{ imageRendering: 'auto' }}
                   />
                 ))}
               </div>
