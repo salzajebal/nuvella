@@ -1004,8 +1004,13 @@ export async function registerRoutes(
         data: {
           id: member.id,
           name: member.name,
+          nickname: member.nickname || null,
           username: member.username,
-          phone: member.phone,
+          email: member.email || null,
+          phone: member.phone || null,
+          address: null,
+          bank: null,
+          accountNumber: null,
           pointBalance: member.pointBalance || 0,
           isFrozen: member.isFrozen || false,
           createdAt: member.createdAt
