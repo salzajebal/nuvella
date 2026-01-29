@@ -695,7 +695,7 @@ export default function ProductDetail() {
             
             {product.descriptionImageUrls && product.descriptionImageUrls.length > 0 && (
               <div className="mb-12 space-y-2">
-                {product.descriptionImageUrls
+                {Array.from(new Set(product.descriptionImageUrls))
                   .filter((imgUrl) => {
                     const lowerUrl = imgUrl.toLowerCase();
                     if (lowerUrl.includes('vivian-mall.com/data/common/')) return false;
