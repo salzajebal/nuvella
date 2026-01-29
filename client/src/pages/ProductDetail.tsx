@@ -695,24 +695,35 @@ export default function ProductDetail() {
             
             {product.descriptionImageUrls && product.descriptionImageUrls.length > 0 && (
               <div className="mb-12 space-y-2">
-                {Array.from(new Set(product.descriptionImageUrls))
-                  .filter((imgUrl) => {
-                    const lowerUrl = imgUrl.toLowerCase();
-                    if (lowerUrl.includes('vivian-mall.com/data/common/')) return false;
-                    if (lowerUrl.includes('vivian-mall.com/data/item/') && 
-                        (lowerUrl.includes('thumb-') || lowerUrl.includes('_60x60') || 
-                         lowerUrl.includes('_150x150') || lowerUrl.includes('_160x160'))) return false;
-                    if (lowerUrl.includes('clois-shop.com/data/common/')) return false;
-                    if (lowerUrl.includes('logo')) return false;
-                    if (lowerUrl.includes('banner')) return false;
-                    if (lowerUrl.includes('top_')) return false;
-                    if (lowerUrl.includes('header')) return false;
-                    if (lowerUrl.includes('tit_proinfo')) return false;
-                    if (lowerUrl.includes('keyvisual')) return false;
-                    if (lowerUrl.includes('danawa.com')) return false;
-                    if (lowerUrl.match(/\/\d+\.(jpg|png|gif|webp)$/)) return false;
-                    return true;
-                  })
+                {(() => {
+                  const seenHashes = new Set<string>();
+                  return Array.from(new Set(product.descriptionImageUrls))
+                    .filter((imgUrl) => {
+                      const lowerUrl = imgUrl.toLowerCase();
+                      if (lowerUrl.includes('vivian-mall.com/data/common/')) return false;
+                      if (lowerUrl.includes('vivian-mall.com/data/item/') && 
+                          (lowerUrl.includes('thumb-') || lowerUrl.includes('_60x60') || 
+                           lowerUrl.includes('_150x150') || lowerUrl.includes('_160x160'))) return false;
+                      if (lowerUrl.includes('clois-shop.com/data/common/')) return false;
+                      if (lowerUrl.includes('logo')) return false;
+                      if (lowerUrl.includes('banner')) return false;
+                      if (lowerUrl.includes('top_')) return false;
+                      if (lowerUrl.includes('header')) return false;
+                      if (lowerUrl.includes('tit_proinfo')) return false;
+                      if (lowerUrl.includes('keyvisual')) return false;
+                      if (lowerUrl.includes('danawa.com')) return false;
+                      if (lowerUrl.match(/\/\d+\.(jpg|png|gif|webp)$/)) return false;
+                      
+                      // Extract hash from /product-images/{hash}_{index}.ext or /product-images/{hash}.ext
+                      const match = imgUrl.match(/\/product-images\/([a-f0-9]+)/i);
+                      if (match) {
+                        const hash = match[1];
+                        if (seenHashes.has(hash)) return false;
+                        seenHashes.add(hash);
+                      }
+                      return true;
+                    });
+                })()
                   .map((imgUrl, index) => (
                   <img 
                     key={index}
