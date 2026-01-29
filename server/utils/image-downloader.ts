@@ -13,7 +13,7 @@ export interface DownloadResult {
 function generateFileName(url: string, index: number = 0): string {
   const hash = crypto.createHash('md5').update(url).digest('hex').substring(0, 12);
   const ext = getExtension(url);
-  return `${hash}_${index}${ext}`;
+  return `${hash}${ext}`;
 }
 
 function getExtension(url: string): string {
