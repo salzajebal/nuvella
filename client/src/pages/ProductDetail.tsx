@@ -738,8 +738,8 @@ export default function ProductDetail() {
                     }}
                     onLoad={(e) => {
                       const target = e.target as HTMLImageElement;
-                      // 너무 작은 이미지(100px 미만)는 숨김
-                      if (target.naturalWidth < 100 || target.naturalHeight < 100) {
+                      // 너무 작은 이미지(300px 미만)는 저화질로 판단하여 숨김
+                      if (target.naturalWidth < 300 || target.naturalHeight < 300) {
                         target.style.display = 'none';
                       }
                     }}
