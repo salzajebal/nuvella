@@ -729,9 +729,20 @@ export default function ProductDetail() {
                     key={index}
                     src={imgUrl}
                     alt={`${product.name} 상세이미지 ${index + 1}`}
-                    className="w-full max-w-3xl mx-auto"
+                    className="w-full max-w-3xl mx-auto description-image"
                     loading="lazy"
                     style={{ imageRendering: 'auto' }}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                    onLoad={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      // 너무 작은 이미지(100px 미만)는 숨김
+                      if (target.naturalWidth < 100 || target.naturalHeight < 100) {
+                        target.style.display = 'none';
+                      }
+                    }}
                   />
                 ))}
               </div>
