@@ -627,19 +627,86 @@ export class DatabaseStorage implements IStorage {
 
   // Reviews
   async getAllReviews(): Promise<Review[]> {
-    return db.select().from(reviews).orderBy(desc(reviews.displayDate));
+    const result = await db.select({
+      id: reviews.id,
+      memberId: reviews.memberId,
+      authorName: members.nickname,
+      productId: reviews.productId,
+      productName: reviews.productName,
+      orderId: reviews.orderId,
+      rating: reviews.rating,
+      title: reviews.title,
+      content: reviews.content,
+      imageUrl: reviews.imageUrl,
+      isVisible: reviews.isVisible,
+      isApproved: reviews.isApproved,
+      createdAt: reviews.createdAt,
+      displayDate: reviews.displayDate,
+    })
+    .from(reviews)
+    .leftJoin(members, eq(reviews.memberId, members.id))
+    .orderBy(desc(reviews.displayDate));
+    
+    return result.map(r => ({
+      ...r,
+      authorName: r.authorName || '회원'
+    })) as Review[];
   }
 
   async getVisibleReviews(): Promise<Review[]> {
-    return db.select().from(reviews)
-      .where(eq(reviews.isVisible, true))
-      .orderBy(desc(reviews.displayDate));
+    const result = await db.select({
+      id: reviews.id,
+      memberId: reviews.memberId,
+      authorName: members.nickname,
+      productId: reviews.productId,
+      productName: reviews.productName,
+      orderId: reviews.orderId,
+      rating: reviews.rating,
+      title: reviews.title,
+      content: reviews.content,
+      imageUrl: reviews.imageUrl,
+      isVisible: reviews.isVisible,
+      isApproved: reviews.isApproved,
+      createdAt: reviews.createdAt,
+      displayDate: reviews.displayDate,
+    })
+    .from(reviews)
+    .leftJoin(members, eq(reviews.memberId, members.id))
+    .where(eq(reviews.isVisible, true))
+    .orderBy(desc(reviews.displayDate));
+    
+    return result.map(r => ({
+      ...r,
+      authorName: r.authorName || '회원'
+    })) as Review[];
   }
 
   async getApprovedReviews(): Promise<Review[]> {
-    return db.select().from(reviews)
-      .where(and(eq(reviews.isVisible, true), eq(reviews.isApproved, true)))
-      .orderBy(desc(reviews.displayDate));
+    const result = await db.select({
+      id: reviews.id,
+      memberId: reviews.memberId,
+      authorName: members.nickname,
+      productId: reviews.productId,
+      productName: reviews.productName,
+      orderId: reviews.orderId,
+      rating: reviews.rating,
+      title: reviews.title,
+      content: reviews.content,
+      imageUrl: reviews.imageUrl,
+      isVisible: reviews.isVisible,
+      isApproved: reviews.isApproved,
+      createdAt: reviews.createdAt,
+      displayDate: reviews.displayDate,
+    })
+    .from(reviews)
+    .leftJoin(members, eq(reviews.memberId, members.id))
+    .where(and(eq(reviews.isVisible, true), eq(reviews.isApproved, true)))
+    .orderBy(desc(reviews.displayDate));
+    
+    return result.map(r => ({
+      ...r,
+      authorName: r.authorName || '회원'
+    })) as Review[];
   }
 
   async getReview(id: string): Promise<Review | undefined> {
@@ -648,7 +715,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getReviewsByProduct(productId: string): Promise<Review[]> {
-    return db.select().from(reviews).where(eq(reviews.productId, productId));
+    const result = await db.select({
+      id: reviews.id,
+      memberId: reviews.memberId,
+      authorName: members.nickname,
+      productId: reviews.productId,
+      productName: reviews.productName,
+      orderId: reviews.orderId,
+      rating: reviews.rating,
+      title: reviews.title,
+      content: reviews.content,
+      imageUrl: reviews.imageUrl,
+      isVisible: reviews.isVisible,
+      isApproved: reviews.isApproved,
+      createdAt: reviews.createdAt,
+      displayDate: reviews.displayDate,
+    })
+    .from(reviews)
+    .leftJoin(members, eq(reviews.memberId, members.id))
+    .where(eq(reviews.productId, productId));
+    
+    return result.map(r => ({
+      ...r,
+      authorName: r.authorName || '회원'
+    })) as Review[];
   }
 
   async createReview(insertReview: InsertReview): Promise<Review> {
