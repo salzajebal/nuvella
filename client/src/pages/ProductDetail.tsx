@@ -533,7 +533,18 @@ export default function ProductDetail() {
                   const urls = product.imageUrls && product.imageUrls.length > 0 
                     ? product.imageUrls.filter(u => u && !u.includes('placehold.co')) 
                     : [];
-                  const displayUrls = urls.length > 0 ? urls : [getProductImage(product)];
+                  // 해시 기반 중복 제거
+                  const seenHashes = new Set<string>();
+                  const uniqueUrls = urls.filter(url => {
+                    const match = url.match(/\/product-images\/([a-f0-9]+)/i);
+                    if (match) {
+                      const hash = match[1];
+                      if (seenHashes.has(hash)) return false;
+                      seenHashes.add(hash);
+                    }
+                    return true;
+                  });
+                  const displayUrls = uniqueUrls.length > 0 ? uniqueUrls : [getProductImage(product)];
                   return displayUrls.map((url, index) => (
                     <div 
                       key={index} 
@@ -546,6 +557,10 @@ export default function ProductDetail() {
                         src={url || getProductImage(product)}
                         alt={`${product.name} ${index + 1}`}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.parentElement!.style.display = 'none';
+                        }}
                       />
                     </div>
                   ));
