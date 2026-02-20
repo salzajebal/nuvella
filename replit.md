@@ -1,6 +1,6 @@
 # Overview
 
-This is "Estella" (에스텔라), a Korean lifestyle shopping mall built as a full-stack web application. The platform features automatic product crawling from vivian-mall.com with 7 product categories: 홈 인테리어, 뷰티, 가전/디지털, 생활용품, 헬스/건강식품, 럭셔리/명품, and 유아/완구.
+This is "Nuvella" (누벨라), a Korean lifestyle shopping mall built as a full-stack web application. The platform features automatic product crawling from vivian-mall.com with 7 product categories: 홈 인테리어, 뷰티, 가전/디지털, 생활용품, 헬스/건강식품, 럭셔리/명품, and 유아/완구.
 
 Products are automatically imported with USD-to-KRW price conversion (1450 rate, rounded to nearest 100 won), accurate category classification, and comprehensive image collection (gallery images and description images stored separately).
 

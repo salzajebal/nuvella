@@ -408,7 +408,7 @@ export async function registerRoutes(
         await storage.deleteProduct(product.id);
       }
 
-      // Seed categories - Estella lifestyle mall categories
+      // Seed categories - Nuvella lifestyle mall categories
       const categoryData = [
         { id: "home_interior", name: "홈 인테리어", description: "세련된 감각의 홈스타일링 아이템", count: 10 },
         { id: "beauty", name: "뷰티", description: "트렌디한 뷰티 & 스킨케어 제품", count: 10 },
@@ -548,7 +548,7 @@ export async function registerRoutes(
     }
     
     try {
-      // Seed categories - Estella lifestyle mall categories (6 main + subcategories)
+      // Seed categories - Nuvella lifestyle mall categories (6 main + subcategories)
       const categoryData = [
         // 대분류: 홈 인테리어
         { id: "home_interior", name: "홈 인테리어", description: "세련된 감각의 홈스타일링 아이템", parentId: null, sortOrder: 1 },
@@ -3191,7 +3191,7 @@ export async function registerRoutes(
                 descriptionImageUrls: descImages,
                 category: product.category,
                 subcategory: product.subcategory,
-                description: product.description || `에스텔라 프리미엄 상품입니다.`,
+                description: product.description || `누벨라 프리미엄 상품입니다.`,
                 isBest: Math.random() > 0.7,
                 isNew: true,
                 isHot: Math.random() > 0.8,
@@ -3319,7 +3319,7 @@ export async function registerRoutes(
               descriptionImageUrls: descImages,
               category: product.category,
               subcategory: product.subcategory,
-              description: product.description || `에스텔라 프리미엄 상품입니다.`,
+              description: product.description || `누벨라 프리미엄 상품입니다.`,
               isBest: Math.random() > 0.7,
               isNew: true,
               isHot: Math.random() > 0.8,

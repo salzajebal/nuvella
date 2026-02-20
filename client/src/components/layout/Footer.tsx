@@ -27,16 +27,16 @@ export function Footer() {
                 className="text-lg sm:text-xl font-bold text-gray-800"
                 style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
               >
-                ESTELLA
+                NUVELLA
               </span>
             </div>
             <div className="text-xs sm:text-sm space-y-1 text-gray-600">
-              <p><span className="text-gray-500">에스텔라</span> | 대표 : 박도이</p>
+              <p><span className="text-gray-500">누벨라</span> | 대표 : 박도이</p>
               <p>사업자등록번호 : 387-36-01448 | 업태 : 도매 및 소매업 | 종목 : 전자상거래업</p>
               <p>통신판매업 : 2025-안양만안-1400 | 관할세무서 : 안양세무서</p>
               <p>주소 : 경기도 안양시 만안구 병목안로 2, 1103호 A482</p>
               <p>TEL : 031-472-2890</p>
-              <p>E-mail : support@estellamall.com</p>
+              <p>E-mail : support@nuvella.com</p>
             </div>
           </div>
           
@@ -56,7 +56,7 @@ export function Footer() {
       <div className="bg-gray-200 py-3">
         <div className="container-custom px-4">
           <p className="text-[10px] sm:text-xs text-gray-500 text-center">
-            Copyright © 2025 Estella. All rights reserved.
+            Copyright © 2025 Nuvella. All rights reserved.
           </p>
         </div>
       </div>
