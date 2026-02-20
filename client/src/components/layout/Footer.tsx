@@ -31,11 +31,11 @@ export function Footer() {
               </span>
             </div>
             <div className="text-xs sm:text-sm space-y-1 text-gray-600">
-              <p><span className="text-gray-500">에스텔라</span> | 대표 : 김지애</p>
-              <p>사업자등록번호 : 504-19-23773</p>
-              <p>통신판매업 : 2017-대구북구-0090</p>
-              <p>주소 : 대구광역시 북구 유통단지로 60, 1146호</p>
-              <p>TEL : 053-323-3694 | FAX : </p>
+              <p><span className="text-gray-500">에스텔라</span> | 대표 : 박도이</p>
+              <p>사업자등록번호 : 387-36-01448 | 업태 : 도매 및 소매업 | 종목 : 전자상거래업</p>
+              <p>통신판매업 : 2025-안양만안-1400 | 관할세무서 : 안양세무서</p>
+              <p>주소 : 경기도 안양시 만안구 병목안로 2, 1103호 A482</p>
+              <p>TEL : 031-472-2890</p>
               <p>E-mail : support@estellamall.com</p>
             </div>
           </div>
@@ -47,7 +47,7 @@ export function Footer() {
               <p>휴일안내 : 일요일 및 공휴일은 휴무</p>
             </div>
             <p className="text-xl sm:text-2xl font-bold text-gray-800">
-              T. 053-323-3694
+              T. 031-472-2890
             </p>
           </div>
         </div>
