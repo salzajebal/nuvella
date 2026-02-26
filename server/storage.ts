@@ -626,11 +626,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Reviews
-  async getAllReviews(): Promise<Review[]> {
+  async getAllReviews(): Promise<any[]> {
     const result = await db.select({
       id: reviews.id,
       memberId: reviews.memberId,
       authorName: members.nickname,
+      memberName: members.name,
       productId: reviews.productId,
       productName: reviews.productName,
       orderId: reviews.orderId,
@@ -649,8 +650,9 @@ export class DatabaseStorage implements IStorage {
     
     return result.map(r => ({
       ...r,
-      authorName: r.authorName || '회원'
-    })) as Review[];
+      authorName: r.authorName || '회원',
+      memberName: r.memberName || '-'
+    }));
   }
 
   async getVisibleReviews(): Promise<Review[]> {

@@ -2291,7 +2291,7 @@ export default function Admin() {
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-sm text-gray-800 truncate">{review.title || review.productName}</span>
                           </div>
-                          <p className="text-xs text-gray-500 mt-0.5">{review.authorName}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{(review as any).memberName ? `${(review as any).memberName} (${review.authorName})` : review.authorName}</p>
                         </div>
                         <span className="text-xs text-gray-400">{new Date(review.displayDate || review.createdAt || "").toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}</span>
                       </div>
@@ -3757,7 +3757,7 @@ export default function Admin() {
                             <td className="px-3 py-2 text-center">
                               {request.status === "pending" ? <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded">대기</span> : request.status === "approved" ? <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">승인</span> : <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-700 rounded">거부</span>}
                             </td>
-                            <td className="px-3 py-2 text-gray-500 text-xs">{new Date(request.requestedAt).toLocaleDateString('ko-KR')}</td>
+                            <td className="px-3 py-2 text-gray-500 text-xs">{new Date(request.requestedAt).toLocaleDateString('ko-KR')} {new Date(request.requestedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</td>
                             <td className="px-3 py-2 text-center">
                               {request.status === "pending" ? (
                                 <div className="flex items-center justify-center gap-1">
@@ -4316,7 +4316,8 @@ export default function Admin() {
                 <thead className="bg-gray-50 border-b">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">상품</th>
-                    <th className="px-4 py-3 text-left font-medium">작성자</th>
+                    <th className="px-4 py-3 text-left font-medium">이름</th>
+                    <th className="px-4 py-3 text-left font-medium">닉네임</th>
                     <th className="px-4 py-3 text-left font-medium">제목</th>
                     <th className="px-4 py-3 text-left font-medium">내용</th>
                     <th className="px-4 py-3 text-left font-medium">별점</th>
@@ -4445,7 +4446,8 @@ export default function Admin() {
                               );
                             })()}
                           </td>
-                          <td className="px-4 py-3 font-medium whitespace-nowrap">{review.authorName}</td>
+                          <td className="px-4 py-3 font-medium whitespace-nowrap">{(review as any).memberName || '-'}</td>
+                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{review.authorName}</td>
                           <td className="px-4 py-3">{review.title}</td>
                           <td className="px-4 py-3 min-w-[200px]">
                             <div className="text-sm text-gray-600 break-words">{review.content}</div>
