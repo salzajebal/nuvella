@@ -2612,7 +2612,11 @@ export async function registerRoutes(
   // Update order status (admin only)
   app.put("/api/admin/orders/:id", requireAdminAuth, async (req: Request, res: Response) => {
     try {
-      const { status, paymentStatus, adminNote } = req.body;
+      const { 
+        status, paymentStatus, adminNote,
+        memberName, memberPhone, memberZipcode, memberAddress, memberAddressDetail,
+        shippingName, shippingPhone, shippingAddress, shippingAddressDetail, shippingZipcode, shippingMemo
+      } = req.body;
       
       // Get current order to check if we need to refund points
       const currentOrder = await storage.getOrder(req.params.id);
@@ -2638,9 +2642,20 @@ export async function registerRoutes(
       
       const order = await storage.updateOrder(req.params.id, {
         ...(status && { status }),
-        // Auto-set paymentStatus to refunded when cancelling a paid order
         ...(isBeingCancelled && wasPaid ? { paymentStatus: "refunded" } : (paymentStatus && { paymentStatus })),
         ...(adminNote !== undefined && { adminNote }),
+        ...(memberName !== undefined && { memberName }),
+        ...(memberPhone !== undefined && { memberPhone }),
+        ...(memberZipcode !== undefined && { memberZipcode }),
+        ...(memberAddress !== undefined && { memberAddress }),
+        ...(memberAddressDetail !== undefined && { memberAddressDetail }),
+        ...(shippingName !== undefined && { shippingName }),
+        ...(shippingPhone !== undefined && { shippingPhone }),
+        ...(shippingAddress !== undefined && { shippingAddress }),
+        ...(shippingAddressDetail !== undefined && { shippingAddressDetail }),
+        ...(shippingZipcode !== undefined && { shippingZipcode }),
+        ...(shippingMemo !== undefined && { shippingMemo }),
+        updatedAt: new Date(),
       });
       
       res.json({ success: true, data: order });
