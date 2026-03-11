@@ -200,6 +200,7 @@ export default function Admin() {
   const [pointTransactions, setPointTransactions] = useState<{id: string; memberId: string; type: string; amount: number; balanceAfter: number; description: string | null; createdAt: string | null; memberName?: string; memberUsername?: string}[]>([]);
   const [pointSearch, setPointSearch] = useState("");
   const [pointPage, setPointPage] = useState(0);
+  const [selectedPointTxIds, setSelectedPointTxIds] = useState<Set<string>>(new Set());
   const [pointSearchFilters, setPointSearchFilters] = useState<{
     searchField: string;
     searchValue: string;
@@ -4038,7 +4039,38 @@ export default function Admin() {
             </div>
 
             <div className="mt-8">
-              <h3 className="font-bold text-lg mb-4">포인트 내역</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg">포인트 내역</h3>
+                {selectedPointTxIds.size > 0 && (
+                  <Button
+                    className="bg-red-500 hover:bg-red-600 text-white"
+                    onClick={async () => {
+                      if (!confirm(`선택한 ${selectedPointTxIds.size}건의 포인트 내역을 삭제하시겠습니까?\n삭제된 내역의 포인트가 자동으로 차감/복원됩니다.`)) return;
+                      try {
+                        const res = await fetchWithAuth("/api/admin/point-transactions/delete", {
+                          method: "POST",
+                          body: JSON.stringify({ transactionIds: Array.from(selectedPointTxIds) }),
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          toast({ title: "완료", description: data.message });
+                          setSelectedPointTxIds(new Set());
+                          fetchPointTransactions();
+                          fetchMembers();
+                        } else {
+                          toast({ title: "오류", description: data.error, variant: "destructive" });
+                        }
+                      } catch (error) {
+                        toast({ title: "오류", description: "삭제 처리 중 오류가 발생했습니다.", variant: "destructive" });
+                      }
+                    }}
+                    data-testid="button-delete-point-tx"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    선택 삭제 ({selectedPointTxIds.size}건)
+                  </Button>
+                )}
+              </div>
               
               <PointSearchPanel
                 onSearch={(filters) => {
@@ -4076,6 +4108,21 @@ export default function Admin() {
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-y border-gray-200">
                           <tr>
+                            <th className="px-3 py-2 text-center w-10">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 rounded border-gray-300"
+                                checked={paginatedTx.length > 0 && paginatedTx.every(tx => selectedPointTxIds.has(tx.id))}
+                                onChange={(e) => {
+                                  const newSet = new Set(selectedPointTxIds);
+                                  paginatedTx.forEach(tx => {
+                                    if (e.target.checked) newSet.add(tx.id);
+                                    else newSet.delete(tx.id);
+                                  });
+                                  setSelectedPointTxIds(newSet);
+                                }}
+                              />
+                            </th>
                             <th className="px-3 py-2 text-left font-medium text-gray-600">날짜</th>
                             <th className="px-3 py-2 text-left font-medium text-gray-600">시간</th>
                             <th className="px-3 py-2 text-left font-medium text-gray-600">아이디</th>
@@ -4088,7 +4135,20 @@ export default function Admin() {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                           {paginatedTx.map((tx) => (
-                            <tr key={tx.id} className="hover:bg-gray-50" data-testid={`row-point-tx-${tx.id}`}>
+                            <tr key={tx.id} className={`hover:bg-gray-50 ${selectedPointTxIds.has(tx.id) ? 'bg-red-50' : ''}`} data-testid={`row-point-tx-${tx.id}`}>
+                              <td className="px-3 py-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  className="w-4 h-4 rounded border-gray-300"
+                                  checked={selectedPointTxIds.has(tx.id)}
+                                  onChange={(e) => {
+                                    const newSet = new Set(selectedPointTxIds);
+                                    if (e.target.checked) newSet.add(tx.id);
+                                    else newSet.delete(tx.id);
+                                    setSelectedPointTxIds(newSet);
+                                  }}
+                                />
+                              </td>
                               <td className="px-3 py-2 text-gray-600 text-xs">
                                 {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('ko-KR') : '-'}
                               </td>

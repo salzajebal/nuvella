@@ -1,7 +1,9 @@
 import type { Express, Request, Response } from "express";
 import { type Server } from "http";
 import { storage } from "./storage";
-import { insertProductSchema, insertCategorySchema, insertMemberSchema, insertChatConversationSchema, insertChatMessageSchema, insertFaqSchema, insertReviewSchema, insertNoticeSchema, insertOrderSchema } from "@shared/schema";
+import { insertProductSchema, insertCategorySchema, insertMemberSchema, insertChatConversationSchema, insertChatMessageSchema, insertFaqSchema, insertReviewSchema, insertNoticeSchema, insertOrderSchema, pointTransactions } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -1459,6 +1461,49 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error unfreezing member:", error);
       res.status(500).json({ success: false, error: "계정 동결 해제 처리 중 오류가 발생했습니다." });
+    }
+  });
+
+  // Delete point transactions (admin) - reverses the point amount
+  app.post("/api/admin/point-transactions/delete", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const { transactionIds } = req.body;
+      
+      if (!Array.isArray(transactionIds) || transactionIds.length === 0) {
+        return res.status(400).json({ success: false, error: "삭제할 내역을 선택해주세요." });
+      }
+      
+      const allTx = await storage.getAllPointTransactions();
+      const results: { deleted: number; errors: string[] } = { deleted: 0, errors: [] };
+      
+      for (const txId of transactionIds) {
+        const tx = allTx.find(t => t.id === txId);
+        if (!tx) {
+          results.errors.push(`내역 ${txId}를 찾을 수 없습니다.`);
+          continue;
+        }
+        
+        const reverseAmount = -tx.amount;
+        const member = await storage.getMember(tx.memberId);
+        if (!member) {
+          results.errors.push(`회원을 찾을 수 없습니다: ${tx.memberId}`);
+          continue;
+        }
+        
+        await storage.updateMemberPoints(tx.memberId, reverseAmount, `내역삭제 환수: ${tx.description || '포인트 내역 삭제'}`);
+        
+        await db.delete(pointTransactions).where(eq(pointTransactions.id, txId));
+        results.deleted++;
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `${results.deleted}건의 포인트 내역이 삭제되고 포인트가 차감/복원되었습니다.`,
+        data: results 
+      });
+    } catch (error) {
+      console.error("Error deleting point transactions:", error);
+      res.status(500).json({ success: false, error: "포인트 내역 삭제 중 오류가 발생했습니다." });
     }
   });
 
