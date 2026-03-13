@@ -112,6 +112,8 @@ export default function Admin() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [productFilter, setProductFilter] = useState("all");
+  const [productSearch, setProductSearch] = useState("");
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   
   const [formData, setFormData] = useState({
     name: "",
@@ -1759,9 +1761,11 @@ export default function Admin() {
     });
   };
 
-  const filteredProducts = productFilter === "all" 
-    ? products 
-    : products.filter(p => p.category === productFilter);
+  const filteredProducts = products.filter(p => {
+    if (productFilter !== "all" && p.category !== productFilter) return false;
+    if (productSearch.trim() && !p.name.toLowerCase().includes(productSearch.toLowerCase())) return false;
+    return true;
+  });
 
   if (checkingAuth) {
     return (
@@ -2410,23 +2414,12 @@ export default function Admin() {
               </p>
             </div>
             
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-4">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">상품 관리</h2>
-                <p className="text-gray-500 text-sm">총 {products.length}개의 상품</p>
+                <p className="text-gray-500 text-sm">총 {products.length}개의 상품 {filteredProducts.length !== products.length ? `(검색결과 ${filteredProducts.length}개)` : ''}</p>
               </div>
               <div className="flex gap-3">
-                <select
-                  data-testid="select-product-filter"
-                  value={productFilter}
-                  onChange={(e) => setProductFilter(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value="all">전체 카테고리</option>
-                  {CATEGORY_OPTIONS.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
                 <Button variant="outline" onClick={fetchProducts}>
                   <RefreshCw className="w-4 h-4 mr-2" />
                   새로고침
@@ -2459,6 +2452,52 @@ export default function Admin() {
                   상품 추가
                 </Button>
               </div>
+            </div>
+            
+            <div className="flex items-center gap-3 mb-6">
+              <Input
+                placeholder="상품명으로 검색..."
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                className="max-w-xs"
+                data-testid="input-product-search"
+              />
+              <select
+                data-testid="select-product-filter"
+                value={productFilter}
+                onChange={(e) => setProductFilter(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm h-10"
+              >
+                <option value="all">전체 카테고리</option>
+                {CATEGORY_OPTIONS.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              {selectedProductIds.size > 0 && (
+                <Button
+                  className="bg-red-500 hover:bg-red-600 text-white"
+                  onClick={async () => {
+                    if (!confirm(`선택한 ${selectedProductIds.size}개의 상품을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+                    try {
+                      let deleted = 0;
+                      for (const id of selectedProductIds) {
+                        const res = await fetchWithAuth(`/api/products/${id}`, { method: "DELETE" });
+                        const data = await res.json();
+                        if (data.success) deleted++;
+                      }
+                      toast({ title: "완료", description: `${deleted}개의 상품이 삭제되었습니다.` });
+                      setSelectedProductIds(new Set());
+                      fetchProducts();
+                    } catch (error) {
+                      toast({ title: "오류", description: "삭제 처리 중 오류가 발생했습니다.", variant: "destructive" });
+                    }
+                  }}
+                  data-testid="button-delete-selected-products"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  선택 삭제 ({selectedProductIds.size}개)
+                </Button>
+              )}
             </div>
 
             {showAddForm && (
@@ -2624,6 +2663,21 @@ export default function Admin() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-100 text-gray-600">
                     <tr>
+                      <th className="px-3 py-3 text-center w-10">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300"
+                          checked={filteredProducts.length > 0 && filteredProducts.every(p => selectedProductIds.has(p.id))}
+                          onChange={(e) => {
+                            const newSet = new Set(selectedProductIds);
+                            filteredProducts.forEach(p => {
+                              if (e.target.checked) newSet.add(p.id);
+                              else newSet.delete(p.id);
+                            });
+                            setSelectedProductIds(newSet);
+                          }}
+                        />
+                      </th>
                       <th className="px-4 py-3 text-left font-medium">상품명</th>
                       <th className="px-4 py-3 text-left font-medium">무게</th>
                       <th className="px-4 py-3 text-left font-medium">순도</th>
@@ -2635,7 +2689,20 @@ export default function Admin() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {filteredProducts.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50">
+                      <tr key={product.id} className={`hover:bg-gray-50 ${selectedProductIds.has(product.id) ? 'bg-red-50' : ''}`}>
+                        <td className="px-3 py-3 text-center">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 rounded border-gray-300"
+                            checked={selectedProductIds.has(product.id)}
+                            onChange={(e) => {
+                              const newSet = new Set(selectedProductIds);
+                              if (e.target.checked) newSet.add(product.id);
+                              else newSet.delete(product.id);
+                              setSelectedProductIds(newSet);
+                            }}
+                          />
+                        </td>
                         <td className="px-4 py-3 font-medium text-gray-900">
                           <div className="flex items-center gap-3">
                             {product.imageUrl && (
