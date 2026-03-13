@@ -400,7 +400,7 @@ export default function Admin() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch(`/api/products?_t=${Date.now()}`, {
+      const res = await fetch(`/api/products?limit=10000&_t=${Date.now()}`, {
         headers: { "Cache-Control": "no-cache" }
       });
       const data = await res.json();
