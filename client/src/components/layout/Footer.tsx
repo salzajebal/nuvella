@@ -35,7 +35,6 @@ export function Footer() {
               <p>사업자등록번호 : 387-36-01448 | 업태 : 도매 및 소매업 | 종목 : 전자상거래업</p>
               <p>통신판매업 : 2025-안양만안-1400 | 관할세무서 : 안양세무서</p>
               <p>주소 : 경기도 안양시 만안구 병목안로 2, 1103호 A482</p>
-              <p>TEL : 031-472-2890</p>
               <p>E-mail : support@nuvella.com</p>
             </div>
           </div>
@@ -46,9 +45,6 @@ export function Footer() {
               <p>상담시간 : 평일 09:00 ~ 18:00 토요일 09:00 ~ 12:00</p>
               <p>휴일안내 : 일요일 및 공휴일은 휴무</p>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-gray-800">
-              T. 031-472-2890
-            </p>
           </div>
         </div>
       </div>
