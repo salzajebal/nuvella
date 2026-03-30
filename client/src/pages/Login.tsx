@@ -120,11 +120,6 @@ export default function Login() {
                   회원가입
                 </Link>
               </p>
-              <p className="text-sm text-gray-500">
-                <Link href="/admin" className="hover:underline">
-                  관리자 로그인
-                </Link>
-              </p>
             </div>
           </CardContent>
         </Card>
