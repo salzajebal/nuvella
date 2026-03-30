@@ -814,6 +814,15 @@ export default function Admin() {
     }
   }, [isAuthenticated]);
 
+  // Auto-refresh members every 30 seconds when on members tab
+  useEffect(() => {
+    if (!isAuthenticated || activeTab !== "members") return;
+    const interval = setInterval(() => {
+      fetchMembers();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, activeTab]);
+
   // Real-time polling for deposit/withdrawal requests (every 5 seconds)
   useEffect(() => {
     if (!isAuthenticated) return;

@@ -1530,13 +1530,23 @@ export async function registerRoutes(
       }
       
       const allMembers = await storage.getAllMembers();
+      const allLoginLogs = await storage.getAllLoginLogs();
       
       let transactionsWithMemberInfo = transactions.map(t => {
         const member = allMembers.find(m => m.id === t.memberId);
+        if (member) {
+          return {
+            ...t,
+            memberName: member.name,
+            memberUsername: member.username,
+          };
+        }
+        // Fallback: look up from login logs (for deleted members)
+        const loginLog = allLoginLogs.find(l => l.memberId === t.memberId);
         return {
           ...t,
-          memberName: member?.name || "알 수 없음",
-          memberUsername: member?.username || "알 수 없음",
+          memberName: loginLog?.memberName || "(탈퇴회원)",
+          memberUsername: loginLog?.memberUsername || "(탈퇴)",
         };
       });
       
