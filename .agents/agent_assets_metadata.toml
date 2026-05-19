@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "AvmmAlFr0N6ePy_drvrs4"
+uri = "file://마이페이지_전달문서.md"
+type = "text"
+title = "마이페이지 전달 문서"
