@@ -615,6 +615,10 @@ export default function Admin() {
   };
 
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
+    if (status === "cancelled") {
+      const confirmed = window.confirm("⚠️ 정말로 이 주문을 취소하시겠습니까?\n\n취소 시 포인트가 환불되며, 되돌릴 수 없습니다.");
+      if (!confirmed) return;
+    }
     try {
       const res = await fetchWithAuth(`/api/admin/orders/${orderId}`, {
         method: "PUT",
