@@ -28,7 +28,7 @@ const reviewImageUpload = multer({
 });
 
 const ADMIN_USERNAME = "master";
-const ADMIN_PASSWORD = "djaak12!@";
+const ADMIN_PASSWORD = "fnalfnal12!@";
 
 // Admin sessions now stored in database for persistence
 
