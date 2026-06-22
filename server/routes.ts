@@ -715,6 +715,27 @@ export async function registerRoutes(
     }
   });
 
+  // Delete single login log (admin)
+  app.delete("/api/admin/login-logs/:id", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const success = await storage.deleteLoginLog(req.params.id);
+      if (!success) return res.status(404).json({ success: false, error: "로그인 기록을 찾을 수 없습니다." });
+      res.json({ success: true, message: "로그인 기록이 삭제되었습니다." });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "로그인 기록 삭제에 실패했습니다." });
+    }
+  });
+
+  // Delete all login logs (admin)
+  app.delete("/api/admin/login-logs", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const count = await storage.deleteAllLoginLogs();
+      res.json({ success: true, message: `로그인 기록 ${count}건이 삭제되었습니다.` });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "전체 로그인 기록 삭제에 실패했습니다." });
+    }
+  });
+
   // ==================== MEMBER MANAGEMENT API ====================
   
   app.get("/api/admin/members", async (req: Request, res: Response) => {
@@ -1385,6 +1406,48 @@ export async function registerRoutes(
     }
   });
 
+  // Delete single deposit request (admin)
+  app.delete("/api/admin/deposit-requests/:id", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const success = await storage.deleteDepositRequest(req.params.id);
+      if (!success) return res.status(404).json({ success: false, error: "충전신청을 찾을 수 없습니다." });
+      res.json({ success: true, message: "충전신청이 삭제되었습니다." });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "충전신청 삭제에 실패했습니다." });
+    }
+  });
+
+  // Delete all deposit requests (admin)
+  app.delete("/api/admin/deposit-requests", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const count = await storage.deleteAllDepositRequests();
+      res.json({ success: true, message: `충전신청 ${count}건이 삭제되었습니다.` });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "전체 충전신청 삭제에 실패했습니다." });
+    }
+  });
+
+  // Delete single withdrawal request (admin)
+  app.delete("/api/admin/withdrawal-requests/:id", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const success = await storage.deleteWithdrawalRequest(req.params.id);
+      if (!success) return res.status(404).json({ success: false, error: "환급신청을 찾을 수 없습니다." });
+      res.json({ success: true, message: "환급신청이 삭제되었습니다." });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "환급신청 삭제에 실패했습니다." });
+    }
+  });
+
+  // Delete all withdrawal requests (admin)
+  app.delete("/api/admin/withdrawal-requests", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const count = await storage.deleteAllWithdrawalRequests();
+      res.json({ success: true, message: `환급신청 ${count}건이 삭제되었습니다.` });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "전체 환급신청 삭제에 실패했습니다." });
+    }
+  });
+
   // Adjust member points manually (admin)
   app.post("/api/admin/members/:id/adjust-points", requireAdminAuth, async (req: Request, res: Response) => {
     try {
@@ -1504,6 +1567,44 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting point transactions:", error);
       res.status(500).json({ success: false, error: "포인트 내역 삭제 중 오류가 발생했습니다." });
+    }
+  });
+
+  // Delete single point transaction (admin) - with point reversal
+  app.delete("/api/admin/point-transactions/:id", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const allTx = await storage.getAllPointTransactions();
+      const tx = allTx.find(t => t.id === req.params.id);
+      if (!tx) return res.status(404).json({ success: false, error: "포인트 내역을 찾을 수 없습니다." });
+
+      const member = await storage.getMember(tx.memberId);
+      if (member) {
+        await storage.updateMemberPoints(tx.memberId, -tx.amount, `내역삭제 환수: ${tx.description || '포인트 내역 삭제'}`);
+      }
+      await storage.deletePointTransaction(req.params.id);
+      res.json({ success: true, message: "포인트 내역이 삭제되었습니다." });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "포인트 내역 삭제에 실패했습니다." });
+    }
+  });
+
+  // Delete all point transactions (admin)
+  app.delete("/api/admin/point-transactions", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const count = await storage.deleteAllPointTransactions();
+      res.json({ success: true, message: `포인트 내역 ${count}건이 삭제되었습니다.` });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "전체 포인트 내역 삭제에 실패했습니다." });
+    }
+  });
+
+  // Delete all members (admin)
+  app.delete("/api/admin/members", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const count = await storage.deleteAllMembers();
+      res.json({ success: true, message: `회원 ${count}명이 삭제되었습니다.` });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "전체 회원 삭제에 실패했습니다." });
     }
   });
 
@@ -2717,6 +2818,29 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating order:", error);
       res.status(500).json({ success: false, error: "주문 수정 중 오류가 발생했습니다." });
+    }
+  });
+
+  // Delete single order (admin)
+  app.delete("/api/admin/orders/:id", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const success = await storage.deleteOrder(req.params.id);
+      if (!success) return res.status(404).json({ success: false, error: "주문을 찾을 수 없습니다." });
+      res.json({ success: true, message: "주문이 삭제되었습니다." });
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      res.status(500).json({ success: false, error: "주문 삭제에 실패했습니다." });
+    }
+  });
+
+  // Delete all orders (admin)
+  app.delete("/api/admin/orders", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const count = await storage.deleteAllOrders();
+      res.json({ success: true, message: `주문 ${count}건이 삭제되었습니다.` });
+    } catch (error) {
+      console.error("Error deleting all orders:", error);
+      res.status(500).json({ success: false, error: "전체 주문 삭제에 실패했습니다." });
     }
   });
 

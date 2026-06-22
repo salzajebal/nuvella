@@ -1372,6 +1372,185 @@ export default function Admin() {
     }
   };
 
+  const handleDeleteAllMembers = async () => {
+    if (!confirm("정말로 모든 회원을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+    try {
+      const res = await fetchWithAuth("/api/admin/members", { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: data.message });
+        fetchMembers();
+        fetchStats();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "전체 회원 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteOrder = async (id: string) => {
+    if (!confirm("이 주문을 삭제하시겠습니까?")) return;
+    try {
+      const res = await fetchWithAuth(`/api/admin/orders/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: "주문이 삭제되었습니다." });
+        fetchOrders();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "주문 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteAllOrders = async () => {
+    if (!confirm("정말로 모든 주문을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+    try {
+      const res = await fetchWithAuth("/api/admin/orders", { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: data.message });
+        fetchOrders();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "전체 주문 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteDeposit = async (id: string) => {
+    if (!confirm("이 충전신청 내역을 삭제하시겠습니까?")) return;
+    try {
+      const res = await fetchWithAuth(`/api/admin/deposit-requests/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: "충전신청이 삭제되었습니다." });
+        fetchDepositRequests();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "충전신청 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteAllDeposits = async () => {
+    if (!confirm("정말로 모든 충전신청 내역을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+    try {
+      const res = await fetchWithAuth("/api/admin/deposit-requests", { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: data.message });
+        fetchDepositRequests();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "전체 충전신청 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteWithdrawal = async (id: string) => {
+    if (!confirm("이 환급신청 내역을 삭제하시겠습니까?")) return;
+    try {
+      const res = await fetchWithAuth(`/api/admin/withdrawal-requests/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: "환급신청이 삭제되었습니다." });
+        fetchWithdrawalRequests();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "환급신청 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteAllWithdrawals = async () => {
+    if (!confirm("정말로 모든 환급신청 내역을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+    try {
+      const res = await fetchWithAuth("/api/admin/withdrawal-requests", { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: data.message });
+        fetchWithdrawalRequests();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "전체 환급신청 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteLoginLog = async (id: string) => {
+    if (!confirm("이 로그인 기록을 삭제하시겠습니까?")) return;
+    try {
+      const res = await fetchWithAuth(`/api/admin/login-logs/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: "로그인 기록이 삭제되었습니다." });
+        fetchLoginLogs();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "로그인 기록 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteAllLoginLogs = async () => {
+    if (!confirm("정말로 모든 로그인 기록을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+    try {
+      const res = await fetchWithAuth("/api/admin/login-logs", { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: data.message });
+        fetchLoginLogs();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "전체 로그인 기록 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteSinglePointTx = async (id: string) => {
+    if (!confirm("이 포인트 내역을 삭제하시겠습니까?\n삭제 시 해당 포인트가 자동으로 차감/복원됩니다.")) return;
+    try {
+      const res = await fetchWithAuth(`/api/admin/point-transactions/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: "포인트 내역이 삭제되었습니다." });
+        fetchPointTransactions();
+        fetchMembers();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "포인트 내역 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteAllPointTx = async () => {
+    if (!confirm("정말로 모든 포인트 내역을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+    try {
+      const res = await fetchWithAuth("/api/admin/point-transactions", { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: data.message });
+        fetchPointTransactions();
+        fetchMembers();
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "전체 포인트 내역 삭제에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
   const handleSaveMemo = async (memberId: string) => {
     try {
       const res = await fetchWithAuth(`/api/admin/members/${memberId}`, {
@@ -3013,6 +3192,10 @@ export default function Admin() {
                   <RefreshCw className="w-4 h-4 mr-2" />
                   새로고침
                 </Button>
+                <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={handleDeleteAllMembers}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  전체삭제
+                </Button>
                 <Button 
                   data-testid="button-add-member"
                   onClick={() => setShowAddMemberForm(true)} 
@@ -3418,6 +3601,10 @@ export default function Admin() {
                   <RefreshCw className="w-4 h-4 mr-2" />
                   새로고침
                 </Button>
+                <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={handleDeleteAllOrders}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  전체삭제
+                </Button>
               </div>
             </div>
 
@@ -3494,6 +3681,9 @@ export default function Admin() {
                             <div className="flex items-center justify-center gap-1">
                               <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => openOrderDetail(order)} data-testid={`button-order-detail-${order.id}`}>
                                 수정
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-500 hover:bg-red-50" onClick={() => handleDeleteOrder(order.id)} data-testid={`button-delete-order-${order.id}`} title="삭제">
+                                <Trash2 className="w-3 h-3" />
                               </Button>
                               <select className="h-6 px-1 text-xs border rounded" value={order.status || "pending"} onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}>
                                 <option value="pending">대기</option>
@@ -3791,6 +3981,10 @@ export default function Admin() {
                   <RefreshCw className="w-4 h-4 mr-2" />
                   새로고침
                 </Button>
+                <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={handleDeleteAllDeposits}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  전체삭제
+                </Button>
               </div>
             </div>
 
@@ -3825,6 +4019,7 @@ export default function Admin() {
                           <th className="px-3 py-2 text-center font-medium text-gray-600">상태</th>
                           <th className="px-3 py-2 text-left font-medium text-gray-600">신청일</th>
                           <th className="px-3 py-2 text-center font-medium text-gray-600">처리</th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600">삭제</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -3846,6 +4041,11 @@ export default function Admin() {
                                   <Button size="sm" variant="ghost" className="h-7 px-2 text-red-600" onClick={() => handleRejectDeposit(request.id)}><XCircle className="w-3.5 h-3.5 mr-1" />거부</Button>
                                 </div>
                               ) : <span className="text-xs text-gray-400">처리완료</span>}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:bg-red-50" onClick={() => handleDeleteDeposit(request.id)} data-testid={`button-delete-deposit-${request.id}`} title="삭제">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
                             </td>
                           </tr>
                         ))}
@@ -3905,6 +4105,10 @@ export default function Admin() {
                   <RefreshCw className="w-4 h-4 mr-2" />
                   새로고침
                 </Button>
+                <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={handleDeleteAllWithdrawals}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  전체삭제
+                </Button>
               </div>
             </div>
 
@@ -3939,6 +4143,7 @@ export default function Admin() {
                           <th className="px-2 py-2 text-center font-medium text-gray-600 text-xs">일시</th>
                           <th className="px-2 py-2 text-center font-medium text-gray-600 text-xs">상태</th>
                           <th className="px-2 py-2 text-center font-medium text-gray-600 text-xs">처리</th>
+                          <th className="px-2 py-2 text-center font-medium text-gray-600 text-xs">삭제</th>
                         </tr>
                       </thead>
                       {paginatedWithdrawals.map((request) => (
@@ -3962,6 +4167,11 @@ export default function Admin() {
                                   <Button size="sm" variant="ghost" className="h-6 px-1.5 text-red-600 text-xs" onClick={() => handleRejectWithdrawal(request.id)}><XCircle className="w-3 h-3" /></Button>
                                 </div>
                               ) : <span className="text-xs text-gray-400">완료</span>}
+                            </td>
+                            <td className="px-2 py-1.5 text-center">
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-500 hover:bg-red-50" onClick={() => handleDeleteWithdrawal(request.id)} data-testid={`button-delete-withdrawal-${request.id}`} title="삭제">
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
                             </td>
                           </tr>
                           {request.adminNote && (
@@ -4121,6 +4331,7 @@ export default function Admin() {
             <div className="mt-8">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-lg">포인트 내역</h3>
+                <div className="flex gap-2">
                 {selectedPointTxIds.size > 0 && (
                   <Button
                     className="bg-red-500 hover:bg-red-600 text-white"
@@ -4150,6 +4361,16 @@ export default function Admin() {
                     선택 삭제 ({selectedPointTxIds.size}건)
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  className="text-red-600 border-red-300 hover:bg-red-50"
+                  onClick={handleDeleteAllPointTx}
+                  data-testid="button-delete-all-point-tx"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  전체삭제
+                </Button>
+                </div>
               </div>
               
               <PointSearchPanel
@@ -4211,6 +4432,7 @@ export default function Admin() {
                             <th className="px-3 py-2 text-right font-medium text-gray-600">금액</th>
                             <th className="px-3 py-2 text-right font-medium text-gray-600">잔액</th>
                             <th className="px-3 py-2 text-center font-medium text-gray-600">상태</th>
+                            <th className="px-3 py-2 text-center font-medium text-gray-600">삭제</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -4281,6 +4503,11 @@ export default function Admin() {
                                    tx.type === 'manual_adjustment' ? '관리자' :
                                    tx.type === 'order_payment' || tx.type === 'use' ? '주문' : tx.type}
                                 </span>
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-500 hover:bg-red-50" onClick={() => handleDeleteSinglePointTx(tx.id)} data-testid={`button-delete-point-tx-${tx.id}`} title="삭제">
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
                               </td>
                             </tr>
                           ))}
@@ -4656,14 +4883,20 @@ export default function Admin() {
                 <h2 className="text-xl font-bold text-gray-900">로그인 기록</h2>
                 <p className="text-sm text-gray-500">회원들의 로그인 기록을 확인할 수 있습니다</p>
               </div>
-              <Button
-                data-testid="button-refresh-login-logs"
-                onClick={fetchLoginLogs}
-                variant="outline"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                새로고침
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  data-testid="button-refresh-login-logs"
+                  onClick={fetchLoginLogs}
+                  variant="outline"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  새로고침
+                </Button>
+                <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={handleDeleteAllLoginLogs}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  전체삭제
+                </Button>
+              </div>
             </div>
 
             <div className="mb-4">
@@ -4688,6 +4921,7 @@ export default function Admin() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">이름</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">접속시간</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP 주소</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">삭제</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -4718,6 +4952,11 @@ export default function Admin() {
                               {log.loginAt ? new Date(log.loginAt).toLocaleString("ko-KR") : "-"}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-500">{log.ipAddress || "-"}</td>
+                            <td className="px-4 py-3 text-center">
+                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:bg-red-50" onClick={() => handleDeleteLoginLog(log.id)} data-testid={`button-delete-log-${log.id}`} title="삭제">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </td>
                           </tr>
                         ))}
                         {paginatedLogs.length === 0 && (

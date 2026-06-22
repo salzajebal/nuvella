@@ -204,6 +204,19 @@ export interface IStorage {
   getOrderByNumber(orderNumber: string): Promise<Order | undefined>;
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrder(id: string, order: Partial<InsertOrder>): Promise<Order | undefined>;
+  deleteOrder(id: string): Promise<boolean>;
+  deleteAllOrders(): Promise<number>;
+
+  // Delete operations for admin
+  deleteDepositRequest(id: string): Promise<boolean>;
+  deleteAllDepositRequests(): Promise<number>;
+  deleteWithdrawalRequest(id: string): Promise<boolean>;
+  deleteAllWithdrawalRequests(): Promise<number>;
+  deleteLoginLog(id: string): Promise<boolean>;
+  deleteAllLoginLogs(): Promise<number>;
+  deletePointTransaction(id: string): Promise<boolean>;
+  deleteAllPointTransactions(): Promise<number>;
+  deleteAllMembers(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1157,6 +1170,61 @@ export class DatabaseStorage implements IStorage {
       .where(eq(orders.id, id))
       .returning();
     return order;
+  }
+
+  async deleteOrder(id: string): Promise<boolean> {
+    const result = await db.delete(orders).where(eq(orders.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteAllOrders(): Promise<number> {
+    const result = await db.delete(orders).returning();
+    return result.length;
+  }
+
+  async deleteDepositRequest(id: string): Promise<boolean> {
+    const result = await db.delete(depositRequests).where(eq(depositRequests.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteAllDepositRequests(): Promise<number> {
+    const result = await db.delete(depositRequests).returning();
+    return result.length;
+  }
+
+  async deleteWithdrawalRequest(id: string): Promise<boolean> {
+    const result = await db.delete(withdrawalRequests).where(eq(withdrawalRequests.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteAllWithdrawalRequests(): Promise<number> {
+    const result = await db.delete(withdrawalRequests).returning();
+    return result.length;
+  }
+
+  async deleteLoginLog(id: string): Promise<boolean> {
+    const result = await db.delete(loginLogs).where(eq(loginLogs.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteAllLoginLogs(): Promise<number> {
+    const result = await db.delete(loginLogs).returning();
+    return result.length;
+  }
+
+  async deletePointTransaction(id: string): Promise<boolean> {
+    const result = await db.delete(pointTransactions).where(eq(pointTransactions.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteAllPointTransactions(): Promise<number> {
+    const result = await db.delete(pointTransactions).returning();
+    return result.length;
+  }
+
+  async deleteAllMembers(): Promise<number> {
+    const result = await db.delete(members).returning();
+    return result.length;
   }
 }
 
