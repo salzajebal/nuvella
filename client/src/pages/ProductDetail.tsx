@@ -171,6 +171,7 @@ export default function ProductDetail() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewPage, setReviewPage] = useState(1);
   const [canReview, setCanReview] = useState(false);
   const [reviewableOrders, setReviewableOrders] = useState<ReviewableOrder[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -836,65 +837,132 @@ export default function ProductDetail() {
                   <p className="text-gray-500">아직 작성된 후기가 없습니다.</p>
                   <p className="text-gray-400 text-sm mt-2">첫 번째 후기를 작성해보세요!</p>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="bg-gray-50 rounded-lg p-5" data-testid={`review-item-${review.id}`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium text-gray-900">{review.authorName}</span>
-                          <div className="flex items-center gap-0.5">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`w-4 h-4 ${
-                                  star <= (review.rating || 5) 
-                                    ? "text-yellow-400 fill-yellow-400" 
-                                    : "text-gray-300"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-400">
-                            {review.displayDate 
-                              ? new Date(review.displayDate).toLocaleDateString("ko-KR")
-                              : review.createdAt 
-                                ? new Date(review.createdAt).toLocaleDateString("ko-KR")
-                                : ""
-                            }
-                          </span>
-                          {currentMemberId && (review as any).memberId === currentMemberId && (
-                            <div className="flex items-center gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 px-2 text-gray-500 hover:text-blue-600"
-                                onClick={() => handleOpenEditReview(review)}
-                                data-testid={`button-edit-review-${review.id}`}
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 px-2 text-gray-500 hover:text-red-600"
-                                onClick={() => handleDeleteReview(review.id)}
-                                data-testid={`button-delete-review-${review.id}`}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
+              ) : (() => {
+                const REVIEWS_PER_PAGE = 10;
+                const sortedReviews = [...reviews].sort((a, b) => {
+                  const dateA = new Date(a.displayDate || a.createdAt || 0).getTime();
+                  const dateB = new Date(b.displayDate || b.createdAt || 0).getTime();
+                  return dateB - dateA;
+                });
+                const totalPages = Math.ceil(sortedReviews.length / REVIEWS_PER_PAGE);
+                const safePage = Math.min(reviewPage, totalPages);
+                const paginated = sortedReviews.slice((safePage - 1) * REVIEWS_PER_PAGE, safePage * REVIEWS_PER_PAGE);
+
+                const getPageNumbers = () => {
+                  const pages: (number | '...')[] = [];
+                  if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    pages.push(1);
+                    if (safePage > 4) pages.push('...');
+                    for (let i = Math.max(2, safePage - 2); i <= Math.min(totalPages - 1, safePage + 2); i++) pages.push(i);
+                    if (safePage < totalPages - 3) pages.push('...');
+                    pages.push(totalPages);
+                  }
+                  return pages;
+                };
+
+                return (
+                  <>
+                    <div className="space-y-4">
+                      {paginated.map((review) => (
+                        <div key={review.id} className="bg-gray-50 rounded-lg p-5" data-testid={`review-item-${review.id}`}>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="font-medium text-gray-900">{review.authorName}</span>
+                              <div className="flex items-center gap-0.5">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`w-4 h-4 ${
+                                      star <= (review.rating || 5)
+                                        ? "text-yellow-400 fill-yellow-400"
+                                        : "text-gray-300"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
                             </div>
-                          )}
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-400">
+                                {review.displayDate
+                                  ? new Date(review.displayDate).toLocaleDateString("ko-KR")
+                                  : review.createdAt
+                                    ? new Date(review.createdAt).toLocaleDateString("ko-KR")
+                                    : ""
+                                }
+                              </span>
+                              {currentMemberId && (review as any).memberId === currentMemberId && (
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 px-2 text-gray-500 hover:text-blue-600"
+                                    onClick={() => handleOpenEditReview(review)}
+                                    data-testid={`button-edit-review-${review.id}`}
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 px-2 text-gray-500 hover:text-red-600"
+                                    onClick={() => handleDeleteReview(review.id)}
+                                    data-testid={`button-delete-review-${review.id}`}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <h4 className="font-medium text-gray-900 mb-2">{review.title}</h4>
+                          <p className="text-gray-600 text-sm leading-relaxed">{review.content}</p>
                         </div>
-                      </div>
-                      <h4 className="font-medium text-gray-900 mb-2">{review.title}</h4>
-                      <p className="text-gray-600 text-sm leading-relaxed">{review.content}</p>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-1 mt-8">
+                        <button
+                          onClick={() => { setReviewPage(Math.max(1, safePage - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          disabled={safePage === 1}
+                          className="px-3 py-1.5 rounded border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                          data-testid="button-review-prev"
+                        >
+                          이전
+                        </button>
+                        {getPageNumbers().map((p, i) =>
+                          p === '...' ? (
+                            <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-sm text-gray-400">…</span>
+                          ) : (
+                            <button
+                              key={p}
+                              onClick={() => { setReviewPage(p as number); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                              className={`px-3 py-1.5 rounded border text-sm font-medium transition-colors ${
+                                safePage === p
+                                  ? 'bg-gray-900 text-white border-gray-900'
+                                  : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                              }`}
+                              data-testid={`button-review-page-${p}`}
+                            >
+                              {p}
+                            </button>
+                          )
+                        )}
+                        <button
+                          onClick={() => { setReviewPage(Math.min(totalPages, safePage + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          disabled={safePage === totalPages}
+                          className="px-3 py-1.5 rounded border border-gray-200 text-sm text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                          data-testid="button-review-next"
+                        >
+                          다음
+                        </button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
             )}
           </div>
