@@ -149,7 +149,7 @@ export default function Signup() {
         <div className="max-w-xl mx-auto">
           <div className="text-center mb-6 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">회원가입</h1>
-            <p className="text-sm sm:text-base text-gray-500">Nuvella 회원이 되어 다양한 혜택을 누리세요</p>
+            <p className="text-sm sm:text-base text-gray-500">Lumia 회원이 되어 다양한 혜택을 누리세요</p>
           </div>
 
           <div className="bg-white shadow-sm border border-gray-200">

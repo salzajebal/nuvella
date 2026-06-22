@@ -103,10 +103,10 @@ export function Header() {
       <div className="container-custom py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center cursor-pointer flex-shrink-0">
           <img 
-            src="/images/nuvella-logo.jpg"
-            alt="Nuvella"
+            src="/images/lumia-logo.png"
+            alt="Lumia"
             className="h-12 sm:h-14 md:h-16 w-auto"
-            data-testid="logo-nuvella"
+            data-testid="logo-lumia"
           />
         </Link>
 
@@ -256,8 +256,8 @@ export function Header() {
                 <div className="mt-8">
                   <Link href="/" className="block mb-6">
                     <img 
-                      src="/images/nuvella-logo.jpg"
-                      alt="Nuvella"
+                      src="/images/lumia-logo.png"
+                      alt="Lumia"
                       className="h-12 w-auto"
                     />
                   </Link>

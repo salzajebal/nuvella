@@ -27,21 +27,22 @@ export function Footer() {
                 className="text-lg sm:text-xl font-bold text-gray-800"
                 style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
               >
-                NUVELLA
+                Lumia
               </span>
             </div>
             <div className="text-xs sm:text-sm space-y-1 text-gray-600">
-              <p><span className="text-gray-500">누벨라</span> | 대표 : 박도이</p>
-              <p>사업자등록번호 : 387-36-01448 | 업태 : 도매 및 소매업 | 종목 : 전자상거래업</p>
-              <p>통신판매업 : 2025-안양만안-1400 | 관할세무서 : 안양세무서</p>
-              <p>주소 : 경기도 안양시 만안구 병목안로 2, 1103호 A482</p>
-              <p>E-mail : support@nuvella.com</p>
+              <p><span className="text-gray-500">루미아</span> | 대표 : 이상준</p>
+              <p>사업자등록번호 : 267-79-00540 | 업태 : 도매 및 소매업 | 종목 : 전자상거래 소매업</p>
+              <p>통신판매업 : 2025-인천계양-0777 | 관할세무서 : 북인천세무서</p>
+              <p>주소 : 인천광역시 계양구 계산새로87번길 5, A동 6층 파운드소호 A-7 (용종동,레드몰1차)</p>
+              <p>E-mail : support@lumia.com</p>
             </div>
           </div>
           
           <div>
             <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-4">사이트 이용문의</h3>
             <div className="text-xs sm:text-sm space-y-1 text-gray-600 mb-4">
+              <p>Tel : 032-555-6421</p>
               <p>상담시간 : 평일 09:00 ~ 18:00 토요일 09:00 ~ 12:00</p>
               <p>휴일안내 : 일요일 및 공휴일은 휴무</p>
             </div>
@@ -52,7 +53,7 @@ export function Footer() {
       <div className="bg-gray-200 py-3">
         <div className="container-custom px-4">
           <p className="text-[10px] sm:text-xs text-gray-500 text-center">
-            Copyright © 2025 Nuvella. All rights reserved.
+            Copyright © 2025 Lumia. All rights reserved.
           </p>
         </div>
       </div>

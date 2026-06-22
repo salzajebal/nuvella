@@ -1170,7 +1170,7 @@ export default function Profile() {
               </div>
               <div className="flex justify-between">
                 <span>이메일</span>
-                <span>support@nuvella.com</span>
+                <span>support@lumia.com</span>
               </div>
             </div>
             <Link href="/support">
