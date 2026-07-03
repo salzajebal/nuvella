@@ -136,6 +136,7 @@ export default function Admin() {
     email: "",
     password: "",
     name: "",
+    nickname: "",
     phone: "",
     address: "",
     bank: "",
@@ -1575,6 +1576,7 @@ export default function Admin() {
       email: member.username,
       password: "",
       name: member.name,
+      nickname: (member as any).nickname || "",
       phone: member.phone || "",
       address: (member as any).address || "",
       bank: (member as any).bank || "",
@@ -3356,6 +3358,14 @@ export default function Admin() {
                       <Input
                         value={memberFormData.name}
                         onChange={(e) => setMemberFormData({ ...memberFormData, name: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">닉네임</label>
+                      <Input
+                        value={memberFormData.nickname}
+                        onChange={(e) => setMemberFormData({ ...memberFormData, nickname: e.target.value })}
+                        data-testid="input-edit-member-nickname"
                       />
                     </div>
                     <div>
