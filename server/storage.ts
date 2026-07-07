@@ -109,6 +109,7 @@ export interface IStorage {
   getAdminSession(token: string): Promise<AdminSession | undefined>;
   createAdminSession(session: InsertAdminSession): Promise<AdminSession>;
   deleteAdminSession(token: string): Promise<boolean>;
+  deleteAllAdminSessions(): Promise<number>;
   updateAdminSessionExpiry(token: string, expiresAt: Date, lastSeenAt: Date): Promise<void>;
   
   // Chat
@@ -507,6 +508,11 @@ export class DatabaseStorage implements IStorage {
   async deleteAdminSession(token: string): Promise<boolean> {
     const result = await db.delete(adminSessions).where(eq(adminSessions.token, token)).returning();
     return result.length > 0;
+  }
+
+  async deleteAllAdminSessions(): Promise<number> {
+    const result = await db.delete(adminSessions).returning();
+    return result.length;
   }
 
   async updateAdminSessionExpiry(token: string, expiresAt: Date, lastSeenAt: Date): Promise<void> {

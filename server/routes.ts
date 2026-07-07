@@ -745,6 +745,16 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/admin/admin-sessions", requireAdminAuth, async (req: Request, res: Response) => {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    try {
+      await storage.deleteAllAdminSessions();
+      res.json({ success: true, message: "모든 관리자 세션이 종료되었습니다. 다시 로그인이 필요합니다." });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "관리자 전체 로그아웃에 실패했습니다." });
+    }
+  });
+
   // ==================== MEMBER MANAGEMENT API ====================
   
   app.get("/api/admin/members", async (req: Request, res: Response) => {

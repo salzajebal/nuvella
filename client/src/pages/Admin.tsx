@@ -1503,17 +1503,19 @@ export default function Admin() {
   };
 
   const handleForceLogoutAll = async () => {
-    if (!confirm("현재 접속 중인 모든 회원을 강제 로그아웃 시키겠습니까?\n회원들은 다시 로그인해야 합니다.")) return;
+    if (!confirm("현재 접속 중인 모든 관리자를 강제 로그아웃 시키겠습니까?\n본인도 로그아웃됩니다.")) return;
     try {
-      const res = await fetchWithAuth("/api/admin/member-sessions", { method: "DELETE" });
+      const res = await fetchWithAuth("/api/admin/admin-sessions", { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         toast({ title: "완료", description: data.message });
+        setAuthToken(null);
+        setIsAuthenticated(false);
       } else {
         toast({ title: "오류", description: data.error, variant: "destructive" });
       }
     } catch (error) {
-      toast({ title: "오류", description: "전체 로그아웃에 실패했습니다.", variant: "destructive" });
+      toast({ title: "오류", description: "관리자 전체 로그아웃에 실패했습니다.", variant: "destructive" });
     }
   };
 
