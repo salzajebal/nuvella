@@ -736,6 +736,15 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/admin/member-sessions", requireAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const count = await storage.deleteAllMemberSessions();
+      res.json({ success: true, message: `접속 중인 회원 ${count}명이 강제 로그아웃 되었습니다.` });
+    } catch (error) {
+      res.status(500).json({ success: false, error: "전체 로그아웃에 실패했습니다." });
+    }
+  });
+
   // ==================== MEMBER MANAGEMENT API ====================
   
   app.get("/api/admin/members", async (req: Request, res: Response) => {

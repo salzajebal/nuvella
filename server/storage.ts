@@ -99,6 +99,7 @@ export interface IStorage {
   createMemberSession(session: InsertMemberSession): Promise<MemberSession>;
   deleteMemberSession(token: string): Promise<boolean>;
   deleteMemberSessionsByMemberId(memberId: string): Promise<void>;
+  deleteAllMemberSessions(): Promise<number>;
   
   // Login Logs
   createLoginLog(log: InsertLoginLog): Promise<LoginLog>;
@@ -475,6 +476,11 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMemberSessionsByMemberId(memberId: string): Promise<void> {
     await db.delete(memberSessions).where(eq(memberSessions.memberId, memberId));
+  }
+
+  async deleteAllMemberSessions(): Promise<number> {
+    const result = await db.delete(memberSessions).returning();
+    return result.length;
   }
 
   // Login Logs

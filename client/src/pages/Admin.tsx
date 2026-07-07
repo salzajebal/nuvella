@@ -10,7 +10,7 @@ import {
   Lock, User, Mail, Phone, CheckCircle, XCircle,
   Star, FileText, Bell, Calendar, Search,
   Wallet, Clock, Snowflake, Unlock, Settings, Link2, Upload,
-  Zap, Download, Loader2
+  Zap, Download, Loader2, UserX
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Product, Category, Member, Review, Notice, Order } from "@shared/schema";
@@ -1502,6 +1502,21 @@ export default function Admin() {
     }
   };
 
+  const handleForceLogoutAll = async () => {
+    if (!confirm("현재 접속 중인 모든 회원을 강제 로그아웃 시키겠습니까?\n회원들은 다시 로그인해야 합니다.")) return;
+    try {
+      const res = await fetchWithAuth("/api/admin/member-sessions", { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "완료", description: data.message });
+      } else {
+        toast({ title: "오류", description: data.error, variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "오류", description: "전체 로그아웃에 실패했습니다.", variant: "destructive" });
+    }
+  };
+
   const handleDeleteAllLoginLogs = async () => {
     if (!confirm("정말로 모든 로그인 기록을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
     try {
@@ -2252,7 +2267,16 @@ export default function Admin() {
             
           </nav>
           
-          <div className="flex-shrink-0 p-4 border-t border-amber-500/20 bg-gradient-to-r from-gray-900 to-gray-800">
+          <div className="flex-shrink-0 p-4 border-t border-amber-500/20 bg-gradient-to-r from-gray-900 to-gray-800 space-y-1">
+            <Button
+              data-testid="button-force-logout-all"
+              variant="ghost"
+              onClick={handleForceLogoutAll}
+              className="w-full justify-start text-orange-400 hover:text-orange-300 hover:bg-white/10"
+            >
+              <UserX className="w-4 h-4 mr-2" />
+              접속자 전체 로그아웃
+            </Button>
             <Button 
               data-testid="button-logout"
               variant="ghost" 
