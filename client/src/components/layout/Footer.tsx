@@ -22,7 +22,7 @@ export function Footer() {
       <div className="container-custom px-4 py-6 sm:py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           <div>
-            <div className="mb-4">
+            <div className="mb-4 inline-block bg-white px-3 py-1 rounded">
               <img src="/eclat-logo.png" alt="에클라샵" className="h-8 w-auto" />
             </div>
             <div className="text-xs sm:text-sm space-y-1 text-gray-600">
