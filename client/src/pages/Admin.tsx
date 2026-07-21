@@ -1995,7 +1995,7 @@ export default function Admin() {
               <Lock className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900">관리자 로그인</h1>
-            <p className="text-gray-500 mt-2">Lumia 관리 시스템</p>
+            <p className="text-gray-500 mt-2">에클라샵 관리 시스템</p>
           </div>
           
           <form onSubmit={handleLogin} className="space-y-5">
@@ -2296,7 +2296,7 @@ export default function Admin() {
             <div className="flex items-center gap-4">
               <h1 className="text-lg font-bold text-gray-800">관리자 대시보드</h1>
               <span className="text-sm text-gray-400">|</span>
-              <span className="text-sm text-gray-500">Lumia 관리자 시스템</span>
+              <span className="text-sm text-gray-500">에클라샵 관리자 시스템</span>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -5437,7 +5437,7 @@ export default function Admin() {
                         type="text"
                         value={depositAccountSettings.accountHolder}
                         onChange={(e) => setDepositAccountSettings(prev => ({ ...prev, accountHolder: e.target.value }))}
-                        placeholder="예: Lumia"
+                        placeholder="예: 에클라샵"
                         className="w-full max-w-md"
                       />
                     </div>

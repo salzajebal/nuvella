@@ -103,10 +103,10 @@ export function Header() {
       <div className="container-custom py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center cursor-pointer flex-shrink-0">
           <img 
-            src="/images/lumia-logo.png"
-            alt="Lumia"
+            src="/eclat-logo.png"
+            alt="에클라샵"
             className="h-12 sm:h-14 md:h-16 w-auto"
-            data-testid="logo-lumia"
+            data-testid="logo-eclatshop"
           />
         </Link>
 

@@ -48,7 +48,7 @@ export default function ProductList() {
   
   const categoryData = getCategoryById(categoryId);
   const categoryName = categoryData?.name || "전체 상품";
-  const categoryDescription = categoryData?.description || "루미아의 모든 상품을 만나보세요";
+  const categoryDescription = categoryData?.description || "에클라샵의 모든 상품을 만나보세요";
   const subcategoryName = subcategoryId ? getSubcategoryName(categoryId, subcategoryId) : null;
 
   const handleWishlistToggle = (e: React.MouseEvent, product: Product) => {
