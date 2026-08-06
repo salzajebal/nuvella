@@ -840,8 +840,8 @@ export default function ProductDetail() {
               ) : (() => {
                 const REVIEWS_PER_PAGE = 10;
                 const sortedReviews = [...reviews].sort((a, b) => {
-                  const dateA = new Date(a.displayDate || a.createdAt || 0).getTime();
-                  const dateB = new Date(b.displayDate || b.createdAt || 0).getTime();
+                  const dateA = new Date(a.createdAt || 0).getTime();
+                  const dateB = new Date(b.createdAt || 0).getTime();
                   return dateB - dateA;
                 });
                 const totalPages = Math.ceil(sortedReviews.length / REVIEWS_PER_PAGE);

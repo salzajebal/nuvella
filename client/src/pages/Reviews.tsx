@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Star, ChevronRight, Home } from "lucide-react";
+import { Star, ChevronRight, Home, ChevronLeft } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
@@ -13,9 +14,14 @@ interface Review {
   content: string;
   imageUrl: string | null;
   displayDate: string | null;
+  createdAt: string | null;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export default function Reviews() {
+  const [page, setPage] = useState(1);
+
   const { data: reviews = [], isLoading } = useQuery<Review[]>({
     queryKey: ["reviews"],
     queryFn: async () => {
@@ -24,6 +30,23 @@ export default function Reviews() {
       return data.success ? data.data : [];
     },
   });
+
+  const totalPages = Math.ceil(reviews.length / ITEMS_PER_PAGE);
+  const paginated = reviews.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const getPageNumbers = () => {
+    const pages: (number | "...")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 4) pages.push("...");
+      for (let i = Math.max(2, page - 2); i <= Math.min(totalPages - 1, page + 2); i++) pages.push(i);
+      if (page < totalPages - 3) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -62,55 +85,97 @@ export default function Reviews() {
             <p className="text-gray-500">첫 번째 후기를 남겨주세요!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {reviews.map((review) => (
-              <div
-                key={review.id}
-                className="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow border border-gray-100"
-                data-testid={`card-review-${review.id}`}
-              >
-                {review.imageUrl && (
-                  <div className="mb-4 rounded-lg overflow-hidden">
-                    <img
-                      src={review.imageUrl}
-                      alt={review.title}
-                      className="w-full h-48 object-cover"
-                    />
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginated.map((review) => (
+                <div
+                  key={review.id}
+                  className="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-shadow border border-gray-100"
+                  data-testid={`card-review-${review.id}`}
+                >
+                  {review.imageUrl && (
+                    <div className="mb-4 rounded-lg overflow-hidden">
+                      <img
+                        src={review.imageUrl}
+                        alt={review.title}
+                        className="w-full h-48 object-cover"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-1 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-4 h-4 ${
+                          i < (review.rating || 5)
+                            ? "text-yellow-400 fill-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    ))}
                   </div>
-                )}
-                
-                <div className="flex items-center gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < (review.rating || 5)
-                          ? "text-yellow-400 fill-yellow-400"
-                          : "text-gray-300"
+                  
+                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{review.title}</h3>
+                  
+                  {review.productName && (
+                    <p className="text-sm text-gray-600 mb-2">구매상품: {review.productName}</p>
+                  )}
+                  
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-4">{review.content}</p>
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t">
+                    <span className="font-medium">{review.authorName}</span>
+                    <span>
+                      {review.createdAt
+                        ? new Date(review.createdAt).toLocaleDateString("ko-KR")
+                        : review.displayDate
+                          ? new Date(review.displayDate).toLocaleDateString("ko-KR")
+                          : "-"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-1 mt-10">
+                <button
+                  onClick={() => { setPage(p => Math.max(1, p - 1)); window.scrollTo(0, 0); }}
+                  disabled={page === 1}
+                  className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {getPageNumbers().map((p, idx) =>
+                  p === "..." ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => { setPage(p as number); window.scrollTo(0, 0); }}
+                      className={`w-9 h-9 rounded-lg text-sm font-medium border transition-colors ${
+                        page === p
+                          ? "bg-gray-900 text-white border-gray-900"
+                          : "border-gray-200 hover:bg-gray-100 text-gray-700"
                       }`}
-                    />
-                  ))}
-                </div>
-                
-                <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{review.title}</h3>
-                
-                {review.productName && (
-                  <p className="text-sm text-gray-600 mb-2">구매상품: {review.productName}</p>
+                    >
+                      {p}
+                    </button>
+                  )
                 )}
-                
-                <p className="text-gray-600 text-sm mb-4 line-clamp-4">{review.content}</p>
-                
-                <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t">
-                  <span className="font-medium">{review.authorName}</span>
-                  <span>
-                    {review.displayDate
-                      ? new Date(review.displayDate).toLocaleDateString("ko-KR")
-                      : "-"}
-                  </span>
-                </div>
+
+                <button
+                  onClick={() => { setPage(p => Math.min(totalPages, p + 1)); window.scrollTo(0, 0); }}
+                  disabled={page === totalPages}
+                  className="p-2 rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </main>
 

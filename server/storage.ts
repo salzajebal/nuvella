@@ -671,7 +671,7 @@ export class DatabaseStorage implements IStorage {
     })
     .from(reviews)
     .leftJoin(members, eq(reviews.memberId, members.id))
-    .orderBy(desc(reviews.displayDate));
+    .orderBy(desc(reviews.createdAt));
     
     return result.map(r => ({
       ...r,
@@ -700,7 +700,7 @@ export class DatabaseStorage implements IStorage {
     .from(reviews)
     .leftJoin(members, eq(reviews.memberId, members.id))
     .where(eq(reviews.isVisible, true))
-    .orderBy(desc(reviews.displayDate));
+    .orderBy(desc(reviews.createdAt));
     
     return result.map(r => ({
       ...r,
@@ -728,7 +728,7 @@ export class DatabaseStorage implements IStorage {
     .from(reviews)
     .leftJoin(members, eq(reviews.memberId, members.id))
     .where(and(eq(reviews.isVisible, true), eq(reviews.isApproved, true)))
-    .orderBy(desc(reviews.displayDate));
+    .orderBy(desc(reviews.createdAt));
     
     return result.map(r => ({
       ...r,
@@ -760,7 +760,8 @@ export class DatabaseStorage implements IStorage {
     })
     .from(reviews)
     .leftJoin(members, eq(reviews.memberId, members.id))
-    .where(eq(reviews.productId, productId));
+    .where(eq(reviews.productId, productId))
+    .orderBy(desc(reviews.createdAt));
     
     return result.map(r => ({
       ...r,
