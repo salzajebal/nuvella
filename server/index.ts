@@ -81,7 +81,46 @@ app.use((req, res, next) => {
   next();
 });
 
+async function restoreDbFromGithubIfEmpty() {
+  const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+  const dbUrl = process.env.NEON_DATABASE_URL;
+  if (!token || !dbUrl) return;
+  try {
+    // Only restore if DB looks empty (no products)
+    const { db } = await import("./db");
+    const { products } = await import("../shared/schema");
+    const { sql } = await import("drizzle-orm");
+    const rows = await db.select({ count: sql<number>`count(*)` }).from(products);
+    const count = Number(rows[0]?.count ?? 0);
+    if (count > 0) {
+      console.log(`[DB Restore] DB에 상품 ${count}개 있음 — 복원 건너뜀`);
+      return;
+    }
+
+    console.log("[DB Restore] DB가 비어 있음 — GitHub에서 db-seed.sql 다운로드 시도...");
+    const getRes = await fetch(
+      "https://api.github.com/repos/salzajebal/nuvella/contents/db-seed.sql",
+      { headers: { Authorization: `token ${token}`, "User-Agent": "eclatshop-app" } }
+    );
+    if (!getRes.ok) {
+      console.log("[DB Restore] GitHub에 db-seed.sql 없음 — 복원 건너뜀");
+      return;
+    }
+    const meta = await getRes.json() as any;
+    const sql_content = Buffer.from(meta.content, "base64").toString("utf8");
+
+    const { writeFileSync } = await import("fs");
+    const { execSync } = await import("child_process");
+    writeFileSync("/tmp/db-seed.sql", sql_content);
+    execSync(`psql "${dbUrl}" -f /tmp/db-seed.sql`, { stdio: "pipe" });
+    console.log("[DB Restore] DB 복원 완료 ✓");
+  } catch (err: any) {
+    console.error("[DB Restore] 오류:", err.message);
+  }
+}
+
 (async () => {
+  await restoreDbFromGithubIfEmpty();
   await registerRoutes(httpServer, app);
 
   // Global error handler - must always return JSON

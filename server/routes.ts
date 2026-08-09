@@ -3683,5 +3683,67 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== DB → GITHUB PUSH ====================
+  app.post("/api/admin/push-db-to-github", async (req: Request, res: Response) => {
+    const { password } = req.body;
+    if (password !== "qwer1234!!") {
+      return res.status(403).json({ success: false, error: "인증 실패" });
+    }
+    const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+    const dbUrl = process.env.NEON_DATABASE_URL;
+    if (!token || !dbUrl) {
+      return res.status(500).json({ success: false, error: "환경변수 누락 (GITHUB_PERSONAL_ACCESS_TOKEN 또는 NEON_DATABASE_URL)" });
+    }
+    try {
+      const { execSync } = await import("child_process");
+      const fs = await import("fs");
+      const tmpFile = "/tmp/db-seed.sql";
+      execSync(`pg_dump "${dbUrl}" --no-owner --no-privileges --no-comments -f ${tmpFile}`, { stdio: "pipe" });
+      const content = fs.readFileSync(tmpFile, "utf8");
+      const encoded = Buffer.from(content).toString("base64");
+
+      // GitHub API: get current SHA if file exists
+      const owner = "salzajebal";
+      const repo = "nuvella";
+      const path = "db-seed.sql";
+      const headers = {
+        Authorization: `token ${token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "eclatshop-app",
+      };
+
+      let sha: string | undefined;
+      try {
+        const getRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, { headers });
+        if (getRes.ok) {
+          const existing = await getRes.json() as any;
+          sha = existing.sha;
+        }
+      } catch (_) {}
+
+      const body: any = {
+        message: `DB snapshot ${new Date().toISOString()}`,
+        content: encoded,
+      };
+      if (sha) body.sha = sha;
+
+      const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      if (!putRes.ok) {
+        const err = await putRes.text();
+        return res.status(500).json({ success: false, error: `GitHub 업로드 실패: ${err}` });
+      }
+
+      res.json({ success: true, message: "db-seed.sql이 GitHub에 성공적으로 업로드됐습니다." });
+    } catch (error: any) {
+      console.error("push-db-to-github error:", error);
+      res.status(500).json({ success: false, error: error.message || "DB 덤프 실패" });
+    }
+  });
+
   return httpServer;
 }
