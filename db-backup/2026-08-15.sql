@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict xyIzIq2LE2ld8OeHJIfhtE2sVrc9sKOG7GeXd0mhfcxguvg2vtG7UJ35NEA3Lab
+\restrict by05ctL8kEwliU1CsU2L5mzlOwNAd3q4N4HfhDPB0tLciOhwR33nqDU0D6lYfrK
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -440,6 +440,7 @@ o5glyqpb2qmsloln0i	admin	2026-08-09 10:50:25.603913	2026-08-16 10:50:25.602	2026
 2h5tbqwerqqmslom072	admin	2026-08-09 10:50:42.686883	2026-08-16 10:50:42.703	2026-08-09 10:50:42.703
 v9pqyotixhfmsloohx8	admin	2026-08-09 10:52:38.991667	2026-08-16 10:52:39.094	2026-08-09 10:52:39.094
 o6h13ahafpnmstxx70k	admin	2026-08-15 05:33:30.694946	2026-08-22 05:33:30.746	2026-08-15 05:33:30.746
+825rc36utxlmstymun4	admin	2026-08-15 05:53:27.730255	2026-08-22 05:53:27.927	2026-08-15 05:53:27.927
 \.
 
 
@@ -8293,5 +8294,5 @@ CREATE INDEX products_name_idx ON public.products USING btree (name);
 -- PostgreSQL database dump complete
 --
 
-\unrestrict xyIzIq2LE2ld8OeHJIfhtE2sVrc9sKOG7GeXd0mhfcxguvg2vtG7UJ35NEA3Lab
+\unrestrict by05ctL8kEwliU1CsU2L5mzlOwNAd3q4N4HfhDPB0tLciOhwR33nqDU0D6lYfrK
 
